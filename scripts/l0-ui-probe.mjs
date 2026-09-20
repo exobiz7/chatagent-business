@@ -19,8 +19,8 @@ const scratchTools=process.env.L1_OWNED_SCRATCH_TOOLS==="1";
 const strictMutations=process.env.L1_STRICT_MUTATIONS==="1";
 const asyncHashTools=process.env.L1_ASYNC_HASH_TOOLS==="1";
 const asyncCopyTools=process.env.L1_ASYNC_COPY_TOOLS==="1";
-const memoryReadTools=process.env.L1_PERSONAL_MEMORY_READ_TOOLS==="1";
-if(memoryReadTools&&!powerUserTools)throw Error("MEMORY_READ_REQUIRES_POWERUSER_TOOLS");
+const copyStageTools=process.env.L1_COPY_STAGE_RECOVERY_TOOLS==="1";
+if(copyStageTools&&!asyncCopyTools)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY_TOOLS");
 if(asyncCopyTools&&!powerUserTools)throw Error("ASYNC_COPY_REQUIRES_POWERUSER_TOOLS");
 if(asyncHashTools&&!powerUserTools)throw Error("ASYNC_HASH_REQUIRES_POWERUSER_TOOLS");
 if(scratchTools&&!semanticWriteTools)throw Error("SEMANTIC_WRITE_TOOLS_REQUIRED");
@@ -133,16 +133,6 @@ const server=http.createServer(async(req,res)=>{
     }
     register("local_copy",process.env.L1_NATIVE_CREATE_ENABLED==="1"?"UNAVAILABLE in native create-only mode: source-bound copy requires separately reviewed descriptor-anchored implementation.":strictMutations?"Copy source to NEW destination only, with exact source hash; existing-target replacement returns ATOMIC_REPLACE_UNAVAILABLE in strict mode.":"Copy a host file with exact source digest and destination-create/replace preconditions; avoid retry after ambiguous timeout.",
       {source:path,destination:path,expectedSourceSha256:sha,expectedDestinationSha256:sha.nullable().optional()},"file/copy");
-    if(memoryReadTools){
-      register("local_continuity_context","Read bounded P8 structured context for an explicitly allowlisted project; no memory writes or process execution.",
-        {projectId:z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/)},"continuity/context",true);
-      register("local_continuity_search","Read bounded lexical task/checkpoint/decision/fact search within an allowlisted P8 project.",
-        {projectId:z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/),query:z.string().min(1).max(256),
-         types:z.array(z.enum(["task","checkpoint","decision","fact"])).min(1).max(4).optional(),
-         limit:z.number().int().min(1).max(20).optional()},"continuity/search",true);
-      register("local_continuity_task","Read an existing P8 task only when its returned project belongs to the personal owner allowlist.",
-        {taskId:z.string().uuid()},"continuity/task",true);
-    }
     if(asyncCopyTools){
       register("local_async_copy_start","Start a create-only, bounded, owned native source-bound copy. Requires exact source SHA-256. Does not replace any existing destination. Progress and final hash require owned status/read.",
         {source:path,destination:path,expectedSourceSha256:sha,idempotencyKey:key},"async-copy/start");
@@ -152,6 +142,19 @@ const server=http.createServer(async(req,res)=>{
         {processId:requestId,cursor:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(16384).optional()},"async-copy/read",true);
       register("local_async_copy_stop","Stop only an owned create-only copy job.",
         {processId:requestId},"async-copy/stop");
+      if(copyStageTools){
+        register("local_copy_stage_inspect","Inspect only this Broker-owned terminal copy job's UUID-named staging artifact. Returns bounded SHA, inode and size for operator reconciliation; never deletes.",
+          {processId:requestId},"async-copy/stage-inspect",true);
+        mcp.registerTool("local_copy_stage_cleanup",{
+          description:"Delete ONLY the exact orphan stage of a terminal Broker-owned copy after matching SHA-256, device and inode. No arbitrary path input; unknown or running job denied.",
+          inputSchema:z.strictObject({processId:requestId,expectedStageSha256:sha,
+            expectedDev:z.string().regex(/^\d+$/),expectedIno:z.string().regex(/^\d+$/)}),
+          annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
+        },async(a)=>{
+          try{return text(await brokerCall("async-copy/stage-cleanup",a));}
+          catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+        });
+      }
     }
     if(asyncHashTools){
       mcp.registerTool("local_async_hash_start",{

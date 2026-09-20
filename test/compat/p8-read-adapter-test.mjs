@@ -4,8 +4,8 @@ import {mkdtempSync,writeFileSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {randomBytes,randomUUID} from "node:crypto";
-import {L1Broker} from "./broker-core.mjs";
-import {PersonalMemoryReadAdapter} from "./personal-memory-read.mjs";
+import {L1Broker} from "../../scripts/l1/broker-core.mjs";
+import {PersonalMemoryReadAdapter} from "./p8-read-adapter.mjs";
 
 const root=mkdtempSync(join(tmpdir(),"chatagent-personal-memory-"));
 const key=join(root,"memory.key"),token=randomBytes(32).toString("base64url");

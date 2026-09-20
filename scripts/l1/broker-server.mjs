@@ -9,7 +9,6 @@ import { HostProcesses } from "./host-processes.mjs";
 import { DurableHostProcesses } from "./durable-host-processes.mjs";
 import { AsyncHashJobs } from "./async-hash-jobs.mjs";
 import { AsyncCopyJobs } from "./async-copy-jobs.mjs";
-import { PersonalMemoryReadAdapter } from "./personal-memory-read.mjs";
 import { dirname } from "node:path";
 
 const dir=process.env.L1_STATE_DIR;
@@ -40,11 +39,8 @@ if(asyncCopyRequested&&(!fileOpsEnabled||!processesEnabled||!durableProcesses||
  throw Error("ASYNC_COPY_REQUIRES_DURABLE_NATIVE_STRICT_GATES");
 const asyncCopy=asyncCopyRequested?new AsyncCopyJobs(broker,files,{processes,
  binary:process.env.L1_NATIVE_COPY_BIN,binarySha:process.env.L1_NATIVE_COPY_SHA256}):null;
-const memoryReadEnabled=process.env.L1_PERSONAL_MEMORY_READ_ENABLED==="1";
-const memoryRead=memoryReadEnabled?new PersonalMemoryReadAdapter(broker,{
- url:process.env.L1_MEMORY_BASE_URL,
- tokenFile:process.env.L1_MEMORY_TOKEN_FILE,
- allowedProjects:process.env.L1_MEMORY_ALLOWED_PROJECTS}):null;
+const copyStageRecovery=process.env.L1_COPY_STAGE_RECOVERY_ENABLED==="1";
+if(copyStageRecovery&&!asyncCopyRequested)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY");
 const effectiveStatus=()=>({...broker.status(),realFilesystemAccess:fileOpsEnabled&&broker.status().paired&&broker.status().mode==="FULL_HOST",realHostExec:processesEnabled&&broker.status().paired&&broker.status().mode==="FULL_HOST",grantsEnforced:fileOpsEnabled||processesEnabled});
 const token=readFileSync(tokenFile,"utf8").trim();
 if(!/^[A-Za-z0-9_-]{43,256}$/.test(token))throw Error("AGENT_TOKEN_INVALID");
@@ -113,7 +109,7 @@ async function handleAgent(req,res){
     ...(scratchEnabled?["/agent/scratch/create","/agent/scratch/cleanup"]:[]),
     ...(asyncHashEnabled?["/agent/async-hash/start","/agent/async-hash/status", "/agent/async-hash/read","/agent/async-hash/stop"]:[]),
     ...(asyncCopyRequested?["/agent/async-copy/start","/agent/async-copy/status", "/agent/async-copy/read","/agent/async-copy/stop"]:[]),
-    ...(memoryReadEnabled?["/agent/continuity/context","/agent/continuity/search","/agent/continuity/task"]:[]),
+    ...(copyStageRecovery?["/agent/async-copy/stage-inspect","/agent/async-copy/stage-cleanup"]:[]),
     ...(processesEnabled?["/agent/process/start","/agent/process/status","/agent/process/read","/agent/process/input","/agent/process/stop"]:[])];
  if(req.method!=="POST"||!allowedAgentRoutes.includes(req.url))
   return json(res,404,{code:"NOT_FOUND"});
@@ -128,16 +124,12 @@ async function handleAgent(req,res){
     if(!["start","status","read","input","stop"].includes(op))throw Error("UNSUPPORTED_OPERATION");
     return json(res,200,await processes[op](a));
   }
-  if(memoryReadEnabled&&req.url.startsWith("/agent/continuity/")){
-    const op=req.url.slice("/agent/continuity/".length);
-    const allowed={context:"get_project_context",search:"search_memory",task:"get_task"};
-    if(!Object.hasOwn(allowed,op))throw Error("UNSUPPORTED_OPERATION");
-    return json(res,200,await memoryRead.call(allowed[op],a));
-  }
   if(asyncCopyRequested&&req.url.startsWith("/agent/async-copy/")){
     const op=req.url.slice("/agent/async-copy/".length);
-    if(!["start","status","read","stop"].includes(op))throw Error("UNSUPPORTED_OPERATION");
-    return json(res,200,await asyncCopy[op](a));
+    const method={start:"start",status:"status",read:"read",stop:"stop",
+     ...(copyStageRecovery?{"stage-inspect":"inspectStage","stage-cleanup":"cleanupStage"}:{})}[op];
+    if(!method)throw Error("UNSUPPORTED_OPERATION");
+    return json(res,200,await asyncCopy[method](a));
   }
   if(asyncHashEnabled&&req.url.startsWith("/agent/async-hash/")){
     const op=req.url.slice("/agent/async-hash/".length);

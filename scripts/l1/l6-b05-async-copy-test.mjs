@@ -62,6 +62,27 @@ try{
  assert.equal(r.status({processId:failed.processId}).state,"FAILED");
  assert.equal(existsSync(bad),false);
  console.log("PASS wrong source hash, existing destination reject without publishing");
+ // Simulate the exact sealed stage identity left by an abrupt native-helper
+ // SIGKILL. Test only; no real user file or general-purpose cleanup path.
+ const record=b2.state.copyJobs.find(x=>x.processId===failed.processId);
+ assert.ok(record?.stageId);
+ const stage=join(work,".personal-copy-"+record.stageId+".stage");
+ writeFileSync(stage,"ORPHAN_PARTIAL_COPY",{mode:0o600,flag:"wx"});
+ const inspection=await r.inspectStage({processId:failed.processId});
+ assert.equal(inspection.state,"ORPHAN_STAGE_REVIEW");
+ assert.equal(inspection.stageSha256,sha("ORPHAN_PARTIAL_COPY"));
+ await assert.rejects(()=>r.cleanupStage({processId:failed.processId,
+   expectedStageSha256:sha("WRONG"),expectedDev:inspection.stageDev,
+   expectedIno:inspection.stageIno}),/COPY_STAGE_PRECONDITION_MISMATCH/);
+ assert.equal(readFileSync(stage,"utf8"),"ORPHAN_PARTIAL_COPY");
+ const cleaned=await r.cleanupStage({processId:failed.processId,
+   expectedStageSha256:inspection.stageSha256,expectedDev:inspection.stageDev,
+   expectedIno:inspection.stageIno});
+ assert.equal(cleaned.changed,true);assert.equal(existsSync(stage),false);
+ assert.equal((await r.cleanupStage({processId:failed.processId,
+   expectedStageSha256:inspection.stageSha256,expectedDev:inspection.stageDev,
+   expectedIno:inspection.stageIno})).changed,false);
+ console.log("PASS sealed-stage inspection, wrong hash refusal and exact cleanup");
  const symlink=join(work,"link");symlinkSync(state,symlink);
  await assert.rejects(()=>r.start({source,destination:join(symlink,"escape"),
   expectedSourceSha256:expected,idempotencyKey:randomUUID()}),/OWNER_CONTROL_PATH_DENIED/);

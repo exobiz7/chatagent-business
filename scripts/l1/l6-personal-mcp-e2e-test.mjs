@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
-import http from "node:http";
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,realpathSync,chmodSync,rmSync,existsSync,readdirSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -10,30 +9,12 @@ import {setTimeout as delay} from "node:timers/promises";
 import {L1Broker} from "./broker-core.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const root=realpathSync(mkdtempSync(join(tmpdir(),"chatagent-l6-b05-copy-memory-mcp-")));
-const state=join(root,"owner"),key=join(root,"agent.key"),mcpKey=join(root,"mcp.key"),
- memoryKey=join(root,"memory.key");
+const state=join(root,"owner"),key=join(root,"agent.key"),mcpKey=join(root,"mcp.key");
 mkdirSync(join(root,"work"),{mode:0o700});
 const b=new L1Broker(state,{initialize:true});
 b.pair("12345678");b.setMode("FULL_HOST","12345678");
 const agentToken=randomBytes(32).toString("base64url"),mcpToken=randomBytes(32).toString("base64url");
 writeFileSync(key,agentToken,{mode:0o600});writeFileSync(mcpKey,mcpToken,{mode:0o600});
-const memoryToken=randomBytes(32).toString("base64url");
-writeFileSync(memoryKey,memoryToken,{mode:0o600});
-const knownTask=randomUUID(),otherTask=randomUUID(),memoryCalls=[];
-const memory=http.createServer(async(req,res)=>{
- let raw="";for await(const b of req)raw+=String(b);
- const args=JSON.parse(raw||"{}");
- memoryCalls.push({method:req.method,path:req.url,authenticated:req.headers.authorization==="Bearer "+memoryToken});
- const respond=(status,obj)=>{res.writeHead(status,{"content-type":"application/json"});res.end(JSON.stringify(obj));};
- if(req.headers.authorization!=="Bearer "+memoryToken)return respond(401,{error:{code:"UNAUTHORIZED"}});
- if(req.url==="/v1/projects/context")return respond(200,{project:{projectId:args.projectId},contextSeq:1});
- if(req.url==="/v1/search")return respond(200,{matches:[{projectId:args.projectId,type:"checkpoint"}]});
- if(req.url==="/v1/tasks/get")return respond(200,{task:{taskId:args.taskId,
-    projectId:args.taskId===knownTask?"personal-lab":"outside-project"}});
- respond(404,{error:{code:"NOT_FOUND"}});
-});
-await new Promise(resolve=>memory.listen(0,"127.0.0.1",resolve));
-const memoryPort=memory.address().port;
 const freePort=async()=>{
  const s=net.createServer();
  return new Promise((resolve,reject)=>{s.once("error",reject);s.listen(0,"127.0.0.1",()=>{
@@ -89,8 +70,7 @@ try{
    L1_NATIVE_CREATE_ENABLED:"1",L1_NATIVE_CREATE_BIN:native,L1_NATIVE_CREATE_SHA256:binarySha,
    L1_HOST_EXEC_ENABLED:"1",L1_DURABLE_PROCESS_ENABLED:"1",L1_ASYNC_HASH_ENABLED:"1",
    L1_ASYNC_COPY_ENABLED:"1",L1_NATIVE_COPY_BIN:nativeCopy,L1_NATIVE_COPY_SHA256:copySha,
-   L1_PERSONAL_MEMORY_READ_ENABLED:"1",L1_MEMORY_BASE_URL:"http://127.0.0.1:"+memoryPort,
-   L1_MEMORY_TOKEN_FILE:memoryKey,L1_MEMORY_ALLOWED_PROJECTS:"personal-lab"},
+   L1_COPY_STAGE_RECOVERY_ENABLED:"1"},
   stdio:"ignore"
  });
  await wait(server,brokerPort);
@@ -98,12 +78,14 @@ try{
   env:{...process.env,L0_AUTH_FILE:mcpKey,L0_PORT:String(mcpPort),L1_AGENT_KEY_FILE:key,
    L1_BROKER_URL:"http://127.0.0.1:"+brokerPort,L1_POWERUSER_TOOLS:"1",
    L1_SEMANTIC_WRITE_TOOLS:"1",L1_OWNED_SCRATCH_TOOLS:"1",L1_STRICT_MUTATIONS:"1",
-   L1_ASYNC_HASH_TOOLS:"1",L1_ASYNC_COPY_TOOLS:"1",L1_PERSONAL_MEMORY_READ_TOOLS:"1"},
+   L1_ASYNC_HASH_TOOLS:"1",L1_ASYNC_COPY_TOOLS:"1",
+   L1_COPY_STAGE_RECOVERY_TOOLS:"1"},
   stdio:"ignore"
  });
  await wait(mcp,mcpPort);
  const tools=(await request("tools/list")).tools;
- assert.equal(tools.length,30);
+ assert.equal(tools.length,29);
+ assert.equal(Object.hasOwn(tools.find(x=>x.name==="local_copy_stage_cleanup").inputSchema.properties,"path"),false);
  const hashTool=tools.find(x=>x.name==="local_async_hash_start");
  assert.deepEqual(hashTool.annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
  const ctool=tools.find(x=>x.name==="local_scratch_create");
@@ -111,7 +93,7 @@ try{
  assert.deepEqual(ctool.annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
  assert.deepEqual(dtool.annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:false});
  assert.ok(!Object.hasOwn(dtool.inputSchema.properties,"path"));
- console.log("PASS isolated 30-tool inventory with async copy and read-only continuity");
+ console.log("PASS isolated 29-tool standalone personal inventory with owner-only stage recovery");
  const userPath=join(root,"work","native-mcp.txt");
  const nativeCreate=await call("local_create_file",{path:userPath,content:"NATIVE_MCP_OK"});
  assert.equal(nativeCreate.isError,false);
@@ -188,26 +170,40 @@ try{
    expectedSourceSha256:sha(hashData),idempotencyKey:randomUUID()});
  assert.equal(denied.isError,true);assert.equal(denied.value.code,"COPY_DESTINATION_EXISTS");
  console.log("PASS real MCP create-only native async 9MiB copy, final hash, pre-existing denial");
- const context=await call("local_continuity_context",{projectId:"personal-lab"});
- assert.equal(context.value.project.projectId,"personal-lab");
- const search=await call("local_continuity_search",{projectId:"personal-lab",query:"checkpoint",limit:3});
- assert.equal(search.value.matches[0].projectId,"personal-lab");
- const task=await call("local_continuity_task",{taskId:knownTask});
- assert.equal(task.value.task.taskId,knownTask);
- const foreign=await call("local_continuity_task",{taskId:otherTask});
- assert.equal(foreign.isError,true);assert.equal(foreign.value.code,"MEMORY_PROJECT_DENIED");
- const wrongProject=await call("local_continuity_context",{projectId:"other-project"});
- assert.equal(wrongProject.isError,true);assert.equal(wrongProject.value.code,"MEMORY_PROJECT_DENIED");
- assert.ok(memoryCalls.every(x=>x.authenticated&&x.method==="POST"&&
-  ["/v1/projects/context","/v1/search","/v1/tasks/get"].includes(x.path)));
- console.log("PASS three P8-compatible read-only memory tools and project isolation");
- console.log("L6_B05_COPY_MEMORY_MCP=PASS");
-}catch(e){console.error("L6_B05_COPY_MEMORY_MCP=FAIL "+e.stack);process.exitCode=1;}
+ const corrupt=await call("local_async_copy_start",{source:hashPath,
+   destination:join(root,"work","bad-copy.bin"),
+   expectedSourceSha256:sha("WRONG"),idempotencyKey:randomUUID()});
+ assert.equal(corrupt.isError,false);
+ for(let i=0;i<110;i++){
+  const st=await call("local_async_copy_status",{processId:corrupt.value.processId});
+  if(st.value.state==="FAILED")break;
+  if(i===109)throw Error("BAD_COPY_NOT_TERMINAL");
+  await delay(70);
+ }
+ const initial=await call("local_copy_stage_inspect",{processId:corrupt.value.processId});
+ assert.equal(initial.value.state,"STAGE_ABSENT_UNVERIFIED");
+ const stage=join(root,"work",".personal-copy-"+initial.value.stageId+".stage");
+ writeFileSync(stage,"ISOLATED_ORPHAN_STAGE",{mode:0o600,flag:"wx"});
+ const found=await call("local_copy_stage_inspect",{processId:corrupt.value.processId});
+ assert.equal(found.value.stageSha256,sha("ISOLATED_ORPHAN_STAGE"));
+ const mismatch=await call("local_copy_stage_cleanup",{processId:corrupt.value.processId,
+  expectedStageSha256:sha("wrong"),expectedDev:found.value.stageDev,
+  expectedIno:found.value.stageIno});
+ assert.equal(mismatch.isError,true);
+ const exact=await call("local_copy_stage_cleanup",{processId:corrupt.value.processId,
+  expectedStageSha256:found.value.stageSha256,expectedDev:found.value.stageDev,
+  expectedIno:found.value.stageIno});
+ assert.equal(exact.isError,false);assert.equal(exact.value.changed,true);
+ assert.equal(existsSync(stage),false);
+ console.log("PASS owner-only MCP stage inspection, wrong digest denial, exact cleanup");
+ assert.equal(tools.some(x=>x.name.startsWith("local_continuity_")),false);
+ console.log("PASS no P8 continuity endpoint or shared-memory dependency in personal MCP");
+ console.log("PERSONAL_29_TOOL_MCP=PASS");
+}catch(e){console.error("PERSONAL_29_TOOL_MCP=FAIL "+e.stack);process.exitCode=1;}
 finally{
  if(mcp)mcp.kill("SIGTERM");
  if(server)server.kill("SIGTERM");
  await delay(400);
- await new Promise(resolve=>memory.close(resolve));
  rmSync(root,{recursive:true,force:true});
  console.log("isolated_fixture_cleanup=COMPLETE");
 }

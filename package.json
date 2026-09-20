@@ -4,7 +4,18 @@
   "private": true,
   "description": "Standalone single-owner macOS Power-User MCP development product",
   "type": "module",
-  "engines": {"node": ">=24.0.0"},
-  "scripts": {"test": "node scripts/l1/l6-b05-copy-memory-mcp-test.mjs", "test:copy": "node scripts/l1/l6-b05-async-copy-test.mjs", "test:memory": "node scripts/l1/l6-personal-memory-read-test.mjs"},
-  "dependencies": {"@modelcontextprotocol/sdk":"1.30.0", "zod":"4.4.3"}
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "test": "node scripts/run-personal-tests.mjs",
+    "test:copy": "node scripts/l1/l6-b05-async-copy-test.mjs",
+    "test:stage": "node scripts/l1/personal-copy-e2e-kill-test.mjs",
+    "test:compat": "node test/compat/p8-read-adapter-test.mjs",
+    "test:ssd": "node scripts/l1/personal-ssd-copy-test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "4.4.3"
+  }
 }
