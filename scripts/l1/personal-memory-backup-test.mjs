@@ -1,6 +1,6 @@
 import {spawnSync} from "node:child_process";
 import assert from "node:assert/strict";
-import {mkdtempSync,realpathSync,mkdirSync,readFileSync,writeFileSync,rmSync,existsSync,chmodSync,statSync} from "node:fs";
+import {mkdtempSync,realpathSync,mkdirSync,readFileSync,writeFileSync,rmSync,existsSync,chmodSync,statSync,renameSync} from "node:fs";
 import {join} from "node:path";
 import {randomUUID,createHash} from "node:crypto";
 import {PersonalMemoryStore} from "./personal-memory-store.mjs";
@@ -48,6 +48,28 @@ const run=async()=>{
    }}}),/BACKUP_DESTINATION_EXISTS/);
   assert.equal(readFileSync(join(racing,"protected"),"utf8"),"ORIGINAL");
   console.log("PASS native conditional directory publish denies between-check destination collision");
+  // A swapped staging directory must never be recursively removed.
+  const blocked=join(root,"blocked-restore"),quarantine=join(root,"retained-original-stage");
+  let replacement=null;
+  assert.throws(()=>restorePersonalMemory({backupDir:bundle,destinationDir:blocked,
+   ownerStatus,...publish,testHooks:{
+    beforePublish:({destinationDir})=>{
+     mkdirSync(destinationDir,{mode:0o700});
+     writeFileSync(join(destinationDir,"protected"),"ORIGINAL",{mode:0o600,flag:"wx"});
+    },
+    beforeCleanup:({path})=>{
+     replacement=path;
+     renameSync(path,quarantine);
+     mkdirSync(path,{mode:0o700});
+     writeFileSync(join(path,"protected"),"REPLACEMENT",{mode:0o600,flag:"wx"});
+    }
+   }}),e=>e.message==="BACKUP_DESTINATION_EXISTS"&&e.cleanupState==="UNCERTAIN"&&
+      e.stagePath===replacement);
+  assert.equal(readFileSync(join(blocked,"protected"),"utf8"),"ORIGINAL");
+  assert.equal(readFileSync(join(replacement,"protected"),"utf8"),"REPLACEMENT");
+  assert.ok(existsSync(join(quarantine,"memory.sqlite")));
+  console.log("PASS substituted restore stage retained; existing target untouched");
+
   const manifest=join(bundle,"backup-manifest.json"),before=readFileSync(manifest);
   writeFileSync(manifest,before.toString().replace('"schemaVersion":1','"schemaVersion":2'));
   assert.throws(()=>restorePersonalMemory({backupDir:bundle,
@@ -66,6 +88,19 @@ const run=async()=>{
    ownerStatus,testHooks:{beforeSnapshot:()=>{throw Error("TEST_INTERRUPTED");}}}),
    /TEST_INTERRUPTED/);
   assert.equal(existsSync(interrupted),false);
+  // Preserve the primary operation error and an unexpected entry, with no sweep.
+  const intruded=join(root,"interrupted-with-foreign-entry");
+  await assert.rejects(()=>backupPersonalMemory({sourceDir:original,
+   destinationDir:intruded,ownerStatus,testHooks:{
+    beforeSnapshot:()=>{throw Error("TEST_EXPECTED_ABORT");},
+    beforeCleanup:({path})=>{
+     writeFileSync(join(path,"unrelated"),"PRESERVE",{mode:0o600,flag:"wx"});
+    }
+   }}),e=>e.message==="TEST_EXPECTED_ABORT"&&e.cleanupState==="UNCERTAIN"&&
+       e.stagePath===intruded);
+  assert.equal(readFileSync(join(intruded,"unrelated"),"utf8"),"PRESERVE");
+  console.log("PASS interrupted backup cleanup refuses unexpected entry");
+
   await assert.rejects(()=>backupPersonalMemory({sourceDir:original,
    destinationDir:join(root,"unpaired"),ownerStatus:()=>({paired:false})}),/BACKUP_OWNER_REQUIRED/);
   const concurrentlyChanged=join(root,"changed-source");

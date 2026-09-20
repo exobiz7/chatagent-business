@@ -5,7 +5,7 @@ import {DatabaseSync,backup as sqliteBackup} from "node:sqlite";
 import {spawnSync} from "node:child_process";
 import {
  existsSync,mkdirSync,lstatSync,readFileSync,writeFileSync,realpathSync,
- copyFileSync,chmodSync,rmSync,renameSync,openSync,fsyncSync,closeSync,unlinkSync
+ copyFileSync,chmodSync,readdirSync,rmdirSync,openSync,fsyncSync,closeSync,unlinkSync
 } from "node:fs";
 import {join,dirname,resolve,isAbsolute,sep} from "node:path";
 import {randomUUID,createHash,createHmac,timingSafeEqual} from "node:crypto";
@@ -47,13 +47,73 @@ const discardOwnedSqliteSidecars=dir=>{
  }
  syncDirectory(dir);
 };
+// Only clean a directory created by THIS offline call. No recursive removal or
+// arbitrary-path API: refuse a replaced root, unexpected entry or symlink.
+const files=["memory-seal.key","memory-head.json","memory.sqlite"];
+const transientFiles=new Set([...files,"backup-manifest.json",
+ "memory.sqlite-wal","memory.sqlite-shm"]);
+const rootIdentity=path=>{
+ const parent=lstatSync(dirname(path)),stage=lstatSync(path);
+ if(!parent.isDirectory()||parent.isSymbolicLink()||(parent.mode&0o077)!==0||
+    parent.uid!==process.getuid()||!stage.isDirectory()||stage.isSymbolicLink()||
+    (stage.mode&0o077)!==0||stage.uid!==process.getuid())
+  error("BACKUP_CLEANUP_UNCERTAIN");
+ return {parentDev:parent.dev,parentIno:parent.ino,dev:stage.dev,ino:stage.ino};
+};
+const cleanupNewRoot=(path,identity,testHooks=null)=>{
+ const matches=()=>{
+  const now=rootIdentity(path);
+  if(!identity||Object.keys(now).some(key=>now[key]!==identity[key]))
+   error("BACKUP_CLEANUP_UNCERTAIN");
+ };
+ const entries=()=>{
+  matches();
+  return readdirSync(path).sort().map(name=>{
+   if(!transientFiles.has(name))error("BACKUP_CLEANUP_UNCERTAIN");
+   const file=join(path,name),st=lstatSync(file);
+   if(!st.isFile()||st.isSymbolicLink()||st.nlink!==1||
+      (st.mode&0o077)!==0||st.uid!==process.getuid())
+    error("BACKUP_CLEANUP_UNCERTAIN");
+   return {name,dev:st.dev,ino:st.ino,bytes:st.size};
+  });
+ };
+ const initial=entries();
+ testHooks?.beforeCleanup?.({path});
+ const current=entries();
+ if(JSON.stringify(initial)!==JSON.stringify(current))
+  error("BACKUP_CLEANUP_UNCERTAIN");
+ for(const item of initial){
+  matches();
+  const file=join(path,item.name),st=lstatSync(file);
+  if(!st.isFile()||st.isSymbolicLink()||st.nlink!==1||
+     st.uid!==process.getuid()||(st.mode&0o077)!==0||
+     st.dev!==item.dev||st.ino!==item.ino||st.size!==item.bytes)
+   error("BACKUP_CLEANUP_UNCERTAIN");
+  unlinkSync(file);
+ }
+ matches();
+ if(readdirSync(path).length)error("BACKUP_CLEANUP_UNCERTAIN");
+ rmdirSync(path);
+ syncDirectory(dirname(path));
+};
+const preserveCleanupError=(primary,cleanupError,path)=>{
+ if(primary&&typeof primary==="object"){
+  primary.cleanupState="UNCERTAIN";
+  primary.cleanupError=cleanupError;
+  primary.stagePath=path;
+  return;
+ }
+ const e=Error("BACKUP_CLEANUP_UNCERTAIN",{cause:cleanupError});
+ e.cleanupState="UNCERTAIN";
+ e.stagePath=path;
+ throw e;
+};
 const writeExclusive=(path,body)=>{
  writeFileSync(path,body,{flag:"wx",mode:0o600});
  const fd=openSync(path,"r");try{fsyncSync(fd);}finally{closeSync(fd);}
 };
 const equal=(a,b)=>typeof a==="string"&&typeof b==="string"&&a.length===b.length&&
  timingSafeEqual(Buffer.from(a),Buffer.from(b));
-const files=["memory-seal.key","memory-head.json","memory.sqlite"];
 const validateRoot=(p)=>{
  ownedDir(p);for(const file of files)ownedFile(join(p,file));
  const key=readFileSync(join(p,files[0]));
@@ -125,10 +185,10 @@ export async function backupPersonalMemory({sourceDir,destinationDir,ownerStatus
  newRoot(destinationDir);
  const {key,head}=validateRoot(sourceDir);
  const source=verifyOfflineRoot(sourceDir,ownerStatus);
- let folderCreated=false,db;
+ let folderCreated=false,rootId=null,accepted=false,primaryError=null,db;
  try{
   mkdirSync(destinationDir,{mode:0o700});folderCreated=true;
-  ownedDir(destinationDir);
+  rootId=rootIdentity(destinationDir);
   testHooks?.beforeSnapshot?.();
   db=new DatabaseSync(join(sourceDir,"memory.sqlite"),{readOnly:true});
   await sqliteBackup(db,join(destinationDir,"memory.sqlite"));
@@ -152,12 +212,20 @@ export async function backupPersonalMemory({sourceDir,destinationDir,ownerStatus
    JSON.stringify({...payload,mac})+"\n");
   syncDirectory(destinationDir);
   const verified=checkBundle(destinationDir,ownerStatus);
+  // If only parent durability is uncertain, retain the verified backup for
+  // exact reconciliation rather than deleting an otherwise completed effect.
+  accepted=true;
   syncDirectory(dirname(destinationDir));
   return {seq:verified.seq,eventHash:verified.eventHash,
    destination:destinationDir,containsSealKey:true,verified:true};
  }catch(e){
-  if(folderCreated)rmSync(destinationDir,{recursive:true,force:true});
-  throw e;
+  primaryError=e;
+  if(accepted){e.effect="CREATED_DURABILITY_UNCERTAIN";e.destination=destinationDir;}
+  if(folderCreated&&!accepted){
+   try{cleanupNewRoot(destinationDir,rootId,testHooks);}
+   catch(cleanupError){preserveCleanupError(e,cleanupError,destinationDir);}
+  }
+  throw primaryError;
  }finally{db?.close();}
 }
 const validatePublishHelper=(helperPath,helperSha256)=>{
@@ -179,9 +247,10 @@ export function restorePersonalMemory({backupDir,destinationDir,ownerStatus,
  if(!isAbsolute(backupDir??"")||legacyRoot(backupDir))error("BACKUP_PATH_UNSAFE");
  const manifest=checkBundle(backupDir,ownerStatus);
  const staging=join(dirname(destinationDir),".personal-restore-"+randomUUID());
- let created=false,uncertain=false;
+ let created=false,uncertain=false,rootId=null,primaryError=null;
  try{
   mkdirSync(staging,{mode:0o700});created=true;
+  rootId=rootIdentity(staging);
   for(const name of files){
    copyFileSync(join(backupDir,name),join(staging,name));
    chmodSync(join(staging,name),0o600);
@@ -212,8 +281,12 @@ export function restorePersonalMemory({backupDir,destinationDir,ownerStatus,
   created=false;
   return {seq:verified.seq,eventHash:verified.lastHash,
    destination:destinationDir,verified:true,containsSealKey:true};
- }finally{
-  // Uncertain native effect must be reconciled, never blindly deleted.
-  if(created&&!uncertain)rmSync(staging,{recursive:true,force:true});
+ }catch(e){primaryError=e;throw e;}
+ finally{
+  // An unknown native outcome is NOT safe to clean or retry.
+  if(created&&!uncertain){
+   try{cleanupNewRoot(staging,rootId,testHooks);}
+   catch(cleanupError){preserveCleanupError(primaryError,cleanupError,staging);}
+  }
  }
 }
