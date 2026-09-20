@@ -29,7 +29,8 @@ const tests=[
  "scripts/l1/personal-36-tool-candidate-test.mjs",
  "scripts/l1/personal-memory-backup-test.mjs",
  "scripts/l1/personal-memory-encrypted-archive-test.mjs",
- "scripts/l1/personal-runner-observation-test.mjs"
+ "scripts/l1/personal-runner-observation-test.mjs",
+ "scripts/l1/personal-stage-sigkill-test.mjs"
 ];
 if(!existsSync("node_modules")||lstatSync("node_modules").isSymbolicLink())
  throw Error("DEPENDENCIES_MUST_BE_INSTALLED_IN_PERSONAL_REPO");

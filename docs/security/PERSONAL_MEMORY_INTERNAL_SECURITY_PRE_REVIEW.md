@@ -39,3 +39,15 @@ assurance, cryptographic lifecycle and independent review remain outstanding.
 See `docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.
 
 On the initial encrypted-archive branch SHA, both macOS CI runs failed before the new archive tests at a pre-existing hash-MCP assertion that required the first post-launch status never be RECOVERY_REQUIRED. The test now observes only the same owned ID for a bounded interval, insisting on EXITED/0 and final SHA; it does not relaunch, disable identity checks or establish the cause of the transient result. Independent runner review remains OPEN.
+
+## 2026-09-21 — Refined controls and residual risk
+
+Actual test-owned SIGKILL of archive and decrypt leaves a signed private
+stage receipt and bounded plaintext tree. Exact operator inspection and
+hash/dev/inode/target-bound cleanup PASS. Restore uses pinned native
+RENAME_EXCL rather than pathname check followed by ordinary rename; a target
+introduced after precheck is not replaced. Offline rewrap uses a distinct key
+and new nonce and leaves the original archive. These are internal engineering
+controls, not clearance: same-UID directory races and plaintext access,
+interrupted cleanup intent, keychain/escrow lifecycle and signed helper build
+remain OPEN. No independent reviewer was assigned.

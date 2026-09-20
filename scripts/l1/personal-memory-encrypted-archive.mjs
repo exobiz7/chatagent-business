@@ -6,6 +6,7 @@ import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,lstatSync,existsSync,rm
  openSync,closeSync,fsyncSync} from "node:fs";
 import {join,dirname,isAbsolute} from "node:path";
 import {backupPersonalMemory,restorePersonalMemory} from "./personal-memory-backup.mjs";
+import {createOwnedStage,inspectOwnedStage,cleanupOwnedStage} from "./personal-stage-recovery.mjs";
 
 const MAX_BACKUP=32*1024*1024; // deliberately bounded candidate, not 32 GiB support
 const names=["memory-seal.key","memory-head.json","memory.sqlite","backup-manifest.json"];
@@ -57,13 +58,17 @@ const unpack=(contents,destination)=>{
  }
  syncDir(destination);
 };
-export async function createEncryptedMemoryArchive({sourceDir,archivePath,archiveKey,ownerStatus}){
+export async function createEncryptedMemoryArchive({sourceDir,archivePath,archiveKey,ownerStatus,
+ testHooks=null}){
  ownerCheck(ownerStatus);archiveKeyCheck(archiveKey);validNew(archivePath);
- const scratch=mkdtempSync(join(dirname(archivePath),".personal-archive-working-"));
+ const owned=createOwnedStage({parentDir:dirname(archivePath),kind:"archive",
+   targetPath:archivePath,archiveKey});
+ const scratch=owned.stage;
  try{
   ownDir(scratch);
   const temporary=join(scratch,"snapshot");
   await backupPersonalMemory({sourceDir,destinationDir:temporary,ownerStatus});
+  testHooks?.afterPlaintextReady?.({stageId:owned.id});
   const memorySeal=readFileSync(join(temporary,"memory-seal.key"));
   if(timingSafeEqual(archiveKey,memorySeal))fail("ARCHIVE_KEY_REUSE_DENIED");
   const plaintext=pack(temporary);
@@ -81,12 +86,18 @@ export async function createEncryptedMemoryArchive({sourceDir,archivePath,archiv
   return {path:archivePath,encrypted:true,containsPlaintextSealKey:false,
    ciphertextSha256:createHash("sha256").update(data).digest("hex")};
  }finally{
-  // Temporary source snapshot contains the seal key! A crash before finally
-  // needs explicit operator orphan review; same-UID actors remain outside scope.
-  rmSync(scratch,{recursive:true,force:true});
+  // Same scope and exact receipt for normal cleanup as for operator recovery.
+  // If uncertain, preserve the stage; never indiscriminately rm -rf.
+  const v=inspectOwnedStage({parentDir:dirname(archivePath),kind:"archive",
+    id:owned.id,targetPath:archivePath,archiveKey});
+  cleanupOwnedStage({parentDir:dirname(archivePath),kind:"archive",
+    id:owned.id,targetPath:archivePath,archiveKey,
+    expectedFingerprint:v.fingerprint,expectedDev:v.stageDev,expectedIno:v.stageIno,
+    confirmation:"DELETE_VERIFIED_PERSONAL_STAGE"});
  }
 }
-export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiveKey,ownerStatus}){
+export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiveKey,ownerStatus,
+ publishHelperPath,publishHelperSha256,testHooks=null}){
  ownerCheck(ownerStatus);archiveKeyCheck(archiveKey);validNew(destinationDir);
  const st=lstatSync(archivePath);
  if(!st.isFile()||st.isSymbolicLink()||st.nlink!==1||(st.mode&0o077)!==0||
@@ -101,7 +112,9 @@ export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiv
  const payload=Buffer.from(encoded.ciphertext,"base64");
  if(nonce.length!==12||tag.length!==16||payload.length>MAX_BACKUP*2)
   fail("ARCHIVE_PAYLOAD_INVALID");
- const scratch=mkdtempSync(join(dirname(destinationDir),".personal-decrypt-working-"));
+ const owned=createOwnedStage({parentDir:dirname(destinationDir),kind:"decrypt",
+  targetPath:destinationDir,archiveKey});
+ const scratch=owned.stage;
  try{
   ownDir(scratch);
   const decipher=createDecipheriv("aes-256-gcm",archiveKey,nonce);
@@ -112,9 +125,67 @@ export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiv
   catch{fail("ARCHIVE_AUTHENTICATION_FAILED");}
   if(raw.length>MAX_BACKUP*2)fail("ARCHIVE_SIZE_LIMIT");
   unpack(raw,scratch);
+  testHooks?.afterPlaintextReady?.({stageId:owned.id});
   const memorySeal=readFileSync(join(scratch,"memory-seal.key"));
   if(timingSafeEqual(archiveKey,memorySeal))fail("ARCHIVE_KEY_REUSE_DENIED");
-  const out=restorePersonalMemory({backupDir:scratch,destinationDir,ownerStatus});
+  const out=restorePersonalMemory({backupDir:scratch,destinationDir,ownerStatus,
+   publishHelperPath,publishHelperSha256,testHooks});
   return {...out,encryptedSource:true};
- }finally{rmSync(scratch,{recursive:true,force:true});}
+ }finally{
+  const v=inspectOwnedStage({parentDir:dirname(destinationDir),kind:"decrypt",
+   id:owned.id,targetPath:destinationDir,archiveKey});
+  cleanupOwnedStage({parentDir:dirname(destinationDir),kind:"decrypt",
+   id:owned.id,targetPath:destinationDir,archiveKey,
+   expectedFingerprint:v.fingerprint,expectedDev:v.stageDev,expectedIno:v.stageIno,
+   confirmation:"DELETE_VERIFIED_PERSONAL_STAGE"});
+ }
+}
+
+// Rewrap a completed archive with a fresh independent key, fresh nonce and new
+// destination; never replaces the existing archive or writes decrypted data.
+// The caller owns Keychain/vault retrieval and must retain the old key until the
+// new archive has been independently verified and its custody confirmed.
+export function rotateEncryptedMemoryArchive({archivePath,newArchivePath,oldArchiveKey,
+ newArchiveKey,ownerStatus}){
+ ownerCheck(ownerStatus);archiveKeyCheck(oldArchiveKey);archiveKeyCheck(newArchiveKey);
+ if(timingSafeEqual(oldArchiveKey,newArchiveKey))fail("ARCHIVE_ROTATION_SAME_KEY");
+ validNew(newArchivePath);
+ const st=lstatSync(archivePath);
+ if(!st.isFile()||st.isSymbolicLink()||st.nlink!==1||(st.mode&0o077)!==0||
+    st.uid!==process.getuid()||st.size>MAX_BACKUP*2)fail("ARCHIVE_FILE_UNSAFE");
+ let encoded;
+ try{encoded=JSON.parse(readFileSync(archivePath,"utf8"));}
+ catch{fail("ARCHIVE_PAYLOAD_INVALID");}
+ if(encoded?.version!==1||encoded.algorithm!=="aes-256-gcm"||
+    !["nonce","tag","ciphertext"].every(k=>typeof encoded[k]==="string"))
+   fail("ARCHIVE_PAYLOAD_INVALID");
+ const nonce=Buffer.from(encoded.nonce,"base64"),tag=Buffer.from(encoded.tag,"base64"),
+  ciphertext=Buffer.from(encoded.ciphertext,"base64");
+ if(nonce.length!==12||tag.length!==16||ciphertext.length>MAX_BACKUP*2)
+   fail("ARCHIVE_PAYLOAD_INVALID");
+ const d=createDecipheriv("aes-256-gcm",oldArchiveKey,nonce);
+ d.setAAD(Buffer.from("chatagent-personal-memory-archive-v1"));d.setAuthTag(tag);
+ let plaintext;
+ try{plaintext=Buffer.concat([d.update(ciphertext),d.final()]);}
+ catch{fail("ARCHIVE_AUTHENTICATION_FAILED");}
+ if(plaintext.length>MAX_BACKUP*2)fail("ARCHIVE_SIZE_LIMIT");
+ let entry;
+ try{entry=JSON.parse(plaintext.toString("utf8"));}
+ catch{fail("ARCHIVE_PAYLOAD_INVALID");}
+ if(entry?.schema!==1||!entry.entries||
+    Object.keys(entry.entries).sort().join(",")!==[...names].sort().join(","))
+   fail("ARCHIVE_PAYLOAD_INVALID");
+ const seal=Buffer.from(entry.entries["memory-seal.key"]??"","base64");
+ if(seal.length!==32||timingSafeEqual(oldArchiveKey,seal)||
+    timingSafeEqual(newArchiveKey,seal))fail("ARCHIVE_KEY_REUSE_DENIED");
+ const nextNonce=randomBytes(12),c=createCipheriv("aes-256-gcm",newArchiveKey,nextNonce);
+ c.setAAD(Buffer.from("chatagent-personal-memory-archive-v1"));
+ const wrapped=Buffer.concat([c.update(plaintext),c.final()]);
+ const output=Buffer.from(JSON.stringify({version:1,algorithm:"aes-256-gcm",
+  nonce:nextNonce.toString("base64"),tag:c.getAuthTag().toString("base64"),
+  ciphertext:wrapped.toString("base64")})+"\n");
+ if(output.length>MAX_BACKUP*2)fail("ARCHIVE_SIZE_LIMIT");
+ fileWrite(newArchivePath,output);syncDir(dirname(newArchivePath));
+ return {path:newArchivePath,rotated:true,oldArchiveRetained:true,
+  ciphertextSha256:createHash("sha256").update(output).digest("hex")};
 }

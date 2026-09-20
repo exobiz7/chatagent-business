@@ -56,3 +56,13 @@ Both initial macOS CI runs on encrypted-archive commit `ac18647b1496569959b7255d
 ## 2026-09-20 — 36-tool candidate CI follow-up
 
 The next SHA `d471ad9d0d6fa0298fcdbead211d1084f6ff0ee7` had one macOS CI SUCCESS and one FAILURE. The failed run passed the corrected 23-tool hash and 29-tool tests, then stopped in the *separate 36-tool candidate test*, which retained the same immediate-RECOVERY_REQUIRED assertion. That third isolated test now also polls only its original owned processId for a bounded time and requires a terminal EXITED/0 plus final SHA before PASS. All original ownership checks, sealed IDs and no-replay behavior remain intact. A mixed CI result on the previous commit is preserved as evidence; no successful run conceals the failure. Further CI on the new revision is required. The source of transient uncertainty is still not independently established.
+
+## 2026-09-21 — New optional archive-stage controls
+
+The separate branch feature/personal-archive-stage-atomic moves offline restore
+to a required SHA-pinned native no-overwrite helper and makes both plaintext
+staging modes HMAC-ownable/reconcilable by an offline operator. New-file AES
+rotation is tested; it does not rotate the store seal or keep a Keychain key.
+See PERSONAL_ARCHIVE_STAGE_ATOMIC_CHECKPOINT.md for evidence and unresolved
+same-UID, orphan-intent and signed build gates. All P8 and current Business
+runtime endpoints remain separate.

@@ -2,9 +2,10 @@
 // Never touches P8 or an existing destination. Backup CONTAINS the seal key:
 // the operator must keep the directory inside encrypted, owner-controlled storage.
 import {DatabaseSync,backup as sqliteBackup} from "node:sqlite";
+import {spawnSync} from "node:child_process";
 import {
- existsSync,mkdirSync,lstatSync,readFileSync,writeFileSync,
- copyFileSync,chmodSync,rmSync,renameSync,openSync,fsyncSync,closeSync
+ existsSync,mkdirSync,lstatSync,readFileSync,writeFileSync,realpathSync,
+ copyFileSync,chmodSync,rmSync,renameSync,openSync,fsyncSync,closeSync,unlinkSync
 } from "node:fs";
 import {join,dirname,resolve,isAbsolute,sep} from "node:path";
 import {randomUUID,createHash,createHmac,timingSafeEqual} from "node:crypto";
@@ -26,10 +27,26 @@ const newRoot=p=>{
  if(typeof p!=="string"||!isAbsolute(p)||p===resolve("/")||legacyRoot(p))
   error("BACKUP_PATH_UNSAFE");
  const parent=dirname(p);ownedDir(parent);
- if(existsSync(p))error("BACKUP_DESTINATION_EXISTS");
+ // existing symlinks are also existing entries, including dangling links.
+ try{lstatSync(p);error("BACKUP_DESTINATION_EXISTS");}
+ catch(e){if(e.code!=="ENOENT")throw e;}
  return p;
 };
 const syncDirectory=p=>{const fd=openSync(p,"r");try{fsyncSync(fd);}finally{closeSync(fd);}};
+const discardOwnedSqliteSidecars=dir=>{
+ // Read-only SQLite verification can create transient WAL/SHM in this uniquely
+ // created staging directory. No sidecar is part of the verified snapshot.
+ for(const name of ["memory.sqlite-wal","memory.sqlite-shm"]){
+  const p=join(dir,name);
+  try{const st=lstatSync(p);
+   if(!st.isFile()||st.isSymbolicLink()||st.nlink!==1||
+      st.uid!==process.getuid()||(st.mode&0o077)!==0)
+    error("BACKUP_SIDECAR_UNSAFE");
+   unlinkSync(p);
+  }catch(e){if(e.code!=="ENOENT")throw e;}
+ }
+ syncDirectory(dir);
+};
 const writeExclusive=(path,body)=>{
  writeFileSync(path,body,{flag:"wx",mode:0o600});
  const fd=openSync(path,"r");try{fsyncSync(fd);}finally{closeSync(fd);}
@@ -143,14 +160,26 @@ export async function backupPersonalMemory({sourceDir,destinationDir,ownerStatus
   throw e;
  }finally{db?.close();}
 }
-export function restorePersonalMemory({backupDir,destinationDir,ownerStatus}){
+const validatePublishHelper=(helperPath,helperSha256)=>{
+ if(typeof helperPath!=="string"||!isAbsolute(helperPath)||
+    !/^[a-f0-9]{64}$/.test(helperSha256??""))
+  error("BACKUP_NATIVE_PUBLISH_REQUIRED");
+ ownedDir(dirname(helperPath));ownedFile(helperPath);
+ const real=realpathSync(helperPath);
+ if(real!==helperPath)error("BACKUP_HELPER_UNSAFE");
+ const actual=sha(readFileSync(helperPath));
+ if(actual!==helperSha256)error("BACKUP_HELPER_HASH_MISMATCH");
+};
+export function restorePersonalMemory({backupDir,destinationDir,ownerStatus,
+ publishHelperPath,publishHelperSha256,testHooks=null}){
  if(typeof ownerStatus!=="function"||ownerStatus()?.paired!==true)
   error("BACKUP_OWNER_REQUIRED");
  newRoot(destinationDir);
+ validatePublishHelper(publishHelperPath,publishHelperSha256);
  if(!isAbsolute(backupDir??"")||legacyRoot(backupDir))error("BACKUP_PATH_UNSAFE");
  const manifest=checkBundle(backupDir,ownerStatus);
  const staging=join(dirname(destinationDir),".personal-restore-"+randomUUID());
- let created=false;
+ let created=false,uncertain=false;
  try{
   mkdirSync(staging,{mode:0o700});created=true;
   for(const name of files){
@@ -161,11 +190,30 @@ export function restorePersonalMemory({backupDir,destinationDir,ownerStatus}){
   const verified=verifyOfflineRoot(staging,ownerStatus);
   if(verified.seq!==manifest.seq||verified.lastHash!==manifest.eventHash)
    error("BACKUP_RESTORE_MISMATCH");
-  if(existsSync(destinationDir))error("BACKUP_DESTINATION_EXISTS");
+  discardOwnedSqliteSidecars(staging);
   syncDirectory(staging);
-  renameSync(staging,destinationDir);created=false;
-  syncDirectory(dirname(destinationDir));
+  // Test hook can create an existing destination *after* all prechecks.
+  testHooks?.beforePublish?.({destinationDir,staging});
+  const stageStat=lstatSync(staging);
+  const result=spawnSync(publishHelperPath,[staging,destinationDir,
+    String(stageStat.dev),String(stageStat.ino)],{
+      timeout:10000,encoding:"utf8",maxBuffer:2048,
+      env:{PATH:"/usr/bin:/bin",LANG:"C"},stdio:["ignore","pipe","pipe"]
+    });
+  if(result.error||result.signal){uncertain=true;error("BACKUP_PUBLISH_UNCERTAIN");}
+  if(result.status!==0){
+   const reason=(result.stderr??"").trim();
+   if(reason==="PUBLISH_DESTINATION_EXISTS")error("BACKUP_DESTINATION_EXISTS");
+   uncertain=true;error("BACKUP_PUBLISH_UNCERTAIN");
+  }
+  if(result.stdout.trim()!=="PUBLISH_DONE"){
+   uncertain=true;error("BACKUP_PUBLISH_UNCERTAIN");
+  }
+  created=false;
   return {seq:verified.seq,eventHash:verified.lastHash,
    destination:destinationDir,verified:true,containsSealKey:true};
- }finally{if(created)rmSync(staging,{recursive:true,force:true});}
+ }finally{
+  // Uncertain native effect must be reconciled, never blindly deleted.
+  if(created&&!uncertain)rmSync(staging,{recursive:true,force:true});
+ }
 }

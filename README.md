@@ -68,3 +68,20 @@ The intermittent runner `RECOVERY_REQUIRED` remains under investigation. Do not
 retry the same uncertain effect on another host/transport. Diagnostic repetitions
 only use new isolated, test-owned effects. See
 `docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.
+
+### Exact orphan recovery, native restore and key rotation — development candidate
+
+An owner-private, HMAC-receipted UUID scratch stage is created *before* an archive
+or decrypt operation produces plaintext. The offline operator can inspect and
+manually clean ONLY that owned stage using its original target, stage dev/ino,
+expected tree fingerprint and explicit confirmation. The SIGKILL test covers
+real archive and decrypt plaintext stages; unattended cleanup and a same-UID
+adversary guarantee are NOT provided. Restoring a memory root requires a
+locally pinned private native macOS no-overwrite publish helper. Archive key
+rotation rewraps ciphertext in memory to a NEW file and retains the old archive;
+keys are still externally supplied, not automatically stored in Keychain.
+
+Full contract: docs/architecture/PERSONAL_ARCHIVE_KEY_STAGE_CONTRACT.md.
+Evidence: docs/verification/PERSONAL_ARCHIVE_STAGE_ATOMIC_CHECKPOINT.md.
+Production use and Business registration remain BLOCKED pending independent
+security review and explicit owner acceptance.

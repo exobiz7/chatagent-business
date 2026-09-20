@@ -44,3 +44,19 @@ Approval for production cutover: **NOT GRANTED**
 Two further CI runs on the first encrypted-archive feature SHA both failed in the pre-existing hash-MCP test on one RECOVERY_REQUIRED observation; neither run reached the new archive tests. The test now polls the original owned processId to a bounded terminal proof, never issuing a second start or relaxing production identity checks. Reviewers must still identify why the observation was uncertain and confirm no false terminal success is possible. This test correction is not a security sign-off.
 
 A further CI failure on `d471ad9d...` occurred in the distinct 36-tool candidate test using the same stale first-observation assertion after its 23-tool and 29-tool tests had passed. All three independent MCP fixtures now use bounded **same-processId status-only observation**, never duplicate start. CI must be reverified on the corrected candidate SHA. This resolves only the test's premature classification; runner /bin/ps uncertainty remains a separate reviewer item.
+
+## 2026-09-21 — Stage/native/rotation candidate for independent review
+
+New branch feature/personal-archive-stage-atomic adds descriptor-relative
+macOS native-restore-publish.c with conditional RENAME_EXCL publication;
+an HMAC-owned archive/decrypt UUID stage receipt, exact SHA/dev/inode-scoped
+operator inspection and cleanup; and offline new-file AES key rewrap. Separate
+SIGKILL fixtures leave real plaintext stage files in both modes and verify
+only the recognized stage is cleaned. A concurrent target inserted after
+restore precheck is refused. The raw key still exists transiently in private
+staging; a same-UID adversary, parent rename race, partial cleanup after
+intent and helper packaging remain explicit OPEN findings. Keychain custody,
+external key escrow, retention and credential recovery are NOT IMPLEMENTED.
+This is engineering evidence, NOT independent sign-off. The accepted P8,
+Business v2 and M16 must not be repointed. See
+PERSONAL_ARCHIVE_KEY_STAGE_CONTRACT.md and the stage verification record.
