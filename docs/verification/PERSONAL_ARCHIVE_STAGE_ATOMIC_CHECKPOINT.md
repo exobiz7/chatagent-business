@@ -25,3 +25,15 @@
 This is not a complete malicious same-UID filesystem-isolation proof: a same-user process could race Node recursive cleanup, rename an intermediate parent after pathname validation, or inspect plaintext in memory/private staging. A crash after cleanup intent may leave uncertain partial effects requiring operator review; never infer cleanup from prefix alone. The archive key is supplied by the caller and is NOT stored in Keychain, rotated on a schedule or escrowed. Backup/restore still require offline/quiescent use. Signed pinned distributable helper, independent security approval, actual Business candidate registration and product cutover are NOT DONE.
 
 Existing P8 Stable, Business v2 and M16 were not modified, copied at runtime, or used as a data store.
+
+## 2026-09-21 — Initial macOS CI test race and correction
+
+The first GitHub macOS CI of commit c80ee6c5e3ff74d4277a382a88050f885dd75463
+passed the preceding 29 tests, then failed the new SIGKILL fixture: the test
+worker emitted READY but continued to publish before the parent SIGKILL.
+This was a test-only synchronization error, not evidence of a production
+helper failure. The isolated test worker now emits READY synchronously and
+blocks for up to 15 seconds until the parent terminates its exact child PID.
+Both archive and decrypt plaintext-stage SIGKILL tests PASS locally with this
+correction. The earlier failed CI is retained as evidence; a new exact-SHA
+CI check is required before claiming portable 30-suite PASS.

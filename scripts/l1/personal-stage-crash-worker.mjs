@@ -1,12 +1,14 @@
 // Test-only worker: parent SIGKILLs this exact process after real plaintext is ready.
-import {readFileSync} from "node:fs";
+import {readFileSync,writeSync} from "node:fs";
 import {createEncryptedMemoryArchive,restoreEncryptedMemoryArchive} from "./personal-memory-encrypted-archive.mjs";
 const [mode,source,output,keyFile,helper,helperSha]=process.argv.slice(2);
 const archiveKey=readFileSync(keyFile);
 const onReady=({stageId})=>{
- process.stdout.write("PERSONAL_STAGE_PLAINTEXT_READY "+stageId+"\n");
- // The parent can now terminate *only this process*. Never resumes its work.
- setInterval(()=>{},10000);
+ // Synchronous pipe write and bounded, blocking test-only hold: the source
+ // cannot finish/publish before the parent kills this exact child PID.
+ writeSync(1,"PERSONAL_STAGE_PLAINTEXT_READY "+stageId+"\n");
+ Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,15000);
+ throw Error("TEST_HOLD_EXPIRED_WITHOUT_SIGKILL");
 };
 if(mode==="archive"){
  await createEncryptedMemoryArchive({sourceDir:source,archivePath:output,archiveKey,
