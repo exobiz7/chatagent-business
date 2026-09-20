@@ -42,3 +42,5 @@ Approval for production cutover: **NOT GRANTED**
 ## Additional CI observation
 
 Two further CI runs on the first encrypted-archive feature SHA both failed in the pre-existing hash-MCP test on one RECOVERY_REQUIRED observation; neither run reached the new archive tests. The test now polls the original owned processId to a bounded terminal proof, never issuing a second start or relaxing production identity checks. Reviewers must still identify why the observation was uncertain and confirm no false terminal success is possible. This test correction is not a security sign-off.
+
+A further CI failure on `d471ad9d...` occurred in the distinct 36-tool candidate test using the same stale first-observation assertion after its 23-tool and 29-tool tests had passed. All three independent MCP fixtures now use bounded **same-processId status-only observation**, never duplicate start. CI must be reverified on the corrected candidate SHA. This resolves only the test's premature classification; runner /bin/ps uncertainty remains a separate reviewer item.

@@ -131,16 +131,18 @@ try{
  const hashKey=randomUUID();
  const hashJob=await call("local_async_hash_start",{path:hashPath,idempotencyKey:hashKey});
  assert.equal(hashJob.isError,false);assert.ok(hashJob.value.processId);
- let terminal;
+ let terminal,uncertainObservations=0;
  for(let i=0;i<120;i++){
   const status=await call("local_async_hash_status",{processId:hashJob.value.processId});
   assert.equal(status.isError,false);
   if(status.value.state==="EXITED"){terminal=status.value;break;}
-  if(status.value.state==="FAILED"||status.value.state==="RECOVERY_REQUIRED")
+  if(status.value.state==="RECOVERY_REQUIRED")uncertainObservations++;
+  else if(["FAILED","TERMINATED"].includes(status.value.state))
    throw Error("HASH_FAILED_"+status.value.state);
   await delay(80);
  }
- assert.ok(terminal,"HASH_TERMINAL_TIMEOUT");
+ assert.ok(terminal,"HASH_TERMINAL_TIMEOUT_UNKNOWN_"+uncertainObservations);
+ console.log("HASH_UNCERTAIN_OBSERVATIONS="+uncertainObservations);
  const result=await call("local_async_hash_read",{processId:hashJob.value.processId,cursor:0,maxBytes:16384});
  assert.equal(result.isError,false);assert.equal(result.value.exitCode,0);
  assert.match(result.value.content,/HASH_PROGRESS/);
@@ -159,7 +161,8 @@ try{
  for(let i=0;i<120;i++){
   const status=await call("local_async_copy_status",{processId:cp.value.processId});
   if(status.value.state==="EXITED"){cpTerminal=status.value;break;}
-  if(["FAILED","RECOVERY_REQUIRED"].includes(status.value.state))throw Error("ASYNC_COPY_FAILED");
+  if(["FAILED","TERMINATED"].includes(status.value.state))throw Error("ASYNC_COPY_FAILED");
+  // Observe this same processId only; never duplicate an uncertain copy effect.
   await delay(80);
  }
  assert.ok(cpTerminal,"ASYNC_COPY_TIMEOUT");
