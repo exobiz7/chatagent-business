@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+!*.env.example
+*.key
+*.token
+artifacts/
+.DS_Store
+.private/

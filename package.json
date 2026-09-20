@@ -1,0 +1,10 @@
+{
+  "name": "chatagent-personal",
+  "version": "0.1.0-development",
+  "private": true,
+  "description": "Standalone single-owner macOS Power-User MCP development product",
+  "type": "module",
+  "engines": {"node": ">=24.0.0"},
+  "scripts": {"test": "node scripts/l1/l6-b05-copy-memory-mcp-test.mjs", "test:copy": "node scripts/l1/l6-b05-async-copy-test.mjs", "test:memory": "node scripts/l1/l6-personal-memory-read-test.mjs"},
+  "dependencies": {"@modelcontextprotocol/sdk":"1.30.0", "zod":"4.4.3"}
+}
