@@ -8,7 +8,7 @@ import net from "node:net";
 import {setTimeout as delay} from "node:timers/promises";
 import {L1Broker} from "./broker-core.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
-const root=realpathSync(mkdtempSync(join(tmpdir(),"chatagent-l6-scratch-mcp-")));
+const root=realpathSync(mkdtempSync(join(realpathSync("/tmp"),"psm-")));
 const state=join(root,"owner"),key=join(root,"agent.key"),mcpKey=join(root,"mcp.key");
 mkdirSync(join(root,"work"),{mode:0o700});
 const b=new L1Broker(state,{initialize:true});

@@ -36,3 +36,7 @@ The new personal product does NOT call the live P8 container, persist its token,
 ## 5. Open gates
 
 Separate product data store and checkpoint implementation; stage/path malicious same-UID threat review, interrupted-commit reconciliation; representative M16 copied-asset workload and larger SSD tests; signed helper artifact, independent security review; actual new private Business app registration and release rollback. Existing-target atomic replace remains UNAVAILABLE. All feature flags stay default OFF. This report is engineering evidence, not independent security sign-off or product acceptance.
+
+## 6. Portable macOS CI fixture paths
+
+The first standalone GitHub Actions run failed in the existing 19-tool scratch MCP fixture at disposable Broker startup after thirteen preceding tests passed; the original fixture discarded child stderr. The CI runner uses a longer macOS temporary directory path, potentially exceeding the Unix-domain socket pathname limit. Three socket-based MCP test fixtures now resolve the canonical short /tmp directory and use short unique prefixes. All modified fixtures re-passed locally. This is a **CI portability correction**, not a change to production Broker socket or an independent security acceptance. Final CI outcome must be checked after the correction.
