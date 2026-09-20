@@ -42,3 +42,13 @@ subsequent starts and `PERSONAL_MEMORY_TOOLS=1` in the separately authenticated 
 process. Do not reuse P8 or any other product state or credential. Memory functions
 require a paired owner but are not tied to FULL_HOST permission. These flags remain
 OFF in the existing apps.
+
+### Offline backup candidate (NOT production-ready)
+
+`personal-memory-backup.mjs` offers library-only backup into a **new** owner-private bundle
+and verified restore into a **new** personal root. It has no MCP endpoint. The bundle contains
+a copy of the raw 32-byte memory seal key; treat it as a credential and only keep it in an
+independently encrypted, access-controlled location. Stop writers before invoking backup.
+A changing source fails closed. There is no managed key rotation, backup scheduler or
+P8 migration. Run `node scripts/l1/personal-memory-backup-test.mjs` for an isolated test.
+Details: `docs/verification/PERSONAL_MEMORY_BACKUP_RECOVERY_CHECKPOINT.md`.

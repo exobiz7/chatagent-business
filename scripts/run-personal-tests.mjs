@@ -26,7 +26,8 @@ const tests=[
  "scripts/l1/personal-memory-store-test.mjs",
  "scripts/l1/personal-memory-mcp-test.mjs",
  "scripts/l1/personal-memory-physical-restart-test.mjs",
- "scripts/l1/personal-36-tool-candidate-test.mjs"
+ "scripts/l1/personal-36-tool-candidate-test.mjs",
+ "scripts/l1/personal-memory-backup-test.mjs"
 ];
 if(!existsSync("node_modules")||lstatSync("node_modules").isSymbolicLink())
  throw Error("DEPENDENCIES_MUST_BE_INSTALLED_IN_PERSONAL_REPO");

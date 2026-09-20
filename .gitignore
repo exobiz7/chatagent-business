@@ -7,3 +7,9 @@ node_modules/
 artifacts/
 .DS_Store
 .private/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+memory-head.json
+backup-manifest.json
+backups/

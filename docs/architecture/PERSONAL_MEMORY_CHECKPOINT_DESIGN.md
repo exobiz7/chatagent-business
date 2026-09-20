@@ -36,3 +36,13 @@ Test isolated personal state only: (1) wrong-project taskId denial before disclo
 ## 5. Implementation status (2026-09-20)
 
 The independent personal product now contains `scripts/l1/personal-memory-store.mjs` using Node 24 built-in SQLite, a distinct owner-private database, random HMAC seal key, signed append-only event chain, and sealed high-watermark. Seven optional personal memory MCP tools have direct owner/project/revision/idempotency scopes and do not require FULL_HOST. `docs/verification/PERSONAL_MEMORY_IMPLEMENTATION_CHECKPOINT.md` records isolated local/MCP/restart tests. The signed/verified event suffix can reconcile a DB commit before head promotion, while corruption and signed-head-ahead truncation fail closed. The physical SIGKILL test uses only a disposable personal worker. This implementation does not make the P8-compatible adapter (kept under `test/compat`) a personal runtime dependency. Backup/restore, retention, concurrency review, Node SQLite API stability, independent security review and actual Business candidate tests remain OPEN.
+
+## 6. Backup and key management candidate
+
+`personal-memory-backup.mjs` now implements a bounded *offline* private SQLite backup and
+new-root restore with a keyed manifest, full sequential event-HMAC verification and
+source-sequence consistency checks. Backups contain the memory seal key. The design does
+NOT require or import P8 memory, but encrypted storage, external key custody, offline
+rotation, backup schedule, retention, post-crash cleanup and independent security approval
+remain open. No personal production data has been backed up. See
+`docs/verification/PERSONAL_MEMORY_BACKUP_RECOVERY_CHECKPOINT.md`.
