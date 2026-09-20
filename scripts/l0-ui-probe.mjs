@@ -21,6 +21,10 @@ const asyncHashTools=process.env.L1_ASYNC_HASH_TOOLS==="1";
 const asyncCopyTools=process.env.L1_ASYNC_COPY_TOOLS==="1";
 const copyStageTools=process.env.L1_COPY_STAGE_RECOVERY_TOOLS==="1";
 const personalMemoryTools=process.env.PERSONAL_MEMORY_TOOLS==="1";
+// Explicit Personal presentation profile: hide development probes and known
+// unavailable operations. Default development inventory remains unchanged.
+// This is discovery/schema only; L1 still enforces actual authority and effects.
+const personalCoreTools=process.env.PERSONAL_CORE_TOOLS==="1";
 if(copyStageTools&&!asyncCopyTools)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY_TOOLS");
 if(asyncCopyTools&&!powerUserTools)throw Error("ASYNC_COPY_REQUIRES_POWERUSER_TOOLS");
 if(asyncHashTools&&!powerUserTools)throw Error("ASYNC_HASH_REQUIRES_POWERUSER_TOOLS");
@@ -72,9 +76,11 @@ const server=http.createServer(async(req,res)=>{
     const item=requests.get(a.requestId);
     return text({requestId:a.requestId,status:!item?"NOT_FOUND":Date.now()>item.expires?"EXPIRED":item.status,realGrant:false});
   });
-  mcp.registerTool("l0_confirmation_probe",{description:"Harmless L0 write-annotation UI probe. Only increments volatile test counter, never changes files, permissions or settings.",inputSchema:z.strictObject({note:z.string().max(120)}),annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}},async()=>{
-    harmlessWrites++;return text({result:"VOLATILE_COUNTER_UPDATED",counter:harmlessWrites,realEffect:false});
-  });
+  if(!personalCoreTools){
+    mcp.registerTool("l0_confirmation_probe",{description:"Harmless L0 write-annotation UI probe. Only increments volatile test counter, never changes files, permissions or settings.",inputSchema:z.strictObject({note:z.string().max(120)}),annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}},async()=>{
+      harmlessWrites++;return text({result:"VOLATILE_COUNTER_UPDATED",counter:harmlessWrites,realEffect:false});
+    });
+  }
   if(personalMemoryTools){
     if(!l1Url)throw Error("PERSONAL_MEMORY_BROKER_REQUIRED");
     const projectId=z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/);
@@ -129,8 +135,8 @@ const server=http.createServer(async(req,res)=>{
     register("local_read","Read bounded UTF-8 bytes from a regular host file; use local_hash for large/binary files.",
       {path,offset:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(65536).optional()},"file/read",true);
     register("local_hash","Compute SHA-256 and size of a regular host file without returning its contents.",{path},"file/hash",true);
-    register("local_write",strictMutations?"Legacy create mode only in strict mode; existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE. Use local_create_file for non-destructive creation.":"Create or replace a UTF-8 file under persistent FULL_HOST; replace requires exact existing SHA-256.",
-      {path,content:z.string().max(262144),mode:z.enum(["create","replace"]),expectedSha256:sha.nullable()},"file/write");
+    register("local_write",personalCoreTools?"Create a NEW UTF-8 file only under owner FULL_HOST. Existing targets are not replaced; use local_create_file for the simpler create-only contract.":strictMutations?"Legacy create mode only in strict mode; existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE. Use local_create_file for non-destructive creation.":"Create or replace a UTF-8 file under persistent FULL_HOST; replace requires exact existing SHA-256.",
+      {path,content:z.string().max(262144),mode:z.enum(personalCoreTools?["create"]:["create","replace"]),expectedSha256:sha.nullable()},"file/write");
     if(semanticWriteTools){
       // Per MCP annotations, a create-only O_EXCL operation does not overwrite or delete.
       mcp.registerTool("local_create_file",{
@@ -141,7 +147,7 @@ const server=http.createServer(async(req,res)=>{
         try{return text(await brokerCall("file/create",a));}
         catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
       });
-      mcp.registerTool("local_replace_file",{
+      if(!personalCoreTools)mcp.registerTool("local_replace_file",{
         description:strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
         inputSchema:z.strictObject({path,content:z.string().max(262144),expectedSha256:sha}),
         annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
@@ -169,7 +175,7 @@ const server=http.createServer(async(req,res)=>{
         catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
       });
     }
-    register("local_copy",process.env.L1_NATIVE_CREATE_ENABLED==="1"?"UNAVAILABLE in native create-only mode: source-bound copy requires separately reviewed descriptor-anchored implementation.":strictMutations?"Copy source to NEW destination only, with exact source hash; existing-target replacement returns ATOMIC_REPLACE_UNAVAILABLE in strict mode.":"Copy a host file with exact source digest and destination-create/replace preconditions; avoid retry after ambiguous timeout.",
+    if(!personalCoreTools)register("local_copy",process.env.L1_NATIVE_CREATE_ENABLED==="1"?"UNAVAILABLE in native create-only mode: source-bound copy requires separately reviewed descriptor-anchored implementation.":strictMutations?"Copy source to NEW destination only, with exact source hash; existing-target replacement returns ATOMIC_REPLACE_UNAVAILABLE in strict mode.":"Copy a host file with exact source digest and destination-create/replace preconditions; avoid retry after ambiguous timeout.",
       {source:path,destination:path,expectedSourceSha256:sha,expectedDestinationSha256:sha.nullable().optional()},"file/copy");
     if(asyncCopyTools){
       register("local_async_copy_start","Start a create-only, bounded, owned native source-bound copy. Requires exact source SHA-256. Does not replace any existing destination. Progress and final hash require owned status/read.",
@@ -216,7 +222,7 @@ const server=http.createServer(async(req,res)=>{
     register("local_process_status","Status of a process owned by this broker.",{processId:requestId},"process/status",true);
     register("local_process_read","Read bounded UTF-8 output for an owned process with cursor.",
       {processId:requestId,cursor:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(16384).optional()},"process/read",true);
-    register("local_process_input","Send bounded stdin to a currently running owned process.",
+    if(!personalCoreTools)register("local_process_input","Send bounded stdin to a currently running owned process.",
       {processId:requestId,content:z.string().max(16384)},"process/input");
     register("local_process_stop","Stop only a process owned by this broker.",{processId:requestId},"process/stop");
   }

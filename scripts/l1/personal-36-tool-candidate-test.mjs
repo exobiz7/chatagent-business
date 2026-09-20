@@ -23,7 +23,7 @@ const freePort=async()=>{
 };
 const brokerPort=await freePort(),mcpPort=await freePort();
 if(brokerPort===mcpPort)throw Error("PORT_COLLISION");
-let server=null,mcp=null;
+let server=null,mcp=null,coreMcp=null;
 const wait=async(child,port)=>{
  for(let i=0;i<70;i++){
   if(child.exitCode!==null)throw Error("EARLY_EXIT");
@@ -33,8 +33,8 @@ const wait=async(child,port)=>{
  }
  throw Error("READY_TIMEOUT");
 };
-const request=async(method,params={})=>{
- const r=await fetch("http://127.0.0.1:"+mcpPort+"/mcp",{method:"POST",
+const requestAt=async(port,method,params={})=>{
+ const r=await fetch("http://127.0.0.1:"+port+"/mcp",{method:"POST",
   headers:{"content-type":"application/json","accept":"application/json, text/event-stream",
    "x-chatagent-l0-credential":mcpToken},
   body:JSON.stringify({jsonrpc:"2.0",id:randomUUID(),method,params})});
@@ -43,6 +43,7 @@ const request=async(method,params={})=>{
  if(result.error)throw Error(result.error.message);
  return result.result;
 };
+const request=(method,params={})=>requestAt(mcpPort,method,params);
 const call=async(name,args)=>{
  const x=await request("tools/call",{name,arguments:args});
  return {value:x.structuredContent,isError:x.isError===true};
@@ -93,6 +94,58 @@ try{
  assert.equal(toolNames.filter(name=>name.startsWith("personal_")).length,7);
  assert.equal(Object.hasOwn(tools.find(x=>x.name==="local_copy_stage_cleanup").inputSchema.properties,"path"),false);
  console.log("PERSONAL_CANDIDATE_TOOL_NAMES="+JSON.stringify(toolNames));
+ // The opt-in Personal operational profile uses the SAME isolated L1 broker.
+ // Legacy 36-tool development discovery is unchanged for existing tests.
+ const corePort=await freePort();
+ assert.notEqual(corePort,mcpPort);assert.notEqual(corePort,brokerPort);
+ coreMcp=spawn(process.execPath,[new URL("../l0-ui-probe.mjs",import.meta.url).pathname],{
+  env:{...process.env,L0_AUTH_FILE:mcpKey,L0_PORT:String(corePort),L1_AGENT_KEY_FILE:key,
+   L1_BROKER_URL:"http://127.0.0.1:"+brokerPort,L1_POWERUSER_TOOLS:"1",
+   L1_SEMANTIC_WRITE_TOOLS:"1",L1_OWNED_SCRATCH_TOOLS:"1",L1_STRICT_MUTATIONS:"1",
+   L1_NATIVE_CREATE_ENABLED:"1",L1_DURABLE_PROCESS_ENABLED:"1",
+   L1_ASYNC_HASH_TOOLS:"1",L1_ASYNC_COPY_TOOLS:"1",
+   L1_COPY_STAGE_RECOVERY_TOOLS:"1",PERSONAL_MEMORY_TOOLS:"1",
+   PERSONAL_CORE_TOOLS:"1"},
+  stdio:"ignore"
+ });
+ await wait(coreMcp,corePort);
+ const coreTools=(await requestAt(corePort,"tools/list")).tools;
+ const coreNames=coreTools.map(tool=>tool.name);
+ const hidden=["l0_confirmation_probe","local_replace_file","local_copy","local_process_input"];
+ assert.equal(coreNames.length,32);
+ assert.deepEqual(coreNames,toolNames.filter(name=>!hidden.includes(name)));
+ assert.equal(new Set(coreNames).size,32);
+ assert.deepEqual(coreTools.find(x=>x.name==="local_write").inputSchema.properties.mode.enum,["create"]);
+ assert.equal(coreNames.some(name=>/backup|restore|archive|rotate|continuity/.test(name)),false);
+ const coreCall=async(name,args)=>{
+  const x=await requestAt(corePort,"tools/call",{name,arguments:args});
+  return {value:x.structuredContent,isError:x.isError===true};
+ };
+ const coreFile=join(root,"work","core-profile.txt");
+ const coreCreated=await coreCall("local_create_file",{path:coreFile,content:"CORE_PROFILE_OK"});
+ assert.equal(coreCreated.isError,false);assert.equal(coreCreated.value.sha256,sha("CORE_PROFILE_OK"));
+ const coreRead=await coreCall("local_read",{path:coreFile,offset:0,maxBytes:64});
+ assert.equal(coreRead.isError,false);assert.equal(coreRead.value.content,"CORE_PROFILE_OK");
+ const coreMemory=await coreCall("personal_project_register",{
+  projectId:"core-profile-fixture",rootLabel:"Core fixture",operationId:randomUUID()});
+ assert.equal(coreMemory.isError,false);
+ const coreExec=await coreCall("local_exec_start",{
+  executable:process.execPath,argv:["-e",'process.stdout.write("CORE_EXEC_OK")'],
+  cwd:join(root,"work"),timeoutMs:5000,idempotencyKey:randomUUID()});
+ assert.equal(coreExec.isError,false);assert.ok(coreExec.value.processId);
+ let coreTerminal=null;
+ for(let i=0;i<110;i++){
+  const status=await coreCall("local_process_status",{processId:coreExec.value.processId});
+  assert.equal(status.isError,false);
+  if(status.value.state==="EXITED"){coreTerminal=status.value;break;}
+  if(["FAILED","TERMINATED"].includes(status.value.state))throw Error("CORE_EXEC_FAILED");
+  await delay(35);
+ }
+ assert.ok(coreTerminal,"CORE_EXEC_TERMINAL_NOT_CONFIRMED");
+ assert.equal(coreTerminal.exitCode,0);
+ const coreOutput=await coreCall("local_process_read",{processId:coreExec.value.processId,cursor:0,maxBytes:1024});
+ assert.match(coreOutput.value.content,/CORE_EXEC_OK/);
+ console.log("PASS 32-tool core profile: no unavailable placeholders, create/read/memory/owned exec effects");
  const hashTool=tools.find(x=>x.name==="local_async_hash_start");
  assert.deepEqual(hashTool.annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
  const ctool=tools.find(x=>x.name==="local_scratch_create");
@@ -223,6 +276,7 @@ try{
  console.log("PERSONAL_36_TOOL_CANDIDATE=PASS");
 }catch(e){console.error("PERSONAL_36_TOOL_CANDIDATE=FAIL "+e.stack);process.exitCode=1;}
 finally{
+ if(coreMcp)coreMcp.kill("SIGTERM");
  if(mcp)mcp.kill("SIGTERM");
  if(server)server.kill("SIGTERM");
  await delay(400);

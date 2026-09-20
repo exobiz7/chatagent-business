@@ -42,3 +42,8 @@ Inventory comes from `scripts/l0-ui-probe.mjs` and the isolated actual `tools/li
 5. After an identified independent reviewer signs off the *exact enabled profile* AND the owner explicitly approves, register a NEW private Personal Business candidate with independent credentials/state/tunnel. Verify actual chat tool-list and user-owned disposable effects with rollback. Never modify P8, Business v2 or M16, merge PR #5 automatically, or migrate live data during review.
 
 **Internal disposition:** review packet PREPARED; independent review UNASSIGNED/NOT DONE; Business Personal candidate NOT registered; production approval NOT GRANTED.
+
+
+## 2026-09-21 — Operational discovery profile follow-up (later change)
+The default 36-name development inventory remains available to isolated development tests. The new opt-in L0 `PERSONAL_CORE_TOOLS=1` profile hides the volatile `l0_confirmation_probe` and three known-unavailable strict/native/durable commands: `local_replace_file`, `local_copy` and `local_process_input`. Core discovery has **32 names**; `local_write` is advertised with `mode=create` only. No L1 effects or owner gate changed. This addresses truthful discovery; existing-file atomic replace is still **NOT implemented** and remains a product-usability follow-up.
+See `docs/architecture/PERSONAL_CORE_MCP_OPERATIONAL_PROFILE_20260921.md` and the paired 36/32-profile isolated MCP test. Independent review and actual Business-side Personal operation remain NOT DONE.
