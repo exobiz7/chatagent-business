@@ -9,15 +9,27 @@ import { HostProcesses } from "./host-processes.mjs";
 import { DurableHostProcesses } from "./durable-host-processes.mjs";
 import { AsyncHashJobs } from "./async-hash-jobs.mjs";
 import { AsyncCopyJobs } from "./async-copy-jobs.mjs";
-import { dirname } from "node:path";
+import { PersonalMemoryStore } from "./personal-memory-store.mjs";
+import { dirname,resolve,sep,isAbsolute } from "node:path";
 
 const dir=process.env.L1_STATE_DIR;
 const tokenFile=process.env.L1_AGENT_KEY_FILE;
 if(!dir||!tokenFile)throw Error("L1_CONFIG_REQUIRED");
 const broker=new L1Broker(dir);
 const fileOpsEnabled=process.env.L1_FILE_OPS_ENABLED==="1";
+const personalMemoryEnabled=process.env.PERSONAL_MEMORY_ENABLED==="1";
+const personalMemoryRoot=process.env.PERSONAL_MEMORY_STATE_DIR;
+if(personalMemoryEnabled&&(!personalMemoryRoot||!isAbsolute(personalMemoryRoot)))
+ throw Error("PERSONAL_MEMORY_ROOT_REQUIRED");
+const within=(child,parent)=>child===parent||child.startsWith(parent+sep);
+if(personalMemoryEnabled&&(within(resolve(personalMemoryRoot),resolve(dir))||
+   within(resolve(dir),resolve(personalMemoryRoot))))
+ throw Error("PERSONAL_MEMORY_OWNER_ROOT_OVERLAP");
+const memory=personalMemoryEnabled?new PersonalMemoryStore(personalMemoryRoot,{
+ initialize:process.env.PERSONAL_MEMORY_INIT==="1",ownerStatus:()=>broker.status()}):null;
 const supportRoot=dir.includes("/Application Support/chatagent/")?dirname(dirname(dir)):null;
-const files=fileOpsEnabled?new HostFileOps(broker,{privateRoot:dir,protectedRoots:supportRoot?[supportRoot]:[],
+const files=fileOpsEnabled?new HostFileOps(broker,{privateRoot:dir,
+ protectedRoots:[...(supportRoot?[supportRoot]:[]),...(personalMemoryEnabled?[personalMemoryRoot]:[])],
  strictMutations:process.env.L1_STRICT_MUTATIONS==="1",
  nativeCreateBinary:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_BIN:null,
  nativeCreateSha256:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_SHA256:null}):null;
@@ -110,6 +122,10 @@ async function handleAgent(req,res){
     ...(asyncHashEnabled?["/agent/async-hash/start","/agent/async-hash/status", "/agent/async-hash/read","/agent/async-hash/stop"]:[]),
     ...(asyncCopyRequested?["/agent/async-copy/start","/agent/async-copy/status", "/agent/async-copy/read","/agent/async-copy/stop"]:[]),
     ...(copyStageRecovery?["/agent/async-copy/stage-inspect","/agent/async-copy/stage-cleanup"]:[]),
+    ...(personalMemoryEnabled?["/agent/personal-memory/project-register","/agent/personal-memory/task-start",
+      "/agent/personal-memory/checkpoint-append","/agent/personal-memory/task-complete",
+      "/agent/personal-memory/task-get","/agent/personal-memory/project-context",
+      "/agent/personal-memory/search"]:[]),
     ...(processesEnabled?["/agent/process/start","/agent/process/status","/agent/process/read","/agent/process/input","/agent/process/stop"]:[])];
  if(req.method!=="POST"||!allowedAgentRoutes.includes(req.url))
   return json(res,404,{code:"NOT_FOUND"});
@@ -119,6 +135,14 @@ async function handleAgent(req,res){
   if(req.url==="/agent/status")return json(res,200,effectiveStatus());
   if(req.url==="/agent/request")return json(res,200,broker.propose(a));
   if(req.url==="/agent/check")return json(res,200,broker.check(a.requestId));
+  if(personalMemoryEnabled&&req.url.startsWith("/agent/personal-memory/")){
+    const op=req.url.slice("/agent/personal-memory/".length);
+    const methods={"project-register":"projectRegister","task-start":"taskStart",
+      "checkpoint-append":"checkpointAppend","task-complete":"taskComplete",
+      "task-get":"taskGet","project-context":"projectContext",search:"search"};
+    if(!Object.hasOwn(methods,op))throw Error("UNSUPPORTED_OPERATION");
+    return json(res,200,memory[methods[op]](a));
+  }
   if(processesEnabled&&req.url.startsWith("/agent/process/")){
     const op=req.url.slice("/agent/process/".length);
     if(!["start","status","read","input","stop"].includes(op))throw Error("UNSUPPORTED_OPERATION");

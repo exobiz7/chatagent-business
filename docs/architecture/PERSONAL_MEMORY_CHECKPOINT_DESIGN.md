@@ -1,7 +1,7 @@
 # Personal memory: independent checkpoint and project/task-bound contract
 
 **Date:** 2026-09-20
-**State:** DESIGN ONLY / NOT IMPLEMENTED / NOT ACCEPTED AS NORMATIVE SSOT
+**State:** ISOLATED IMPLEMENTATION TEST PASS / NOT INDEPENDENTLY SECURITY-APPROVED / NOT DEPLOYED
 **Product/repository:** exobiz7/chatagent-personal (private)
 **Hard boundary:** No runtime dependency on the earlier chatagent/P8 repositories, P8 memory container, its token, database, tunnels or state directories.
 
@@ -32,3 +32,7 @@ No direct P8 data migration is part of this plan. Any future migration requires 
 Test isolated personal state only: (1) wrong-project taskId denial before disclosure/write, (2) exact expected revision and conflicting operationId rejection, (3) completed task immutable, (4) checkpoint append survives process crash and restarts, (5) verified tail corruption quarantine/fail-closed recovery, (6) bounded search and context, (7) secret redaction and no host authorization from memory, (8) own seal/state directory and zero P8 imports/mounts, (9) no unapproved cross-product request. Then an independent reviewer and a separate private Business candidate may evaluate the accepted read/write schema.
 
 **Release decision:** This design does not assert that memory continuity is complete. Personal memory runtime implementation and user acceptance remain OPEN.
+
+## 5. Implementation status (2026-09-20)
+
+The independent personal product now contains `scripts/l1/personal-memory-store.mjs` using Node 24 built-in SQLite, a distinct owner-private database, random HMAC seal key, signed append-only event chain, and sealed high-watermark. Seven optional personal memory MCP tools have direct owner/project/revision/idempotency scopes and do not require FULL_HOST. `docs/verification/PERSONAL_MEMORY_IMPLEMENTATION_CHECKPOINT.md` records isolated local/MCP/restart tests. The signed/verified event suffix can reconcile a DB commit before head promotion, while corruption and signed-head-ahead truncation fail closed. The physical SIGKILL test uses only a disposable personal worker. This implementation does not make the P8-compatible adapter (kept under `test/compat`) a personal runtime dependency. Backup/restore, retention, concurrency review, Node SQLite API stability, independent security review and actual Business candidate tests remain OPEN.

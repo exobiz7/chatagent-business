@@ -20,6 +20,7 @@ const strictMutations=process.env.L1_STRICT_MUTATIONS==="1";
 const asyncHashTools=process.env.L1_ASYNC_HASH_TOOLS==="1";
 const asyncCopyTools=process.env.L1_ASYNC_COPY_TOOLS==="1";
 const copyStageTools=process.env.L1_COPY_STAGE_RECOVERY_TOOLS==="1";
+const personalMemoryTools=process.env.PERSONAL_MEMORY_TOOLS==="1";
 if(copyStageTools&&!asyncCopyTools)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY_TOOLS");
 if(asyncCopyTools&&!powerUserTools)throw Error("ASYNC_COPY_REQUIRES_POWERUSER_TOOLS");
 if(asyncHashTools&&!powerUserTools)throw Error("ASYNC_HASH_REQUIRES_POWERUSER_TOOLS");
@@ -74,6 +75,43 @@ const server=http.createServer(async(req,res)=>{
   mcp.registerTool("l0_confirmation_probe",{description:"Harmless L0 write-annotation UI probe. Only increments volatile test counter, never changes files, permissions or settings.",inputSchema:z.strictObject({note:z.string().max(120)}),annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}},async()=>{
     harmlessWrites++;return text({result:"VOLATILE_COUNTER_UPDATED",counter:harmlessWrites,realEffect:false});
   });
+  if(personalMemoryTools){
+    if(!l1Url)throw Error("PERSONAL_MEMORY_BROKER_REQUIRED");
+    const projectId=z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/);
+    const taskId=z.string().uuid(),operationId=z.string().uuid();
+    const memoryWrite=(name,description,schema,route)=>mcp.registerTool(name,{
+      description,inputSchema:z.strictObject(schema),
+      annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}
+    },async(a)=>{
+      try{return text(await brokerCall("personal-memory/"+route,a));}
+      catch(e){return {...text({code:e.message||"MEMORY_UNAVAILABLE",success:false}),isError:true};}
+    });
+    const memoryRead=(name,description,schema,route)=>mcp.registerTool(name,{
+      description,inputSchema:z.strictObject(schema),
+      annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false}
+    },async(a)=>{
+      try{return text(await brokerCall("personal-memory/"+route,a));}
+      catch(e){return {...text({code:e.message||"MEMORY_UNAVAILABLE",success:false}),isError:true};}
+    });
+    memoryWrite("personal_project_register","Register metadata for one project in this personal product's own private memory store; independent of P8 and host grants.",
+      {projectId,rootLabel:z.string().min(1).max(128),operationId},"project-register");
+    memoryWrite("personal_task_start","Create an owner-scoped task under an existing personal project. Requires idempotency UUID.",
+      {projectId,title:z.string().min(1).max(160),operationId},"task-start");
+    memoryWrite("personal_checkpoint_append","Append a personal task checkpoint with exact project, task, expected revision, and operation UUID; cannot authorize host execution.",
+      {projectId,taskId,expectedTaskRevision:z.number().int().nonnegative(),operationId,
+       summary:z.string().min(1).max(512),currentState:z.string().min(1).max(512),
+       nextActions:z.array(z.string().min(1).max(256)).max(5),verification:z.string().min(1).max(512),
+       artifactRefs:z.array(z.string().min(1).max(128)).max(5).optional(),
+       gitSha:z.string().regex(/^[a-f0-9]{40}$/).nullable().optional()},"checkpoint-append");
+    memoryWrite("personal_task_complete","Complete an exact project/task at the expected revision; the task becomes immutable.",
+      {projectId,taskId,expectedTaskRevision:z.number().int().nonnegative(),operationId},"task-complete");
+    memoryRead("personal_task_get","Read one existing personal task only from the explicitly supplied matching project.",
+      {projectId,taskId},"task-get");
+    memoryRead("personal_project_context","Read bounded task context from an explicit personal project; no host authority.",
+      {projectId,limit:z.number().int().min(1).max(20).optional()},"project-context");
+    memoryRead("personal_memory_search","Bounded lexical checkpoint search inside an explicit personal project.",
+      {projectId,query:z.string().min(1).max(128),limit:z.number().int().min(1).max(20).optional()},"search");
+  }
   if(powerUserTools){
     const path=z.string().min(1).max(4096);
     const requestId=z.string().uuid();
