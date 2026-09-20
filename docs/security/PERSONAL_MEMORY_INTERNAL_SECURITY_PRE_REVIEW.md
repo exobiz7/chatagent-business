@@ -26,3 +26,14 @@ Explicitly separate **engineering test PASS** from **independent security sign-o
 The new `personal-memory-backup.mjs` is a **library-only offline operator candidate**, NOT a memory MCP tool and NOT a deployed scheduled backup. It takes a consistent SQLite snapshot, copies the independently generated key and signed head, checks journal/HMAC against a read-only SQLite view, and requires an absent private destination. A restored store is independently verified before publishing its new root. Negative tests reject changed source sequence, altered backup manifest/key and existing destinations. The backup necessarily includes the raw seal key, making the whole bundle **sensitive**; no encryption-at-rest guarantee follows from 0700/0600 permissions. A malicious same-UID process can compromise either source or backup. Further review must resolve backup encryption, custody, loss/recovery, restore rollback, key rotation, WAL/head power-loss windows, parent symlink swaps and cleanup after uncertain effects. These tests do not close PM-01/02 or constitute independent security approval.
 
 The intermittent `HASH_FAILED_RECOVERY_REQUIRED` occurred on a single macOS CI run; another run of the identical commit passed 26 tests. Six isolated hash-MCP repetitions on the owner Mac passed. A transient runner identity-observation race is a hypothesis, not verified causation. The durable runner's fail-closed state and no-replay contract are unchanged. Diagnostic reproduction under CI load and a separate reviewer are required before declaring this reliability gate closed.
+
+## Separate encrypted-archive security candidate (no approval)
+
+AES-256-GCM encrypts a bounded offline personal backup with a separate
+caller-provided 32-byte key, authenticated before restoring any destination;
+the completed archive does not expose the raw memory seal key. Key reuse is
+denied. A plaintext snapshot temporarily exists in a private scratch directory;
+crash-orphan recovery is not built. The caller must supply external key custody,
+and same-UID hostile actors, full rollback, destination race, encrypted volume
+assurance, cryptographic lifecycle and independent review remain outstanding.
+See `docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.

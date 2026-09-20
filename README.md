@@ -52,3 +52,19 @@ independently encrypted, access-controlled location. Stop writers before invokin
 A changing source fails closed. There is no managed key rotation, backup scheduler or
 P8 migration. Run `node scripts/l1/personal-memory-backup-test.mjs` for an isolated test.
 Details: `docs/verification/PERSONAL_MEMORY_BACKUP_RECOVERY_CHECKPOINT.md`.
+
+### Optional encrypted archive — development only
+
+`personal-memory-encrypted-archive.mjs` wraps the offline snapshot into one
+AES-256-GCM encrypted archive file. The caller **must supply a separate random
+32-byte archive key** from an independently protected source; using the memory
+seal key as the archive encryption key is rejected. The completed archive
+contains no plaintext SQLite, head or seal key. Temporary private working
+folders DO contain plaintext until cleanup, and crash/orphan reconciliation,
+external key custody/rotation and independent review remain open. No memory
+backup or restore capability is exposed through Business/MCP.
+
+The intermittent runner `RECOVERY_REQUIRED` remains under investigation. Do not
+retry the same uncertain effect on another host/transport. Diagnostic repetitions
+only use new isolated, test-owned effects. See
+`docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.

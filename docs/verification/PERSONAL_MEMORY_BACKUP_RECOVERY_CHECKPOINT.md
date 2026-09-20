@@ -26,3 +26,25 @@ The two macOS CI runs against the same `4a394088...` feature commit disagreed. T
 - Only after independent sign-off, pin a separate personal artifact and register an expressly authorized new private Business candidate. An in-chat report is not an actual Business tool effect test.
 
 **Disposition:** backup/restore candidate LOCAL PASS; runner diagnosis PARTIAL; security and product acceptance OPEN.
+
+## 2026-09-20 — Encrypted transport and runner observation follow-up
+
+An **optional, offline-only** `personal-memory-encrypted-archive.mjs` now creates
+an AES-256-GCM authenticated archive using an independent, caller-provided
+32-byte key. The completed file contains only a versioned encrypted payload,
+nonce and tag. The memory seal key is included **inside the encrypted payload**;
+reusing the memory seal key as the encryption key is denied. Wrong-key and
+modified ciphertext restoration reject before new destination creation. Test
+`PERSONAL_MEMORY_ENCRYPTED_ARCHIVE=PASS` also verifies restored checkpoints.
+This is NOT integrated with Keychain, escrow, rotation or production backup.
+Private plaintext staging exists during both encryption and restoration, so
+abnormal crash remnants and hostile same-UID races remain open.
+
+The separate test-owned `personal-runner-observation-test.mjs` performed 12
+new short-lived owned processes, terminal/output verification and same-key
+non-replay with PASS. It does **not** reproduce or root-cause the earlier CI
+`RECOVERY_REQUIRED`, and it does not change execution ownership checks.
+
+Security reviewer handoff: `docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.
+Independent security approval, live Business candidate registration and
+production promotion have not occurred.

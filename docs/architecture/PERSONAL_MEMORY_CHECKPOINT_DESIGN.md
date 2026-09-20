@@ -46,3 +46,11 @@ NOT require or import P8 memory, but encrypted storage, external key custody, of
 rotation, backup schedule, retention, post-crash cleanup and independent security approval
 remain open. No personal production data has been backed up. See
 `docs/verification/PERSONAL_MEMORY_BACKUP_RECOVERY_CHECKPOINT.md`.
+
+## 7. Optional encrypted archive candidate
+
+An offline AES-256-GCM archive now wraps a snapshot with a separate 32-byte
+caller-provided encryption key. It does not migrate from P8, is not an MCP tool
+and does not set up persistent key storage, scheduled backups or backup
+rotation. The raw seal key exists only within the encrypted completed archive
+but does exist transiently in private staging; see independent reviewer handoff.
