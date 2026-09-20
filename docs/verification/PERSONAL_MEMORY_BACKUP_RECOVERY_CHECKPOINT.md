@@ -48,3 +48,7 @@ non-replay with PASS. It does **not** reproduce or root-cause the earlier CI
 Security reviewer handoff: `docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.
 Independent security approval, live Business candidate registration and
 production promotion have not occurred.
+
+## 2026-09-20 — Two CI failures on new feature SHA and bounded same-ID test observation
+
+Both initial macOS CI runs on encrypted-archive commit `ac18647b1496569959b7255d4d09c96e3cdd7a7e` stopped at the *unchanged* `l6-b05-async-hash-mcp-test` before running the new encryption and runner observation tests, each reporting `HASH_FAILED_RECOVERY_REQUIRED`. The test previously treated a single fail-closed startup observation as terminal. The existing supervisor reserves a sealed processId ahead of launch, so a short unbound/startup observation can report RECOVERY_REQUIRED while the exact same process later reaches a verified terminal state. Test polling now continues, bounded to 120 observations of the **same processId only**; no new start, fallback transport, or ownership validation change is permitted. If no verified EXITED/0 and final digest is seen, the test still fails; it reports uncertain-observation count. The separate strict safety and ownership contract is unchanged. CI results on the revised commit remain to be recorded. This removes an overly eager test assertion; it does NOT prove the underlying /bin/ps timing root cause is fixed.

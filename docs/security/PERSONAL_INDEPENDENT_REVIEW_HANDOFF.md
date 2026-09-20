@@ -38,3 +38,7 @@ Approval for new private Business canary: **NOT GRANTED**
 Approval for production cutover: **NOT GRANTED**
 
 **Engineering disposition:** additional implementation and negative tests can continue in the independent personal repository, but no statement of independent security approval is justified. The accepted P8 Stable, current Business v2 and M16 are not modified or reused.
+
+## Additional CI observation
+
+Two further CI runs on the first encrypted-archive feature SHA both failed in the pre-existing hash-MCP test on one RECOVERY_REQUIRED observation; neither run reached the new archive tests. The test now polls the original owned processId to a bounded terminal proof, never issuing a second start or relaxing production identity checks. Reviewers must still identify why the observation was uncertain and confirm no false terminal success is possible. This test correction is not a security sign-off.

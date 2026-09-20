@@ -37,3 +37,5 @@ crash-orphan recovery is not built. The caller must supply external key custody,
 and same-UID hostile actors, full rollback, destination race, encrypted volume
 assurance, cryptographic lifecycle and independent review remain outstanding.
 See `docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.
+
+On the initial encrypted-archive branch SHA, both macOS CI runs failed before the new archive tests at a pre-existing hash-MCP assertion that required the first post-launch status never be RECOVERY_REQUIRED. The test now observes only the same owned ID for a bounded interval, insisting on EXITED/0 and final SHA; it does not relaunch, disable identity checks or establish the cause of the transient result. Independent runner review remains OPEN.
