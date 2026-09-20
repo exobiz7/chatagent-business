@@ -86,7 +86,13 @@ try{
  await wait(mcp,mcpPort);
  const tools=(await request("tools/list")).tools;
  assert.equal(tools.length,36);
+ const toolNames=tools.map(tool=>tool.name);
+ assert.equal(new Set(toolNames).size,36,"DUPLICATE_MCP_TOOL_NAME");
+ // Offline key custody / archive rotation are library-only, not callable by Business.
+ assert.equal(toolNames.some(name=>/backup|restore|archive|rotate|continuity/.test(name)),false);
+ assert.equal(toolNames.filter(name=>name.startsWith("personal_")).length,7);
  assert.equal(Object.hasOwn(tools.find(x=>x.name==="local_copy_stage_cleanup").inputSchema.properties,"path"),false);
+ console.log("PERSONAL_CANDIDATE_TOOL_NAMES="+JSON.stringify(toolNames));
  const hashTool=tools.find(x=>x.name==="local_async_hash_start");
  assert.deepEqual(hashTool.annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
  const ctool=tools.find(x=>x.name==="local_scratch_create");
