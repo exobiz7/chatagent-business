@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdtempSync,realpathSync,readFileSync,writeFileSync,
- rmSync,existsSync,chmodSync,lstatSync} from "node:fs";
+ rmSync,existsSync,chmodSync,lstatSync,unlinkSync} from "node:fs";
 import {join} from "node:path";
 import {randomUUID,randomBytes,createHash} from "node:crypto";
 import {PersonalMemoryStore} from "./personal-memory-store.mjs";
 import {createEncryptedMemoryArchive} from "./personal-memory-encrypted-archive.mjs";
-import {inspectOwnedStage,cleanupOwnedStage} from "./personal-stage-recovery.mjs";
+import {createOwnedStage,inspectOwnedStage,cleanupOwnedStage} from "./personal-stage-recovery.mjs";
 
 const root=realpathSync(mkdtempSync("/tmp/pm-stage-e2e-"));
 const original=join(root,"own"),archive=join(root,"complete.enc"),
@@ -72,6 +72,42 @@ try{
  await createEncryptedMemoryArchive({sourceDir:original,archivePath:archive,archiveKey,ownerStatus});
  await runCrash("decrypt",archive,join(root,"killed-root"));
  assert.ok(existsSync(archive));
+ // A completed archive must not be mistaken for a failed creation if
+ // its transient plaintext-stage cleanup cannot finish.
+ const committed=join(root,"committed-cleanup-failure.enc");
+ let stuckId=null;
+ await assert.rejects(()=>createEncryptedMemoryArchive({
+  sourceDir:original,archivePath:committed,archiveKey,ownerStatus,
+  testHooks:{afterPlaintextReady:({stageId})=>{
+   stuckId=stageId;
+   writeFileSync(join(root,".personal-archive-working-"+stageId,"unexpected"),
+    "owned test interference",{mode:0o600,flag:"wx"});
+  }}
+ }),e=>e.message==="ARCHIVE_STAGE_CLEANUP_UNCERTAIN"&&
+    e.effect==="COMMITTED"&&e.stageId===stuckId);
+ assert.ok(existsSync(committed));
+ const stuck=join(root,".personal-archive-working-"+stuckId);
+ unlinkSync(join(stuck,"unexpected"));
+ const input={parentDir:root,kind:"archive",id:stuckId,targetPath:committed,archiveKey};
+ const v=inspectOwnedStage(input);
+ cleanupOwnedStage({...input,expectedFingerprint:v.fingerprint,
+  expectedDev:v.stageDev,expectedIno:v.stageIno,confirmation:"DELETE_VERIFIED_PERSONAL_STAGE"});
+ assert.equal(existsSync(stuck),false);
+ console.log("PASS committed archive preserved when transient cleanup is uncertain");
+ // A partial cleanup must preserve the durable intent, not recurse into new entries.
+ const pending=createOwnedStage({parentDir:root,kind:"decrypt",
+  targetPath:join(root,"operator-review"),archiveKey});
+ const args={parentDir:root,kind:"decrypt",id:pending.id,
+  targetPath:join(root,"operator-review"),archiveKey};
+ const before=inspectOwnedStage(args);
+ assert.throws(()=>cleanupOwnedStage({...args,expectedFingerprint:before.fingerprint,
+  expectedDev:before.stageDev,expectedIno:before.stageIno,
+  confirmation:"DELETE_VERIFIED_PERSONAL_STAGE",
+  testHooks:{afterCleanupIntent:()=>writeFileSync(join(pending.stage,"unexpected"),
+   "late entry",{mode:0o600,flag:"wx"})}}),/STAGE_CLEANUP_UNCERTAIN/);
+ assert.throws(()=>inspectOwnedStage(args),/STAGE_CLEANUP_UNCERTAIN/);
+ assert.ok(existsSync(join(pending.stage,".personal-stage-cleanup-issued.json")));
+ console.log("PASS interrupted cleanup intent retained for manual review");
  completed=true;
  console.log("PERSONAL_STAGE_SIGKILL_RECOVERY=PASS");
 }catch(e){console.error("PERSONAL_STAGE_SIGKILL_RECOVERY=FAIL "+e.stack);process.exitCode=1;}
