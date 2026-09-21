@@ -2,6 +2,7 @@ import { promises as fs, constants as C, realpathSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, normalize, sep } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { nativeCreateOnly } from "./native-create-only.mjs";
+import { nativeReplaceCAS } from "./native-replace-cas.mjs";
 
 const MAX_READ=65536;
 const MAX_WRITE=262144;
@@ -44,13 +45,18 @@ async function streamSha(path){
 }
 export class HostFileOps {
  constructor(broker,{privateRoot,protectedRoots=[],testHooks=null,strictMutations=false,
-   nativeCreateBinary=null,nativeCreateSha256=null}={}){
+   nativeCreateBinary=null,nativeCreateSha256=null,
+   nativeReplaceBinary=null,nativeReplaceSha256=null}={}){
   this.broker=broker;
   // Fault injection is in-process test-only; no HTTP/MCP path can provide it.
   this.testHooks=testHooks;
   this.strictMutations=strictMutations;
   this.nativeCreateBinary=nativeCreateBinary;
   this.nativeCreateSha256=nativeCreateSha256;
+  this.nativeReplaceBinary=nativeReplaceBinary;
+  this.nativeReplaceSha256=nativeReplaceSha256;
+  if(this.nativeReplaceBinary&&(!this.strictMutations||!this.nativeReplaceSha256))
+    throw Error("NATIVE_REPLACE_REQUIRES_STRICT_AND_HASH");
   if(this.nativeCreateBinary&&(!this.strictMutations||!this.nativeCreateSha256))
     throw Error("NATIVE_CREATE_REQUIRES_STRICT_AND_HASH");
   this.privateRoots=[privateRoot,...protectedRoots].filter(Boolean).map(normalize);
@@ -110,6 +116,12 @@ export class HostFileOps {
    await this.testHooks?.beforeNativeCreateCommit?.({target});
    return nativeCreateOnly({binary:this.nativeCreateBinary,
      expectedBinarySha256:this.nativeCreateSha256,target,buffer});
+  }
+  if(mode==="replace"&&this.nativeReplaceBinary){
+   // This hook runs before the native hash check: races at this boundary refuse.
+   await this.testHooks?.beforeNativeReplaceCommit?.({target});
+   return nativeReplaceCAS({binary:this.nativeReplaceBinary,
+     expectedBinarySha256:this.nativeReplaceSha256,target,expectedSha256,buffer});
   }
   if(mode==="create"){
    const file=await fs.open(target,C.O_CREAT|C.O_EXCL|C.O_WRONLY|C.O_NOFOLLOW,0o600);

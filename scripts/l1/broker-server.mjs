@@ -32,7 +32,14 @@ const files=fileOpsEnabled?new HostFileOps(broker,{privateRoot:dir,
  protectedRoots:[...(supportRoot?[supportRoot]:[]),...(personalMemoryEnabled?[personalMemoryRoot]:[])],
  strictMutations:process.env.L1_STRICT_MUTATIONS==="1",
  nativeCreateBinary:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_BIN:null,
- nativeCreateSha256:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_SHA256:null}):null;
+ nativeCreateSha256:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_SHA256:null,
+ nativeReplaceBinary:process.env.L1_NATIVE_REPLACE_ENABLED==="1"?process.env.L1_NATIVE_REPLACE_BIN:null,
+ nativeReplaceSha256:process.env.L1_NATIVE_REPLACE_ENABLED==="1"?process.env.L1_NATIVE_REPLACE_SHA256:null}):null;
+if(process.env.L1_NATIVE_REPLACE_ENABLED==="1"&&
+   (!fileOpsEnabled||process.env.L1_STRICT_MUTATIONS!=="1"||
+    process.env.L1_NATIVE_CREATE_ENABLED!=="1"||
+    !process.env.L1_NATIVE_REPLACE_BIN||!process.env.L1_NATIVE_REPLACE_SHA256))
+ throw Error("NATIVE_REPLACE_REQUIRES_STRICT_NATIVE_CREATE");
 const scratchEnabled=fileOpsEnabled&&process.env.L1_OWNED_SCRATCH_ENABLED==="1";
 const scratch=scratchEnabled?await new OwnedScratch(broker).init():null;
 const processesEnabled=process.env.L1_HOST_EXEC_ENABLED==="1";
@@ -100,8 +107,10 @@ const json=(res,code,value)=>{
  res.end(JSON.stringify(value));
 };
 const read=async req=>{
+ // Keep ordinary operations bounded; UTF-8 file create/replace may carry 256 KiB.
+ const limit=["/agent/file/write","/agent/file/create","/agent/file/replace"].includes(req.url)?350000:8192;
  let s="";for await(const chunk of req){
-  s+=chunk;if(s.length>8192)throw Error("PAYLOAD_LIMIT");
+  s+=chunk;if(s.length>limit)throw Error("PAYLOAD_LIMIT");
  }
  try{return JSON.parse(s||"{}");}catch{throw Error("INVALID_JSON");}
 };

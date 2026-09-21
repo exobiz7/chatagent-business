@@ -25,6 +25,7 @@ const personalMemoryTools=process.env.PERSONAL_MEMORY_TOOLS==="1";
 // unavailable operations. Default development inventory remains unchanged.
 // This is discovery/schema only; L1 still enforces actual authority and effects.
 const personalCoreTools=process.env.PERSONAL_CORE_TOOLS==="1";
+const nativeReplaceEnabled=process.env.L1_NATIVE_REPLACE_ENABLED==="1";
 if(copyStageTools&&!asyncCopyTools)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY_TOOLS");
 if(asyncCopyTools&&!powerUserTools)throw Error("ASYNC_COPY_REQUIRES_POWERUSER_TOOLS");
 if(asyncHashTools&&!powerUserTools)throw Error("ASYNC_HASH_REQUIRES_POWERUSER_TOOLS");
@@ -49,8 +50,13 @@ const server=http.createServer(async(req,res)=>{
   if(req.url!=="/mcp"||req.method!=="POST")return error(res,404,"NOT_FOUND");
   if(!eq(req.headers["x-chatagent-l0-credential"],expected))return error(res,401,"UNAUTHORIZED");
   let bodyRaw="";
-  for await(const chunk of req){bodyRaw+=chunk;if(bodyRaw.length>16384)return error(res,413,"BODY_LIMIT");}
+  // Text create/replace may legitimately contain up to 256 KiB UTF-8.
+  // Other tools retain the original 16 KiB request limit.
+  for await(const chunk of req){bodyRaw+=chunk;if(bodyRaw.length>350000)return error(res,413,"BODY_LIMIT");}
   let body;try{body=JSON.parse(bodyRaw);}catch{return error(res,400,"INVALID_JSON");}
+  if(bodyRaw.length>16384&&!(body?.method==="tools/call"&&
+      ["local_write","local_create_file","local_replace_file"].includes(body?.params?.name)))
+    return error(res,413,"BODY_LIMIT");
   // Phase 6 accepted compatibility: authenticated legacy discovery negotiation is not a tool.
   if (body && !Array.isArray(body) && body.jsonrpc === "2.0" && body.method === "server/discover" &&
       (body.id == null || typeof body.id === "string" || (typeof body.id === "number" && Number.isFinite(body.id))) &&
@@ -147,8 +153,8 @@ const server=http.createServer(async(req,res)=>{
         try{return text(await brokerCall("file/create",a));}
         catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
       });
-      if(!personalCoreTools)mcp.registerTool("local_replace_file",{
-        description:strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
+      if(!personalCoreTools||nativeReplaceEnabled)mcp.registerTool("local_replace_file",{
+        description:nativeReplaceEnabled?"Replace an EXISTING regular file only when its SHA-256 matches expectedSha256. New-file creation remains separate. Atomic rename visibility; no malicious same-UID race protection or blind retry on uncertain result.":strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
         inputSchema:z.strictObject({path,content:z.string().max(262144),expectedSha256:sha}),
         annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
       },async(a)=>{
