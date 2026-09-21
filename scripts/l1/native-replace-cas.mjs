@@ -4,7 +4,7 @@ import {isAbsolute,dirname} from "node:path";
 import {createHash} from "node:crypto";
 const digest=buf=>createHash("sha256").update(buf).digest("hex");
 const validSha=s=>typeof s==="string"&&/^[a-f0-9]{64}$/.test(s);
-export async function nativeReplaceCAS({binary,expectedBinarySha256,target,expectedSha256,buffer}){
+export async function nativeReplaceCAS({binary,expectedBinarySha256,target,expectedSha256,buffer,testHooks=null}){
  if(typeof binary!=="string"||!isAbsolute(binary)||
     typeof target!=="string"||!isAbsolute(target)||!validSha(expectedBinarySha256)||
     !validSha(expectedSha256)||!Buffer.isBuffer(buffer)||buffer.length>262144)
@@ -60,16 +60,18 @@ export async function nativeReplaceCAS({binary,expectedBinarySha256,target,expec
  const match=output.match(/^CAS_DONE bytes=(\d+)$/);
  if(!match||Number(match[1])!==buffer.length)throw Error("CAS_RESULT_UNCERTAIN");
  // Post-commit observation: failure is uncertainty, never permission to retry.
- let real;
- try{real=await fs.realpath(target);}catch{throw Error("CAS_POSTCOMMIT_UNCERTAIN");}
- if(real!==target)throw Error("CAS_POSTCOMMIT_UNCERTAIN");
- const committed=await fs.open(target,C.O_RDONLY|C.O_NOFOLLOW);
  try{
-  const st=await committed.stat();
-  if(!st.isFile()||st.nlink!==1||st.size!==buffer.length||
-     digest(await committed.readFile())!==digest(buffer))
-   throw Error("CAS_POSTCOMMIT_UNCERTAIN");
- }finally{await committed.close();}
+  await testHooks?.beforePostcommitObservation?.({target});
+  const real=await fs.realpath(target);
+  if(real!==target)throw Error("CAS_POSTCOMMIT_UNCERTAIN");
+  const committed=await fs.open(target,C.O_RDONLY|C.O_NOFOLLOW);
+  try{
+   const st=await committed.stat();
+   if(!st.isFile()||st.nlink!==1||st.size!==buffer.length||
+      digest(await committed.readFile())!==digest(buffer))
+    throw Error("CAS_POSTCOMMIT_UNCERTAIN");
+  }finally{await committed.close();}
+ }catch{throw Error("CAS_POSTCOMMIT_UNCERTAIN");}
  return {path:target,bytes:buffer.length,sha256:digest(buffer),
    changed:true,commitMode:"DIRFD_EXPECTED_SHA_RENAME"};
 }

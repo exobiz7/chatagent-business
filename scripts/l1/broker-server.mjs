@@ -1,4 +1,6 @@
 import http from "node:http";
+import {boundedJSONBody} from "./bounded-json-body.mjs";
+import {auditedFileMutation,fileEffectDetails} from "./file-effect-status.mjs";
 import net from "node:net";
 import { readFileSync, existsSync, chmodSync, unlinkSync, lstatSync } from "node:fs";
 import { timingSafeEqual, createHash } from "node:crypto";
@@ -109,10 +111,7 @@ const json=(res,code,value)=>{
 const read=async req=>{
  // Keep ordinary operations bounded; UTF-8 file create/replace may carry 256 KiB.
  const limit=["/agent/file/write","/agent/file/create","/agent/file/replace"].includes(req.url)?350000:8192;
- let s="";for await(const chunk of req){
-  s+=chunk;if(s.length>limit)throw Error("PAYLOAD_LIMIT");
- }
- try{return JSON.parse(s||"{}");}catch{throw Error("INVALID_JSON");}
+ return (await boundedJSONBody(req,{maxBytes:limit})).body;
 };
 let ownerFailures=0, lockedUntil=0;
 function rejectOwner(pass){
@@ -178,19 +177,17 @@ async function handleAgent(req,res){
     const op=req.url.slice("/agent/file/".length);
     if(!["list","stat","read","hash","write","copy","create","replace"].includes(op))throw Error("UNSUPPORTED_OPERATION");
     const pathDigest=pathFingerprint(a);
-    if(["write","copy","create","replace"].includes(op)){
-      broker.record("HOST_FILE_ISSUED",{operation:op,pathDigest});broker.save();
-    }
-    try{
-      const result=await files[op](a);
-      broker.record("HOST_FILE_COMPLETED",{operation:op,pathDigest});broker.save();
-      return json(res,200,result);
-    }catch(e){
-      broker.record("HOST_FILE_FAILED",{operation:op,pathDigest,code:safeError(e)});broker.save();
-      throw e;
-    }
+    const execute=()=>files[op](a);
+    const result=["write","copy","create","replace"].includes(op)
+     ?await auditedFileMutation(broker,op,pathDigest,execute):await execute();
+    return json(res,200,result);
   }
- }catch(e){return json(res,400,{code:safeError(e)});}
+ }catch(e){
+  const details=fileEffectDetails(e);
+  return json(res,400,{code:safeError(e),...(
+   details.effect?{effect:details.effect,retryable:false}:{}),
+   ...(e.audit==="UNCERTAIN"?{audit:"UNCERTAIN"}:{})});
+ }
 }
 async function handleOwner(req,res){
  if(req.method!=="POST"||!["/owner/status","/owner/pending","/owner/grants","/owner/approve","/owner/revoke","/owner/mode","/owner/audit"].includes(req.url))

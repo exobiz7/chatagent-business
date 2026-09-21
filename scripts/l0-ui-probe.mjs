@@ -1,4 +1,5 @@
 import http from "node:http";
+import {boundedJSONBody} from "./l1/bounded-json-body.mjs";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -36,25 +37,36 @@ async function brokerCall(route,body={}){
   const timeoutMs=["file/hash","file/copy"].includes(route)?120000:30000;
   const response=await fetch(l1Url+"/agent/"+route,{method:"POST",headers:{"content-type":"application/json","x-chatagent-l1-credential":l1Token},body:JSON.stringify(body),signal:AbortSignal.timeout(timeoutMs)});
   const result=await response.json();
-  if(!response.ok)throw Error(result.code||"L1_UNAVAILABLE");
+  if(!response.ok){
+    const e=Error(result.code||"L1_UNAVAILABLE");
+    if(["COMMITTED","UNCERTAIN"].includes(result.effect)){
+      e.effect=result.effect;e.retryable=false;
+    }
+    if(result.audit==="UNCERTAIN")e.audit="UNCERTAIN";
+    throw e;
+  }
   return result;
 }
 
 const requests=new Map();
 let harmlessWrites=0;
 const text=(data)=>({content:[{type:"text",text:JSON.stringify(data)}],structuredContent:data});
+const toolError=e=>({...text({code:e.message||"BROKER_UNAVAILABLE",success:false,
+  ...(["COMMITTED","UNCERTAIN"].includes(e.effect)?{effect:e.effect,retryable:false}:{}),
+  ...(e.audit==="UNCERTAIN"?{audit:"UNCERTAIN"}:{})}),isError:true});
 const error=(res,status,reason,id=null)=>{res.writeHead(status,{"content-type":"application/json"});res.end(JSON.stringify({jsonrpc:"2.0",id,error:{code:-32000,message:reason}}));};
 const eq=(a,b)=>{const x=Buffer.from(a??""),y=Buffer.from(b??"");return x.length===y.length&&timingSafeEqual(x,y);};
 const server=http.createServer(async(req,res)=>{
   if(req.url==="/health"&&req.method==="GET"){res.writeHead(200);res.end("ok");return;}
   if(req.url!=="/mcp"||req.method!=="POST")return error(res,404,"NOT_FOUND");
   if(!eq(req.headers["x-chatagent-l0-credential"],expected))return error(res,401,"UNAUTHORIZED");
-  let bodyRaw="";
-  // Text create/replace may legitimately contain up to 256 KiB UTF-8.
-  // Other tools retain the original 16 KiB request limit.
-  for await(const chunk of req){bodyRaw+=chunk;if(bodyRaw.length>350000)return error(res,413,"BODY_LIMIT");}
-  let body;try{body=JSON.parse(bodyRaw);}catch{return error(res,400,"INVALID_JSON");}
-  if(bodyRaw.length>16384&&!(body?.method==="tools/call"&&
+  // Parse byte-counted complete UTF-8, not per-chunk Buffer.toString().
+  // Only file text operations retain the larger authenticated envelope.
+  let parsed;
+  try{parsed=await boundedJSONBody(req,{maxBytes:350000,oversizeCode:"BODY_LIMIT"});}
+  catch(e){return error(res,e.message==="BODY_LIMIT"?413:400,e.message);}
+  const {body,bytes}=parsed;
+  if(bytes>16384&&!(body?.method==="tools/call"&&
       ["local_write","local_create_file","local_replace_file"].includes(body?.params?.name)))
     return error(res,413,"BODY_LIMIT");
   // Phase 6 accepted compatibility: authenticated legacy discovery negotiation is not a tool.
@@ -133,7 +145,7 @@ const server=http.createServer(async(req,res)=>{
       description,inputSchema:z.strictObject(schema),annotations:{readOnlyHint:readonly,destructiveHint:!readonly,openWorldHint:name==="local_exec_start"}
     },async(args)=>{
       try{return text(await brokerCall(route,args));}
-      catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+      catch(e){return toolError(e);}
     });
     register("local_list","List an absolute macOS path through explicit persistent owner FULL_HOST delegation; bounded and paginated.",
       {path,offset:z.number().int().nonnegative().optional(),limit:z.number().int().min(1).max(250).optional()},"file/list",true);
@@ -151,7 +163,7 @@ const server=http.createServer(async(req,res)=>{
         annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}
       },async(a)=>{
         try{return text(await brokerCall("file/create",a));}
-        catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+        catch(e){return toolError(e);}
       });
       if(!personalCoreTools||nativeReplaceEnabled)mcp.registerTool("local_replace_file",{
         description:nativeReplaceEnabled?"Replace an EXISTING regular file at exact expected SHA-256; create remains separate. Preserve regular mode and xattrs; ACL/special flags refused. Atomic rename visibility, NOT race-free kernel CAS; never retry uncertain results blindly.":strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
@@ -159,7 +171,7 @@ const server=http.createServer(async(req,res)=>{
         annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
       },async(a)=>{
         try{return text(await brokerCall("file/replace",a));}
-        catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+        catch(e){return toolError(e);}
       });
     }
     if(scratchTools){

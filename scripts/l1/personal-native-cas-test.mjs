@@ -32,6 +32,17 @@ try{
  assert.equal(result.commitMode,"DIRFD_EXPECTED_SHA_RENAME");
  assert.equal(readFileSync(target,"utf8"),"UPDATED");
  assert.equal(statSync(target).mode&0o777,0o644);
+ const uncertainTarget=join(work,"postcommit.txt");
+ writeFileSync(uncertainTarget,"BEFORE",{mode:0o600,flag:"wx"});
+ const postcommit=new HostFileOps(b,{...options,testHooks:{
+  beforePostcommitObservation:()=>{throw Error("EIO");}
+ }});
+ await assert.rejects(()=>postcommit.replace({path:uncertainTarget,content:"AFTER",
+  expectedSha256:sha("BEFORE")}),/CAS_POSTCOMMIT_UNCERTAIN/);
+ assert.equal(readFileSync(uncertainTarget,"utf8"),"AFTER");
+ await assert.rejects(()=>files.replace({path:uncertainTarget,content:"RETRY",
+  expectedSha256:sha("BEFORE")}),/CAS_PRECONDITION_MISMATCH/);
+ console.log("PASS F02 post-commit observation failure is UNCERTAIN; effect not retried");
  console.log("PASS pinned native existing-file compare, atomic visibility, preserved mode");
  await assert.rejects(()=>files.replace({path:target,content:"BAD",
    expectedSha256:sha("BASE")}),/CAS_PRECONDITION_MISMATCH/);

@@ -121,7 +121,8 @@ export class HostFileOps {
    // This hook runs before the native hash check: races at this boundary refuse.
    await this.testHooks?.beforeNativeReplaceCommit?.({target});
    return nativeReplaceCAS({binary:this.nativeReplaceBinary,
-     expectedBinarySha256:this.nativeReplaceSha256,target,expectedSha256,buffer});
+     expectedBinarySha256:this.nativeReplaceSha256,target,expectedSha256,buffer,
+     testHooks:this.testHooks});
   }
   if(mode==="create"){
    const file=await fs.open(target,C.O_CREAT|C.O_EXCL|C.O_WRONLY|C.O_NOFOLLOW,0o600);
