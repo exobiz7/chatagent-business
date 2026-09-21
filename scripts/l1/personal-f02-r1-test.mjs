@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {callL1} from "./l1-file-transport.mjs";
-import {auditedFileRead} from "./file-effect-status.mjs";
+import {auditedFileRead,fileEffectDetails} from "./file-effect-status.mjs";
 const options={url:"http://127.0.0.1:3110",token:"fixture-only",body:{content:"fixture"}};
 const lost=async()=>{throw Error("ECONNRESET: do not disclose transport details");};
 const invalid=async()=>({ok:true,json:async()=>{throw SyntaxError("bad JSON");}});
@@ -22,13 +22,19 @@ try{
  const result=await callL1({...options,route:"file/replace",
   fetchImpl:reply(true,{...receipt("file/replace"),commitMode:"DIRFD_EXPECTED_SHA_RENAME"})});
  assert.deepEqual(result,{...receipt("file/replace"),commitMode:"DIRFD_EXPECTED_SHA_RENAME"});
- for(const effect of ["COMMITTED","UNCERTAIN"]){
+ for(const {code,effect} of [
+  {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED"},
+  {code:"CAS_POSTCOMMIT_UNCERTAIN",effect:"UNCERTAIN"}
+ ]){
   await assert.rejects(()=>callL1({...options,route:"file/replace",
-   fetchImpl:reply(false,{code:"HOST_FILE_AUDIT_UNCERTAIN",effect,
-    retryable:false,audit:"UNCERTAIN"})}),e=>
-   e.message==="HOST_FILE_AUDIT_UNCERTAIN"&&e.effect===effect&&
+   fetchImpl:reply(false,{code,effect,retryable:false,audit:"UNCERTAIN"})}),e=>
+   e.message===code&&e.effect===effect&&
    e.retryable===false&&e.audit==="UNCERTAIN");
  }
+ assert.deepEqual(fileEffectDetails(Error("CAS_POSTCOMMIT_UNCERTAIN")),
+  {code:"CAS_POSTCOMMIT_UNCERTAIN",effect:"UNCERTAIN",retryable:false});
+ assert.deepEqual(fileEffectDetails(Object.assign(Error("HOST_FILE_AUDIT_UNCERTAIN"),
+  {effect:"COMMITTED"})),{code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED",retryable:false});
  await assert.rejects(()=>callL1({...options,route:"file/replace",
   fetchImpl:reply(false,{code:"CAS_PRECONDITION_MISMATCH"})}),e=>
   e.message==="CAS_PRECONDITION_MISMATCH"&&e.effect===undefined);
@@ -50,13 +56,38 @@ try{
    {code:"CAS_PRECONDITION_MISMATCH",retryable:true},
    {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED"},
    {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED",retryable:false,audit:"BAD"},
-   {code:"CAS_PRECONDITION_MISMATCH",changed:true,bytes:7,sha256:validSha}
+   {code:"CAS_PRECONDITION_MISMATCH",changed:true,bytes:7,sha256:validSha},
+   {code:"CAS_POSTCOMMIT_UNCERTAIN"},
+   {code:"HOST_FILE_AUDIT_UNCERTAIN"},
+   {code:"CAS_POSTCOMMIT_UNCERTAIN",effect:"COMMITTED",retryable:false},
+   {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"UNCERTAIN",retryable:false},
+   {code:"CAS_PRECONDITION_MISMATCH",effect:"COMMITTED",retryable:false},
+   {code:"CAS_PRECONDITION_MISMATCH",effect:"UNCERTAIN",retryable:false},
+   {code:"PRECONDITION_MISMATCH",effect:"COMMITTED",retryable:false},
+   {code:"PRECONDITION_REQUIRED",effect:"COMMITTED",retryable:false},
+   {code:"OPERATION_FAILED",effect:"COMMITTED",retryable:false}
   ]){
    await assert.rejects(()=>callL1({...options,route,
     fetchImpl:reply(false,malformedError)}),e=>
     e.message==="L1_MUTATION_RESPONSE_UNCERTAIN"&&e.effect==="UNCERTAIN"&&e.retryable===false);
   }
+
+  for(const {code,effect} of [
+   {code:"CAS_POSTCOMMIT_UNCERTAIN",effect:"UNCERTAIN"},
+   {code:"NATIVE_CREATE_TIMEOUT_UNCERTAIN",effect:"UNCERTAIN"},
+   {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED"},
+   {code:"OPERATION_FAILED",effect:"UNCERTAIN"}
+  ]){
+   await assert.rejects(()=>callL1({...options,route,
+    fetchImpl:reply(false,{code,effect,retryable:false})}),e=>
+     e.message===code&&e.effect===effect&&e.retryable===false);
+  }
+  for(const code of ["CAS_PRECONDITION_MISMATCH","PRECONDITION_MISMATCH","PRECONDITION_REQUIRED"]){
+   await assert.rejects(()=>callL1({...options,route,fetchImpl:reply(false,{code})}),e=>
+    e.message===code&&e.effect===undefined&&e.retryable===undefined);
+  }
  }
+ console.log("PASS F02-R1.1 all four mutation routes enforce known code/effect pairings");
  console.log("PASS F02-R1.1 all mutation routes require complete receipts and valid failure envelopes");
  console.log("PASS F02-R1 normal L1 success, COMMITTED/UNCERTAIN and known rejection preserved");
  for(const route of ["file/read","file/hash","status","process/start","async-copy/start"]){

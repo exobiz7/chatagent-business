@@ -11,13 +11,24 @@ const validReceipt=(route,r)=>{
   ?validPath(r.source)&&validPath(r.destination)
   :validPath(r.path);
 };
+// Keep known L1 effect-bearing and precondition codes semantically consistent.
+// Unknown error codes are NOT presumed to be precommit or safe to retry.
+const preconditionCodes=new Set([
+ "CAS_PRECONDITION_MISMATCH","PRECONDITION_MISMATCH","PRECONDITION_REQUIRED"
+]);
 const validFailure=r=>validCode(r.code)&&
  r.changed===undefined&&r.bytes===undefined&&r.sha256===undefined&&
  r.path===undefined&&r.source===undefined&&r.destination===undefined&&
  (r.effect===undefined||["COMMITTED","UNCERTAIN"].includes(r.effect))&&
  (r.retryable===undefined||r.retryable===false)&&
  (r.effect===undefined||r.retryable===false)&&
- (r.audit===undefined||r.audit==="UNCERTAIN");
+ (r.audit===undefined||r.audit==="UNCERTAIN")&&
+ (r.code==="HOST_FILE_AUDIT_UNCERTAIN"
+  ?r.effect==="COMMITTED"&&r.retryable===false
+  :/_UNCERTAIN$/.test(r.code)
+   ?r.effect==="UNCERTAIN"&&r.retryable===false
+   :r.effect!=="COMMITTED")&&
+ (!preconditionCodes.has(r.code)||r.effect===undefined);
 export async function callL1({route,body={},url,token,fetchImpl=fetch}){
  const timeoutMs=["file/hash","file/copy"].includes(route)?120000:30000;
  const mutation=mutationRoutes.has(route);
