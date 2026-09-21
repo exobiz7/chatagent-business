@@ -13,6 +13,8 @@
 #include <string.h>
 #include <limits.h>
 #include <CommonCrypto/CommonDigest.h>
+#include <sys/acl.h>
+#include <sys/xattr.h>
 enum { MAX_NEW = 262144, MAX_OLD = 16*1024*1024 };
 static void fail(const char *code){fprintf(stderr,"%s\n",code);exit(2);}
 static void close_ok(int fd){if(close(fd))fail("CAS_CLOSE_UNCERTAIN");}
@@ -72,6 +74,46 @@ static void clean_stage(int parent,const char *stage,const struct stat *owned,
     unlinkat(parent,stage,0))fail("CAS_STAGE_CLEANUP_UNCERTAIN");
  fail(reason);
 }
+// ACLs and file flags are not safely transferable by this candidate.
+// Refuse BEFORE the replacement effect instead of silently dropping them.
+static int metadata_supported(int fd,const struct stat *st){
+ if(st->st_flags!=0)return 0;
+ errno=0;
+ acl_t acl=acl_get_fd_np(fd,ACL_TYPE_EXTENDED);
+ if(acl){acl_free(acl);return 0;}
+ return errno==ENOENT;
+}
+// Preserve the macOS xattrs (including provenance) on the private staged inode.
+// Refuse and clean ONLY that exact stage if an attribute cannot be copied.
+static void preserve_xattrs(int from,int to,int parent,const char *stage,
+                            const struct stat *owned){
+ ssize_t len=flistxattr(from,NULL,0,0);
+ if(len<0||len>32768)clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");
+ if(!len)return;
+ char *names=malloc((size_t)len);
+ if(!names)clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");
+ if(flistxattr(from,names,(size_t)len,0)!=len){
+  free(names);clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");
+ }
+ size_t offset=0;
+ while(offset<(size_t)len){
+  const char *name=names+offset;
+  size_t left=(size_t)len-offset,n=strnlen(name,left);
+  if(!n||n==left){free(names);clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");}
+  ssize_t size=fgetxattr(from,name,NULL,0,0,0);
+  if(size<0||size>1048576){
+   free(names);clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");
+  }
+  void *value=malloc(size?(size_t)size:1);
+  if(!value){free(names);clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");}
+  if(fgetxattr(from,name,value,(size_t)size,0,0)!=size||
+     fsetxattr(to,name,value,(size_t)size,0,0)){
+   free(value);free(names);clean_stage(parent,stage,owned,"CAS_METADATA_UNSUPPORTED");
+  }
+  free(value);offset+=n+1;
+ }
+ free(names);
+}
 int main(int argc,char **argv){
  if(argc!=3||!argv[2]||strlen(argv[2])!=64)fail("CAS_INPUT_INVALID");
  for(size_t i=0;i<64;i++)
@@ -92,7 +134,8 @@ int main(int argc,char **argv){
  struct stat before;unsigned char current[CC_SHA256_DIGEST_LENGTH];
  if(!hash_file(original,&before,current))fail("CAS_TARGET_UNSAFE");
  if(!same_sha(current,argv[2]))fail("CAS_PRECONDITION_MISMATCH");
- // Preserve ordinary existing permissions, without copying security metadata.
+ if(!metadata_supported(original,&before))fail("CAS_METADATA_UNSUPPORTED");
+ // Preserve mode and copyable xattrs; unsupported ACLs/flags refuse.
  char stage[80];int temp=-1;
  for(int i=0;i<8;i++){
   unsigned char entropy[16];arc4random_buf(entropy,sizeof(entropy));
@@ -111,6 +154,7 @@ int main(int argc,char **argv){
  struct stat owned;
  if(fstat(temp,&owned))fail("CAS_STAGE_UNCERTAIN");
  if(fchmod(temp,before.st_mode&0777))clean_stage(parent,stage,&owned,"CAS_STAGE_MODE_FAILED");
+ preserve_xattrs(original,temp,parent,stage,&owned);
  size_t written=0;
  while(written<length){
   ssize_t n=write(temp,incoming+written,length-written);
@@ -132,6 +176,8 @@ int main(int argc,char **argv){
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
  unsigned char final[CC_SHA256_DIGEST_LENGTH];struct stat verify;
  if(!hash_file(original,&verify,final))clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
+ if(!metadata_supported(original,&verify))
+  clean_stage(parent,stage,&owned,"CAS_METADATA_UNSUPPORTED");
  if(!same_sha(final,argv[2])||verify.st_ino!=before.st_ino||
     verify.st_dev!=before.st_dev)
   clean_stage(parent,stage,&owned,"CAS_PRECONDITION_MISMATCH");

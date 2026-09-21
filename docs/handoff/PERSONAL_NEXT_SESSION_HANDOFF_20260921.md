@@ -74,5 +74,5 @@ Time-outs occurred during long chat/tool turns. The true cause (UI transport tim
 
 ## 10. Native expected-SHA existing-file replacement (2026-09-21 follow-up)
 - Earlier section 9 describes default-OFF 32-name core. The native CAS candidate adds a separate default-OFF `L1_NATIVE_REPLACE_ENABLED=1` and private hash-pinned binary, plus matching L0 flag, exposing a 33-name operational core with functioning `local_replace_file`. Base 32 core and 36 development remain when flag OFF.
-- Verify latest HEAD and `docs/verification/PERSONAL_NATIVE_CAS_IMPL_20260921.md`; verify full local and exact-SHA CI before acceptance. SHA recheck and same-directory atomic rename do not constitute kernel-atomic CAS against malicious same-UID mutation. Independent review, ACL/xattr semantics and signed distribution remain OPEN.
+- Verify latest HEAD and `docs/verification/PERSONAL_NATIVE_CAS_IMPL_20260921.md`; verify full local and exact-SHA CI before acceptance. SHA recheck and same-directory atomic rename do not constitute kernel-atomic CAS against malicious same-UID mutation. The metadata guard now preserves copyable xattrs and refuses extended ACLs or file flags; independent review, concurrent metadata changes and signed distribution remain OPEN.
 - No Business Personal registration, P8/Business v2/M16 change, real data migration, or PR merge is authorized here.

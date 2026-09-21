@@ -105,11 +105,18 @@ try{
  assert.equal(wrong.isError,true);
  assert.equal(wrong.value.code,"CAS_PRECONDITION_MISMATCH");
  assert.equal(readFileSync(target,"utf8"),"MCP_BASE");
+ const attach=spawnSync("/usr/bin/xattr",["-w","com.example.chatagent.mcp","MCP_META",target],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(attach.status,0,attach.stderr);
  const changed=await call("local_replace_file",{path:target,content:"MCP_UPDATED",
   expectedSha256:made.value.sha256});
  assert.equal(changed.isError,false);
  assert.equal(changed.value.commitMode,"DIRFD_EXPECTED_SHA_RENAME");
  assert.equal(readFileSync(target,"utf8"),"MCP_UPDATED");
+ const retained=spawnSync("/usr/bin/xattr",["-p","com.example.chatagent.mcp",target],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(retained.status,0,retained.stderr);
+ assert.equal(retained.stdout.trim(),"MCP_META");
  const collision=await call("local_create_file",{path:target,content:"NEVER"});
  assert.equal(collision.isError,true);
  assert.equal(readFileSync(target,"utf8"),"MCP_UPDATED");

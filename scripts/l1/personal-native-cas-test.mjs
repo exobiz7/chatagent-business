@@ -75,6 +75,42 @@ try{
  await assert.rejects(()=>racing.replace({path:join(work,"race.txt"),
    content:"THIRD",expectedSha256:sha("FIRST")}),/CAS_PRECONDITION_MISMATCH/);
  assert.equal(readFileSync(join(work,"race.txt"),"utf8"),"OTHER");
+ const xattrTarget=join(work,"with-attribute.txt");
+ writeFileSync(xattrTarget,"META_BASE",{mode:0o600,flag:"wx"});
+ const setAttr=spawnSync("/usr/bin/xattr",["-w","com.example.chatagent.review","VALUE",xattrTarget],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(setAttr.status,0,setAttr.stderr);
+ const metadataResult=await files.replace({path:xattrTarget,content:"META_UPDATED",
+  expectedSha256:sha("META_BASE")});
+ assert.equal(metadataResult.changed,true);
+ const getAttr=spawnSync("/usr/bin/xattr",["-p","com.example.chatagent.review",xattrTarget],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(getAttr.status,0,getAttr.stderr);
+ assert.equal(getAttr.stdout.trim(),"VALUE");
+ console.log("PASS user xattr survives native replacement");
+ const aclTarget=join(work,"with-acl.txt");
+ writeFileSync(aclTarget,"ACL_BASE",{mode:0o600,flag:"wx"});
+ const acl=spawnSync("/bin/chmod",["+a","user:"+process.env.USER+" allow read",aclTarget],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(acl.status,0,acl.stderr);
+ await assert.rejects(()=>files.replace({path:aclTarget,content:"ACL_UPDATED",
+  expectedSha256:sha("ACL_BASE")}),/CAS_METADATA_UNSUPPORTED/);
+ assert.equal(readFileSync(aclTarget,"utf8"),"ACL_BASE");
+ assert.equal(readdirSync(work).some(x=>x.startsWith(".personal-cas-")),false);
+ console.log("PASS unsupported ACL refused before effect; no orphan stage");
+ const flagged=join(work,"with-flags.txt");
+ writeFileSync(flagged,"FLAG_BASE",{mode:0o600,flag:"wx"});
+ const setFlag=spawnSync("/usr/bin/chflags",["uchg",flagged],{encoding:"utf8",timeout:5000});
+ assert.equal(setFlag.status,0,setFlag.stderr);
+ try{
+  await assert.rejects(()=>files.replace({path:flagged,content:"FLAG_UPDATED",
+   expectedSha256:sha("FLAG_BASE")}),/CAS_METADATA_UNSUPPORTED/);
+  assert.equal(readFileSync(flagged,"utf8"),"FLAG_BASE");
+ }finally{
+  const unset=spawnSync("/usr/bin/chflags",["nouchg",flagged],{encoding:"utf8",timeout:5000});
+  assert.equal(unset.status,0,unset.stderr);
+ }
+ console.log("PASS unsupported file flags refused before effect");
  console.log("PASS pre-commit external edit rejects stale digest, preserves intervening content");
  console.log("PERSONAL_NATIVE_CAS_TEST=PASS");
 }catch(e){console.error("PERSONAL_NATIVE_CAS_TEST=FAIL "+e.stack);process.exitCode=1;}

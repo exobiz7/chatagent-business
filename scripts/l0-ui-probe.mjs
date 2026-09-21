@@ -154,7 +154,7 @@ const server=http.createServer(async(req,res)=>{
         catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
       });
       if(!personalCoreTools||nativeReplaceEnabled)mcp.registerTool("local_replace_file",{
-        description:nativeReplaceEnabled?"Replace an EXISTING regular file only when its SHA-256 matches expectedSha256. New-file creation remains separate. Atomic rename visibility; no malicious same-UID race protection or blind retry on uncertain result.":strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
+        description:nativeReplaceEnabled?"Replace an EXISTING regular file at exact expected SHA-256; create remains separate. Preserve regular mode and xattrs; ACL/special flags refused. Atomic rename visibility, NOT race-free kernel CAS; never retry uncertain results blindly.":strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
         inputSchema:z.strictObject({path,content:z.string().max(262144),expectedSha256:sha}),
         annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
       },async(a)=>{
