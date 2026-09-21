@@ -1,6 +1,6 @@
 import http from "node:http";
 import {boundedJSONBody} from "./bounded-json-body.mjs";
-import {auditedFileMutation,fileEffectDetails} from "./file-effect-status.mjs";
+import {auditedFileMutation,auditedFileRead,fileEffectDetails} from "./file-effect-status.mjs";
 import net from "node:net";
 import { readFileSync, existsSync, chmodSync, unlinkSync, lstatSync } from "node:fs";
 import { timingSafeEqual, createHash } from "node:crypto";
@@ -179,7 +179,8 @@ async function handleAgent(req,res){
     const pathDigest=pathFingerprint(a);
     const execute=()=>files[op](a);
     const result=["write","copy","create","replace"].includes(op)
-     ?await auditedFileMutation(broker,op,pathDigest,execute):await execute();
+     ?await auditedFileMutation(broker,op,pathDigest,execute)
+     :await auditedFileRead(broker,op,pathDigest,execute);
     return json(res,200,result);
   }
  }catch(e){

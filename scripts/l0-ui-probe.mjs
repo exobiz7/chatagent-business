@@ -1,5 +1,6 @@
 import http from "node:http";
 import {boundedJSONBody} from "./l1/bounded-json-body.mjs";
+import {callL1} from "./l1/l1-file-transport.mjs";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -34,18 +35,7 @@ if(scratchTools&&!semanticWriteTools)throw Error("SEMANTIC_WRITE_TOOLS_REQUIRED"
 if(semanticWriteTools&&!powerUserTools)throw Error("POWERUSER_TOOLS_REQUIRED");
 if(powerUserTools&&!l1Url)throw Error("L1_BROKER_REQUIRED");
 async function brokerCall(route,body={}){
-  const timeoutMs=["file/hash","file/copy"].includes(route)?120000:30000;
-  const response=await fetch(l1Url+"/agent/"+route,{method:"POST",headers:{"content-type":"application/json","x-chatagent-l1-credential":l1Token},body:JSON.stringify(body),signal:AbortSignal.timeout(timeoutMs)});
-  const result=await response.json();
-  if(!response.ok){
-    const e=Error(result.code||"L1_UNAVAILABLE");
-    if(["COMMITTED","UNCERTAIN"].includes(result.effect)){
-      e.effect=result.effect;e.retryable=false;
-    }
-    if(result.audit==="UNCERTAIN")e.audit="UNCERTAIN";
-    throw e;
-  }
-  return result;
+  return callL1({route,body,url:l1Url,token:l1Token});
 }
 
 const requests=new Map();

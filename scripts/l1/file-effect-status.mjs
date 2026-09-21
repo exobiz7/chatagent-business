@@ -33,3 +33,24 @@ export async function auditedFileMutation(broker,op,pathDigest,execute){
  }
  return result;
 }
+
+
+// Preserve pre-F02 read-only file completion/failure audit. No mutation effect
+// is inferred and an audit failure never overwrites an operation's root cause.
+export async function auditedFileRead(broker,op,pathDigest,execute){
+ let result;
+ try{result=await execute();}
+ catch(e){
+  try{broker.record("HOST_FILE_FAILED",{operation:op,pathDigest,code:codeOf(e)});
+      broker.save();}
+  catch{e.audit="UNCERTAIN";}
+  throw e;
+ }
+ try{broker.record("HOST_FILE_COMPLETED",{operation:op,pathDigest});broker.save();}
+ catch{
+  const e=Error("HOST_FILE_READ_AUDIT_FAILED");
+  e.audit="UNCERTAIN";
+  throw e;
+ }
+ return result;
+}

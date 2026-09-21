@@ -19,6 +19,7 @@ const tests=[
  "scripts/l1/personal-native-cas-test.mjs",
  "scripts/l1/personal-native-cas-mcp-test.mjs",
  "scripts/l1/personal-f01-f02-contract-test.mjs",
+ "scripts/l1/personal-f02-r1-test.mjs",
  "scripts/l1/l6-b05-async-hash-test.mjs",
  "scripts/l1/l6-b05-async-hash-mcp-test.mjs",
  "scripts/l1/l6-b05-async-copy-test.mjs",
