@@ -90,6 +90,126 @@ try{
   argv:["-e","process.stdout.write('OTHER')"],timeoutMs:10000,idempotencyKey:randomUUID()});
  assert.throws(()=>r.status({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
  assert.throws(()=>r.stop({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
+ // F04: no action ever reserved: the original key remains sealed, no replay.
+ const beforeActionKey=randomUUID(),beforeActionDest=join(work,"before-action.bin");
+ const realStart=r.processes.start.bind(r.processes);
+ r.processes.start=async()=>{throw Error("TEST_BEFORE_ACTION");};
+ await assert.rejects(()=>r.start({source,destination:beforeActionDest,
+  expectedSourceSha256:expected,idempotencyKey:beforeActionKey}),/TEST_BEFORE_ACTION/);
+ r.processes.start=realStart;
+ await assert.rejects(()=>r.start({source,destination:beforeActionDest,
+  expectedSourceSha256:expected,idempotencyKey:beforeActionKey}),
+  /ASYNC_COPY_RECONCILIATION_REQUIRED/);
+ assert.equal(existsSync(beforeActionDest),false);
+ // An action sealed before the config/runner exists still exposes its original
+ // processId as RECOVERY_REQUIRED, not a new process or a fabricated success.
+ const reservedKey=randomUUID(),reservedDest=join(work,"reserved-action.bin");
+ const reservedId=randomUUID(),sealedNonce=sha(JSON.stringify("fixture-nonce"));
+ r.processes.start=async input=>{
+  const {idempotencyKey,...intent}=input;
+  b2.reserveAction(idempotencyKey,sha(JSON.stringify(intent)),
+   {processId:reservedId,nonceDigest:sealedNonce});
+  throw Error("TEST_AFTER_ACTION_RESERVATION");
+ };
+ await assert.rejects(()=>r.start({source,destination:reservedDest,
+  expectedSourceSha256:expected,idempotencyKey:reservedKey}),/TEST_AFTER_ACTION_RESERVATION/);
+ r.processes.start=realStart;
+ const reservedReopenBroker=new L1Broker(state);
+ const reservedReopen=new AsyncCopyJobs(reservedReopenBroker,
+  new HostFileOps(reservedReopenBroker,{privateRoot:state,strictMutations:true}),
+  {binary:helper,binarySha:helperSha});
+ const recoveredReservation=await reservedReopen.start({source,destination:reservedDest,
+  expectedSourceSha256:expected,idempotencyKey:reservedKey});
+ assert.equal(recoveredReservation.processId,reservedId);
+ assert.equal(recoveredReservation.state,"RECOVERY_REQUIRED");
+ assert.equal(reservedReopenBroker.state.actions.filter(x=>x.key===reservedKey).length,1);
+ assert.equal(reservedReopenBroker.state.copyJobs.find(x=>x.key===reservedKey).processId,reservedId);
+ assert.equal(existsSync(reservedDest),false);
+ const originalStatus=reservedReopen.processes.status.bind(reservedReopen.processes);
+ reservedReopen.processes.status=()=>{throw Error("RECOVERY_REQUIRED");};
+ const stillOwned=await reservedReopen.start({source,destination:reservedDest,
+  expectedSourceSha256:expected,idempotencyKey:reservedKey});
+ assert.equal(stillOwned.processId,reservedId);
+ assert.equal(stillOwned.state,"RECOVERY_REQUIRED");
+ reservedReopen.processes.status=originalStatus;
+ await assert.rejects(()=>reservedReopen.inspectStage({processId:reservedId}),
+  /COPY_RECONCILIATION_REQUIRED/);
+ // An unrelated or corrupted action digest must never be linked to this copy.
+ const badActionKey=randomUUID(),badActionDest=join(work,"bad-action.bin");
+ const badActionId=randomUUID();
+ r.processes.start=async input=>{
+  b2.reserveAction(input.idempotencyKey,sha(JSON.stringify({unrelated:true})),
+   {processId:badActionId,nonceDigest:sealedNonce});
+  throw Error("TEST_MISMATCHED_ACTION");
+ };
+ await assert.rejects(()=>r.start({source,destination:badActionDest,
+  expectedSourceSha256:expected,idempotencyKey:badActionKey}),/TEST_MISMATCHED_ACTION/);
+ r.processes.start=realStart;
+ await assert.rejects(()=>r.start({source,destination:badActionDest,
+  expectedSourceSha256:expected,idempotencyKey:badActionKey}),
+  /ASYNC_COPY_RECONCILIATION_REQUIRED/);
+ assert.equal(b2.state.copyJobs.find(x=>x.key===badActionKey).processId,null);
+ assert.equal(existsSync(badActionDest),false);
+ // A failed reconciliation save must not announce a durable binding.
+ const saveKey=randomUUID(),saveDest=join(work,"save-uncertain.bin"),saveId=randomUUID();
+ r.processes.start=async input=>{
+  const {idempotencyKey,...intent}=input;
+  b2.reserveAction(idempotencyKey,sha(JSON.stringify(intent)),
+   {processId:saveId,nonceDigest:sealedNonce});
+  throw Error("TEST_SAVE_WINDOW");
+ };
+ await assert.rejects(()=>r.start({source,destination:saveDest,
+  expectedSourceSha256:expected,idempotencyKey:saveKey}),/TEST_SAVE_WINDOW/);
+ r.processes.start=realStart;
+ const uncertainBroker=new L1Broker(state);
+ const uncertainJobs=new AsyncCopyJobs(uncertainBroker,
+  new HostFileOps(uncertainBroker,{privateRoot:state,strictMutations:true}),
+  {binary:helper,binarySha:helperSha});
+ const safeSave=uncertainBroker.save.bind(uncertainBroker);
+ uncertainBroker.save=()=>{throw Error("TEST_STATE_SAVE_FAILED");};
+ await assert.rejects(()=>uncertainJobs.start({source,destination:saveDest,
+  expectedSourceSha256:expected,idempotencyKey:saveKey}),
+  /ASYNC_COPY_RECONCILIATION_REQUIRED/);
+ assert.equal(uncertainBroker.state.copyJobs.find(x=>x.key===saveKey).processId,null);
+ uncertainBroker.save=safeSave;
+ const safeReconcile=await uncertainJobs.start({source,destination:saveDest,
+  expectedSourceSha256:expected,idempotencyKey:saveKey});
+ assert.equal(safeReconcile.processId,saveId);
+ assert.equal(safeReconcile.state,"RECOVERY_REQUIRED");
+ assert.equal(existsSync(saveDest),false);
+ console.log("PASS F04 no-action seal, pre-config processId reconciliation and digest mismatch denial");
+ // Real detached runner launched, then simulated copy binding interruption.
+ // Relaunch must reconnect to the SAME action/processId, never spawn again.
+ for(const legacy of [false,true]){
+  const interruptedKey=randomUUID(),interruptedDest=join(work,legacy?"legacy-recovered.bin":"recovered.bin");
+  let launchedId=null;
+  r.processes.start=async input=>{
+   const launched=await realStart(input);launchedId=launched.processId;
+   throw Error("TEST_POST_LAUNCH_BEFORE_COPY_BIND");
+  };
+  await assert.rejects(()=>r.start({source,destination:interruptedDest,
+   expectedSourceSha256:expected,idempotencyKey:interruptedKey}),/TEST_POST_LAUNCH_BEFORE_COPY_BIND/);
+  r.processes.start=realStart;
+  const pendingRec=b2.state.copyJobs.find(x=>x.key===interruptedKey);
+  assert.equal(pendingRec.processId,null);
+  if(legacy){delete pendingRec.sourceDev;delete pendingRec.sourceIno;b2.save();}
+  const restartBroker=new L1Broker(state);
+  const restartJobs=new AsyncCopyJobs(restartBroker,
+   new HostFileOps(restartBroker,{privateRoot:state,strictMutations:true}),
+   {binary:helper,binarySha:helperSha});
+  const resumed=await restartJobs.start({source,destination:interruptedDest,
+   expectedSourceSha256:expected,idempotencyKey:interruptedKey});
+  assert.equal(resumed.processId,launchedId);
+  await wait(()=>["EXITED","FAILED"].includes(restartJobs.status({processId:launchedId}).state));
+  const finished=restartJobs.read({processId:launchedId,cursor:0,maxBytes:16384});
+  assert.equal(finished.exitCode,0,finished.content);
+  assert.match(finished.content,/COPY_DONE/);
+  assert.equal(sha(readFileSync(interruptedDest)),expected);
+  assert.equal(restartBroker.state.actions.filter(x=>x.key===interruptedKey).length,1);
+  assert.equal((await restartJobs.start({source,destination:interruptedDest,
+   expectedSourceSha256:expected,idempotencyKey:interruptedKey})).processId,launchedId);
+ }
+ console.log("PASS F04 real post-launch recovery, legacy record linkage and same-ID no-replay");
  broker.setMode("ASK",pass);
  await assert.rejects(()=>jobs.start({source,destination:join(work,"blocked.bin"),
   expectedSourceSha256:expected,idempotencyKey:randomUUID()}),/ACCESS_REQUIRED/);

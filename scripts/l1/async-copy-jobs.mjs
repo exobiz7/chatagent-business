@@ -1,14 +1,84 @@
-import {promises as fs,constants as C} from "node:fs";
+import {promises as fs,constants as C,existsSync,lstatSync,fstatSync,openSync,readFileSync,closeSync} from "node:fs";
 import {dirname,join,isAbsolute} from "node:path";
 import {createHash,randomUUID} from "node:crypto";
 import {DurableHostProcesses} from "./durable-host-processes.mjs";
 
 const validSha=s=>typeof s==="string"&&/^[a-f0-9]{64}$/.test(s);
+const digest=v=>createHash("sha256").update(JSON.stringify(v)).digest("hex");
+const uuid=s=>typeof s==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+const decimal=s=>typeof s==="string"&&/^\d+$/.test(s);
 export class AsyncCopyJobs {
  constructor(broker,files,{processes=null,binary,binarySha}={}){
   if(!isAbsolute(binary??"")||!validSha(binarySha))throw Error("INVALID_COPY_HELPER_CONFIG");
   this.broker=broker;this.files=files;this.binary=binary;this.binarySha=binarySha;
   this.processes=processes??new DurableHostProcesses(broker);
+ }
+ actionInput(rec,dev,ino){
+  return {executable:process.execPath,
+   argv:[new URL("./async-file-copy-worker.mjs",import.meta.url).pathname,
+    this.binary,this.binarySha,rec.sourcePath,rec.destinationPath,
+    rec.expectedSourceSha256,String(rec.bytes),dev,ino,rec.stageId],
+   cwd:dirname(rec.destinationPath),timeoutMs:3600000};
+ }
+ // Legacy reservations predate sealed source dev/ino. Recover ONLY if the
+ // private action config itself matches the sealed action digest and this
+ // copy's immutable stage/source/destination/size. No live source re-stat:
+ // the original source may have changed since the interrupted launch.
+ legacyIdentity(rec,action){
+  const directory=this.processes.jobDir(action.processId);
+  const file=join(directory,"config.json");
+  if(!existsSync(file))throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  for(const path of [directory,file]){
+   const st=lstatSync(path);
+   if(st.isSymbolicLink()||(st.mode&0o077)!==0||
+      (typeof process.getuid==="function"&&st.uid!==process.getuid())||
+      (path===directory?!st.isDirectory():!st.isFile()))
+    throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  }
+  const fd=openSync(file,C.O_RDONLY|C.O_NOFOLLOW);
+  let config;
+  try{
+   const st=fstatSync(fd);
+   if(!st.isFile()||st.size>65536||(st.mode&0o077)!==0||
+      (typeof process.getuid==="function"&&st.uid!==process.getuid()))
+    throw Error("UNSAFE_COPY_CONFIG");
+   config=JSON.parse(readFileSync(fd,{encoding:"utf8"}));
+  }catch{throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");}
+  finally{closeSync(fd);}
+  if(!config||typeof config!=="object"||!validSha(config.nonce)||
+     config.processId!==action.processId||digest(config.nonce)!==action.nonceDigest||
+     !Array.isArray(config.argv)||config.argv.length!==10||
+     !decimal(config.argv[7])||!decimal(config.argv[8]))
+   throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  const [dev,ino]=config.argv.slice(7,9);
+  if(digest(this.actionInput(rec,dev,ino))!==action.digest)
+   throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  return {dev,ino};
+ }
+ // Bind only the original HMAC-sealed action with the same key AND exact
+ // intended launch digest. Never invoke processes.start here or replay effect.
+ reconcile(rec){
+  const action=(this.broker.state.actions??[]).find(x=>x.key===rec.key);
+  if(!action||!uuid(action.processId)||!validSha(action.nonceDigest)||
+     !validSha(action.digest)||!["ISSUED","EXITED","FAILED","TERMINATED"].includes(action.stage)||
+     !uuid(rec.stageId)||!Number.isSafeInteger(rec.bytes)||rec.bytes<0||
+     (this.broker.state.copyJobs??[]).some(x=>x!==rec&&x.processId===action.processId))
+   throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  const {dev,ino}=decimal(rec.sourceDev)&&decimal(rec.sourceIno)
+   ?{dev:rec.sourceDev,ino:rec.sourceIno}:this.legacyIdentity(rec,action);
+  if(digest(this.actionInput(rec,dev,ino))!==action.digest)
+   throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  const previousAudit=this.broker.state.audit.slice();
+  rec.processId=action.processId;
+  this.broker.record("ASYNC_COPY_RECONCILED",{stageId:rec.stageId,processId:action.processId});
+  // An uncertain state save must not be advertised as durable in this session.
+  // A fresh sealed reload can always repeat reconciliation without replay.
+  try{this.broker.save();}
+  catch{
+   rec.processId=null;this.broker.state.audit=previousAudit;
+   throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  }
+  return action.processId;
  }
  async start({source,destination,expectedSourceSha256,idempotencyKey}){
   if(typeof source!=="string"||typeof destination!=="string"||
@@ -26,9 +96,16 @@ export class AsyncCopyJobs {
    if(old.sourcePathSha256!==hash(from)||old.destinationPathSha256!==hash(to)||
        old.expectedSourceSha256!==expectedSourceSha256)
     throw Error("IDEMPOTENCY_KEY_CONFLICT");
-   if(!old.processId)throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
-   return {source:from,destination:to,bytes:old.bytes,
-     ...this.processes.status({processId:old.processId})};
+   if(!old.processId)this.reconcile(old);
+   let observed;
+   try{observed=this.processes.status({processId:old.processId});}
+   catch(e){
+    // A damaged or still-unbound runner cannot make the sealed action ID vanish.
+    // Expose only RECOVERY_REQUIRED; never claim terminal state or replay.
+    if(e?.message!=="RECOVERY_REQUIRED")throw e;
+    observed={processId:old.processId,state:"RECOVERY_REQUIRED"};
+   }
+   return {source:from,destination:to,bytes:old.bytes,...observed};
   }
   const fd=await fs.open(from,C.O_RDONLY|C.O_NOFOLLOW);
   let st;
@@ -47,16 +124,12 @@ export class AsyncCopyJobs {
    destinationPath:to,
    sourcePathSha256:createHash("sha256").update(from).digest("hex"),
    destinationPathSha256:createHash("sha256").update(to).digest("hex"),
-   expectedSourceSha256,bytes:st.size,createdAt:Date.now(),stageCleanup:"NONE"};
+   expectedSourceSha256,bytes:st.size,sourceDev:String(st.dev),sourceIno:String(st.ino),
+   createdAt:Date.now(),stageCleanup:"NONE"};
   entries.push(record);this.broker.state.copyJobs=entries;
   this.broker.record("ASYNC_COPY_RESERVED",{stageId});this.broker.save();
-  const job=await this.processes.start({
-   executable:process.execPath,
-   argv:[new URL("./async-file-copy-worker.mjs",import.meta.url).pathname,
-    this.binary,this.binarySha,from,to,expectedSourceSha256,
-    String(st.size),String(st.dev),String(st.ino),stageId],
-   cwd:dirname(to),timeoutMs:3600000,idempotencyKey
-  });
+  const job=await this.processes.start({...this.actionInput(record,record.sourceDev,record.sourceIno),
+   idempotencyKey});
   record.processId=job.processId;
   this.broker.record("ASYNC_COPY_BOUND",{processId:job.processId});
   this.broker.save();

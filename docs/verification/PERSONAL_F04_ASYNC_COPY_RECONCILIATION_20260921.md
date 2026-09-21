@@ -1,0 +1,23 @@
+# Personal F04 — sealed async copy action reconciliation (engineering candidate)
+
+Date: 2026-09-21 KST. Previous independently reviewed implementation SHA: `3f9a4a824d7b39f8d8129a9b0636714850241e70`; handoff-only branch parent: `764f297bd148dd54d4983d223bff0166a6dd8632`. The implementation SHA containing this document must be recorded in PR #5 following commit.
+Independent baseline: `/Users/macstudio/CodexReview/chatagent-personal/90f1b89cb71b247a768e589fdc7987f6a6835d1c-static-n78czyco/02_FINDINGS_AND_REPRO.md` (F04) and subsequent Astra reports.
+**Engineering scope only — not independent F04 closure or owner beta approval.**
+
+## Goal and implemented contract
+- F04: copyJobs may persist `processId:null` before `DurableHostProcesses.start()` seals a process action. A crash or uncertain response between those saves formerly prevented the copy API from finding the original job.
+- `scripts/l1/async-copy-jobs.mjs`: record original source `dev/ino` as strings in the HMAC-sealed copy reservation alongside stage UUID, canonical paths, source digest and source size. Centralize the exact `{executable,argv,cwd,timeoutMs}` construction for launch and reconciliation.
+- On a request with the **same idempotency key and matching original paths/source SHA**, if copy `processId` is missing, look up the original sealed action by key. Validate process UUID, stage UUID, nonce digest, valid action stage and **exact original launch fingerprint**. Bind only that action processId to the reserved copy record with an audit event and persistent save. Never call `processes.start` in the reconciliation branch or spawn another helper.
+- Legacy records without stored source dev/ino can recover only from a bounded, private, no-follow action `config.json` that matches the sealed nonce and launch digest and this copy's original stage/source/destination/size. If no intact matching action/config exists, refuse `ASYNC_COPY_RECONCILIATION_REQUIRED`; never guess the original identity or infer success from current files.
+## Status and failure semantics
+- After binding, query only `processes.status({processId})` for the original action. An unavailable/unverified runner yields the original processId plus `RECOVERY_REQUIRED`, **not** EXITED or a duplicate copy. The same-key request can surface the ID without adding a new tool or opening arbitrary process-status access.
+- Persist failure in the new copy binding refuses success and rolls back the in-memory ID/audit; a subsequent request/restart can repeat the same sealed-ID reconciliation without replay. A previous fsync/rename outcome may remain uncertain; do not report guaranteed durability when save threw.
+- If only a copy reservation was persisted and no sealed action exists, retain the non-replay fence and require operator reconciliation. For a legacy copy record with no stored dev/ino AND no intact private action config, likewise refuse; this is an explicit bounded limitation, not an automatic recovery claim.
+- Stage inspect/cleanup remain separately guarded by owned processId, verified **terminal** process status, owner write grant, hash and inode preconditions. A RECOVERY_REQUIRED process is **not** eligible for stage cleanup. Copy semantics remain create-only; no existing destination may be overwritten.
+
+## Tests and evidence limits
+- Expanded `scripts/l1/l6-b05-async-copy-test.mjs` using its pre-existing private temporary owner/work tree and compiled native helper. New cases: no action reserved (same key refuses replay); action reserved but no runner config (same processId surfaced as RECOVERY_REQUIRED); mismatched sealed action digest refused; injected failed copy-binding persistence and safe retry; **real detached runner started** then simulated error before copy ID binding, followed by broker reopen and same-key reconciliation (new and legacy copy records), SHA/destination and single-action assertions.
+- Existing normal copy, duplicate suppression, wrong source SHA, existing destination refusal, stage inspection/cleanup and owner-grant tests remain.
+- Targeted local test: PASS. Final local `npm test`: record separately after final run. Exact-SHA Push/PR macOS CI: record separately after commit.
+- Failure window injection is test-owned and deterministic: **not** an actual mid-window broker SIGKILL/power failure. Real operational user data, live Personal Business app E2E, disk loss, simultaneous independent client retries and all process identity races are UNVERIFIED.
+- F03 native CAS metadata concurrency remains P1 OPEN and unchanged; F01 real HTTP split remains UNVERIFIED. Optional offline encrypted backup is a separate acceptance item. 32/33 core beta entry remains HOLD pending independent F04 re-review, outstanding gates and owner decision.
