@@ -6,6 +6,10 @@ const lost=async()=>{throw Error("ECONNRESET: do not disclose transport details"
 const invalid=async()=>({ok:true,json:async()=>{throw SyntaxError("bad JSON");}});
 const malformed=async()=>({ok:true,json:async()=>null});
 const reply=(ok,content)=>async()=>({ok,json:async()=>content});
+const validSha="a".repeat(64);
+const receipt=route=>route==="file/copy"
+ ?{source:"/tmp/fixture-source",destination:"/tmp/fixture-destination",bytes:7,sha256:validSha,changed:true}
+ :{path:"/tmp/fixture-target",bytes:7,sha256:validSha,changed:true};
 try{
  for(const route of ["file/create","file/write","file/replace","file/copy"]){
   for(const fetchImpl of [lost,invalid,malformed]){
@@ -16,17 +20,44 @@ try{
  }
  console.log("PASS F02-R1 file mutation fetch, JSON and malformed response are UNCERTAIN, never retryable");
  const result=await callL1({...options,route:"file/replace",
-  fetchImpl:reply(true,{sha256:"fixture-digest",changed:true})});
- assert.deepEqual(result,{sha256:"fixture-digest",changed:true});
+  fetchImpl:reply(true,{...receipt("file/replace"),commitMode:"DIRFD_EXPECTED_SHA_RENAME"})});
+ assert.deepEqual(result,{...receipt("file/replace"),commitMode:"DIRFD_EXPECTED_SHA_RENAME"});
  for(const effect of ["COMMITTED","UNCERTAIN"]){
   await assert.rejects(()=>callL1({...options,route:"file/replace",
-   fetchImpl:reply(false,{code:"HOST_FILE_AUDIT_UNCERTAIN",effect,audit:"UNCERTAIN"})}),e=>
+   fetchImpl:reply(false,{code:"HOST_FILE_AUDIT_UNCERTAIN",effect,
+    retryable:false,audit:"UNCERTAIN"})}),e=>
    e.message==="HOST_FILE_AUDIT_UNCERTAIN"&&e.effect===effect&&
    e.retryable===false&&e.audit==="UNCERTAIN");
  }
  await assert.rejects(()=>callL1({...options,route:"file/replace",
   fetchImpl:reply(false,{code:"CAS_PRECONDITION_MISMATCH"})}),e=>
   e.message==="CAS_PRECONDITION_MISMATCH"&&e.effect===undefined);
+ for(const route of ["file/create","file/write","file/replace","file/copy"]){
+  const good=receipt(route);
+  assert.deepEqual(await callL1({...options,route,fetchImpl:reply(true,good)}),good);
+  for(const malformedResult of [
+   {},{unrelated:true},{...good,bytes:"7"},{...good,sha256:"bad"},
+   {...good,changed:false},{...good,changed:undefined},
+   {...good,path:"",source:route==="file/copy"?"":good.source},
+   {...good,code:"HOST_FILE_COMPLETED"}, {...good,effect:"COMMITTED"}
+  ]){
+   await assert.rejects(()=>callL1({...options,route,
+    fetchImpl:reply(true,malformedResult)}),e=>
+    e.message==="L1_MUTATION_RESPONSE_UNCERTAIN"&&e.effect==="UNCERTAIN"&&e.retryable===false);
+  }
+  for(const malformedError of [
+   {},{unrelated:true},{code:42},{code:"not-a-code"},
+   {code:"CAS_PRECONDITION_MISMATCH",retryable:true},
+   {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED"},
+   {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED",retryable:false,audit:"BAD"},
+   {code:"CAS_PRECONDITION_MISMATCH",changed:true,bytes:7,sha256:validSha}
+  ]){
+   await assert.rejects(()=>callL1({...options,route,
+    fetchImpl:reply(false,malformedError)}),e=>
+    e.message==="L1_MUTATION_RESPONSE_UNCERTAIN"&&e.effect==="UNCERTAIN"&&e.retryable===false);
+  }
+ }
+ console.log("PASS F02-R1.1 all mutation routes require complete receipts and valid failure envelopes");
  console.log("PASS F02-R1 normal L1 success, COMMITTED/UNCERTAIN and known rejection preserved");
  for(const route of ["file/read","file/hash","status","process/start","async-copy/start"]){
   for(const fetchImpl of [lost,invalid]){
