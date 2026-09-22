@@ -45,10 +45,22 @@ export class AsyncCopyJobs {
    config=JSON.parse(readFileSync(fd,{encoding:"utf8"}));
   }catch{throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");}
   finally{closeSync(fd);}
-  if(!config||typeof config!=="object"||!validSha(config.nonce)||
-     config.processId!==action.processId||digest(config.nonce)!==action.nonceDigest||
+  if(!config||typeof config!=="object"||Array.isArray(config)||
+     !validSha(config.nonce)||config.processId!==action.processId||
+     digest(config.nonce)!==action.nonceDigest||
+     typeof config.executable!=="string"||!isAbsolute(config.executable)||
+     typeof config.cwd!=="string"||!isAbsolute(config.cwd)||
+     !Number.isInteger(config.timeoutMs)||config.timeoutMs<100||config.timeoutMs>3600000||
      !Array.isArray(config.argv)||config.argv.length!==10||
+     config.argv.some(x=>typeof x!=="string"||x.length>8192||x.includes("\0"))||
      !decimal(config.argv[7])||!decimal(config.argv[8]))
+   throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
+  // Hash the *actual* persisted execution fields before comparing the
+  // original copy's reconstructed intent. Never authenticate one and bind
+  // another: the runner consumes this config, not the reconstructed object.
+  const actualIntent={executable:config.executable,argv:config.argv,
+   cwd:config.cwd,timeoutMs:config.timeoutMs};
+  if(digest(actualIntent)!==action.digest)
    throw Error("ASYNC_COPY_RECONCILIATION_REQUIRED");
   const [dev,ino]=config.argv.slice(7,9);
   if(digest(this.actionInput(rec,dev,ino))!==action.digest)

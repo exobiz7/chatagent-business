@@ -214,6 +214,68 @@ try{
  await assert.rejects(()=>jobs.start({source,destination:join(work,"blocked.bin"),
   expectedSourceSha256:expected,idempotencyKey:randomUUID()}),/ACCESS_REQUIRED/);
  console.log("PASS private state, unrelated process ID and revoked gate denial");
+ // F04-R1: the *actual* legacy runner config must match the sealed action
+ // AND the copy record. These are owner-only fixtures: never launch the
+ // intentionally mismatched configs or touch existing user paths.
+ const legacyKey=randomUUID(),legacyDest=join(work,"legacy-contract.bin");
+ const legacyId=randomUUID(),legacyNonce="f".repeat(64);
+ let originalIntent,launchAttempts=0;
+ r.processes.start=async input=>{
+  const {idempotencyKey,...intent}=input;
+  originalIntent=intent;
+  b2.reserveAction(idempotencyKey,sha(JSON.stringify(intent)),
+   {processId:legacyId,nonceDigest:sha(JSON.stringify(legacyNonce))});
+  throw Error("TEST_F04_LEGACY_PREPARED");
+ };
+ await assert.rejects(()=>r.start({source,destination:legacyDest,
+  expectedSourceSha256:expected,idempotencyKey:legacyKey}),/TEST_F04_LEGACY_PREPARED/);
+ r.processes.start=async()=>{launchAttempts++;throw Error("UNEXPECTED_SECOND_LAUNCH");};
+ const legacyRec=b2.state.copyJobs.find(x=>x.key===legacyKey);
+ delete legacyRec.sourceDev;delete legacyRec.sourceIno;b2.save();
+ const legacyJobDir=join(state,"jobs",legacyId);
+ mkdirSync(legacyJobDir,{mode:0o700});
+ const legacyConfigFile=join(legacyJobDir,"config.json");
+ const validConfig={...originalIntent,processId:legacyId,nonce:legacyNonce};
+ const changeArg=(i,v)=>c=>{c.argv[i]=v;};
+ const mutations=[
+  ["executable",c=>{c.executable="/unrelated/node";}],
+  ["cwd",c=>{c.cwd="/unrelated/work";}],
+  ["timeout",c=>{c.timeoutMs=1000;}],
+  ...[0,1,2,3,4,5,6,9].map(i=>["argv["+i+"]",
+   changeArg(i,"altered-"+i)]),
+  ["missing executable",c=>{delete c.executable;}],
+  ["missing argv",c=>{delete c.argv;}],
+  ["invalid timeout",c=>{c.timeoutMs="3600000";}],
+  ["bad argv type",c=>{c.argv[3]=3;}],
+  ["mismatched dev",changeArg(7,"999999")],
+  ["mismatched ino",changeArg(8,"999999")],
+  ["mismatched nonce",c=>{c.nonce="e".repeat(64);}]
+ ];
+ for(const [label,mutate] of mutations){
+  const candidate=JSON.parse(JSON.stringify(validConfig));mutate(candidate);
+  writeFileSync(legacyConfigFile,JSON.stringify(candidate),{mode:0o600});
+  await assert.rejects(()=>r.start({source,destination:legacyDest,
+   expectedSourceSha256:expected,idempotencyKey:legacyKey}),
+   /ASYNC_COPY_RECONCILIATION_REQUIRED/,label);
+  assert.equal(legacyRec.processId,null,label);
+  assert.equal(b2.state.audit.some(a=>a.action==="ASYNC_COPY_RECONCILED"&&
+   a.processId===legacyId),false,label);
+ }
+ const legacyBeforeReopen=new L1Broker(state);
+ assert.equal(legacyBeforeReopen.state.copyJobs.find(x=>x.key===legacyKey).processId,null);
+ assert.equal(launchAttempts,0);
+ assert.equal(existsSync(legacyDest),false);
+ writeFileSync(legacyConfigFile,JSON.stringify(validConfig),{mode:0o600});
+ const recoveredLegacy=await r.start({source,destination:legacyDest,
+  expectedSourceSha256:expected,idempotencyKey:legacyKey});
+ assert.equal(recoveredLegacy.processId,legacyId);
+ assert.equal(recoveredLegacy.state,"RECOVERY_REQUIRED");
+ assert.equal(launchAttempts,0);
+ assert.equal(b2.state.actions.filter(x=>x.key===legacyKey).length,1);
+ assert.equal((new L1Broker(state)).state.copyJobs.find(x=>x.key===legacyKey).processId,legacyId);
+ r.processes.start=realStart;
+ console.log("PASS F04-R1 "+mutations.length+" legacy config mismatches rejected, intact config same-ID recovery, no replay");
+
  console.log("L6_B05_ASYNC_COPY=PASS");
 }catch(e){console.error("L6_B05_ASYNC_COPY=FAIL "+e.stack);process.exitCode=1;}
 finally{rmSync(root,{recursive:true,force:true});console.log("isolated_fixture_cleanup=COMPLETE");}
