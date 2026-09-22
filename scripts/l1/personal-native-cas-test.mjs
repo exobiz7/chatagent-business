@@ -122,6 +122,43 @@ try{
   assert.equal(unset.status,0,unset.stderr);
  }
  console.log("PASS unsupported file flags refused before effect");
+ // Compile-time, fixture-only F03 mutations occur AFTER staging and BEFORE
+ // final verification. The production pinned helper is compiled without hooks.
+ const drifts=[
+  ["mode","PERSONAL_TEST_CAS_MODE_DRIFT"],
+  ["xattr","PERSONAL_TEST_CAS_XATTR_DRIFT"],
+  ["stage-xattr","PERSONAL_TEST_CAS_STAGE_XATTR_DRIFT"]
+ ];
+ for(const [name,macro] of drifts){
+  const testBinary=join(root,"native-cas-f03-"+name);
+  const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
+   "-Wall","-Wextra","-Werror","-O2","-D"+macro,
+   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   {encoding:"utf8",timeout:10000});
+  assert.equal(built.status,0,built.stderr);
+  chmodSync(testBinary,0o700);
+  const driftTarget=join(work,"f03-"+name+".txt");
+  writeFileSync(driftTarget,"F03_BASE",{mode:0o600,flag:"wx"});
+  if(name!=="mode"){
+   const set=spawnSync("/usr/bin/xattr",["-w","com.example.chatagent.f03","ORIGINAL",driftTarget],
+    {encoding:"utf8",timeout:5000});
+   assert.equal(set.status,0,set.stderr);
+  }
+  const run=spawnSync(testBinary,[driftTarget,sha("F03_BASE")],{
+   input:"F03_REPLACE",encoding:"utf8",timeout:10000});
+  assert.equal(run.status,2,name+" "+run.stderr);
+  assert.equal(run.stderr.trim(),"CAS_TARGET_CHANGED",name);
+  assert.equal(readFileSync(driftTarget,"utf8"),"F03_BASE",name);
+  assert.equal(readdirSync(work).some(x=>x.startsWith(".personal-cas-")),false,name);
+  if(name==="mode")assert.equal(statSync(driftTarget).mode&0o777,0o700);
+  else{
+   const get=spawnSync("/usr/bin/xattr",["-p","com.example.chatagent.f03",driftTarget],
+    {encoding:"utf8",timeout:5000});
+   assert.equal(get.status,0,get.stderr);
+   assert.equal(get.stdout.trim(),name==="xattr"?"CHANGED":"ORIGINAL",name);
+  }
+ }
+ console.log("PASS F03 deterministic mode/source-xattr/stage-xattr drift refuses stale metadata without replacing target");
  console.log("PASS pre-commit external edit rejects stale digest, preserves intervening content");
  console.log("PERSONAL_NATIVE_CAS_TEST=PASS");
 }catch(e){console.error("PERSONAL_NATIVE_CAS_TEST=FAIL "+e.stack);process.exitCode=1;}

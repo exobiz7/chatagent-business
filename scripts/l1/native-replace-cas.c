@@ -35,6 +35,13 @@ static int parent_fd(const char *full,char *leaf){
  }
  fail("CAS_INVALID_PATH");return -1;
 }
+// This compares an observed metadata snapshot; it is NOT an atomic compare
+// with a later rename. ctime detects metadata-only edits including mode/xattrs.
+static int same_metadata(const struct stat *a,const struct stat *b){
+ return a->st_mode==b->st_mode&&a->st_flags==b->st_flags&&
+        a->st_ctimespec.tv_sec==b->st_ctimespec.tv_sec&&
+        a->st_ctimespec.tv_nsec==b->st_ctimespec.tv_nsec;
+}
 static int hash_file(int fd,struct stat *before,unsigned char digest[CC_SHA256_DIGEST_LENGTH]){
  if(fstat(fd,before)||!S_ISREG(before->st_mode)||before->st_nlink!=1||
     before->st_uid!=geteuid()||before->st_size<0||before->st_size>MAX_OLD)
@@ -53,7 +60,8 @@ static int hash_file(int fd,struct stat *before,unsigned char digest[CC_SHA256_D
  struct stat after;
  if(fstat(fd,&after)||after.st_dev!=before->st_dev||after.st_ino!=before->st_ino||
     after.st_size!=before->st_size||after.st_mtimespec.tv_sec!=before->st_mtimespec.tv_sec||
-    after.st_mtimespec.tv_nsec!=before->st_mtimespec.tv_nsec)
+    after.st_mtimespec.tv_nsec!=before->st_mtimespec.tv_nsec||
+    !same_metadata(before,&after))
   return 0;
  return 1;
 }
@@ -114,6 +122,37 @@ static void preserve_xattrs(int from,int to,int parent,const char *stage,
  }
  free(names);
 }
+// Compare the complete bounded original xattr set with what was copied to
+// the staged inode. A list-size match is not sufficient: values can change
+// while content SHA stays identical. Refuse (do not guess) on any read error.
+static int same_xattrs(int from,int to){
+ ssize_t alen=flistxattr(from,NULL,0,0),blen=flistxattr(to,NULL,0,0);
+ if(alen<0||blen<0||alen>32768||blen>32768||alen!=blen)return 0;
+ if(!alen)return 1;
+ char *names=malloc((size_t)alen);
+ if(!names)return 0;
+ int equal=0;
+ if(flistxattr(from,names,(size_t)alen,0)!=alen)goto done;
+ size_t off=0;
+ while(off<(size_t)alen){
+  const char *name=names+off;
+  size_t left=(size_t)alen-off,n=strnlen(name,left);
+  if(!n||n==left)goto done;
+  ssize_t size=fgetxattr(from,name,NULL,0,0,0);
+  if(size<0||size>1048576||fgetxattr(to,name,NULL,0,0,0)!=size)goto done;
+  void *a=malloc(size?(size_t)size:1),*b=malloc(size?(size_t)size:1);
+  if(!a||!b){free(a);free(b);goto done;}
+  ssize_t ar=fgetxattr(from,name,a,(size_t)size,0,0);
+  ssize_t br=fgetxattr(to,name,b,(size_t)size,0,0);
+  int match=ar==size&&br==size&&!memcmp(a,b,(size_t)size);
+  free(a);free(b);
+  if(!match)goto done;
+  off+=n+1;
+ }
+ equal=1;
+done:
+ free(names);return equal;
+}
 int main(int argc,char **argv){
  if(argc!=3||!argv[2]||strlen(argv[2])!=64)fail("CAS_INPUT_INVALID");
  for(size_t i=0;i<64;i++)
@@ -164,6 +203,19 @@ int main(int argc,char **argv){
  }
  if(fsync(temp))fail("CAS_STAGE_FSYNC_UNCERTAIN");
  close_ok(temp);
+ // Test-only deterministic metadata drift after the staged snapshot. The
+ // normal pinned production binary has none of these compile-time branches.
+#if defined(PERSONAL_TEST_CAS_MODE_DRIFT)
+ if(fchmod(original,(before.st_mode&0777)^0100))fail("CAS_TEST_SETUP_FAILED");
+#elif defined(PERSONAL_TEST_CAS_XATTR_DRIFT)
+ if(fsetxattr(original,"com.example.chatagent.f03","CHANGED",7,0,0))
+  fail("CAS_TEST_SETUP_FAILED");
+#elif defined(PERSONAL_TEST_CAS_STAGE_XATTR_DRIFT)
+ int testfd=openat(parent,stage,O_WRONLY|O_NOFOLLOW|O_CLOEXEC);
+ if(testfd<0||fsetxattr(testfd,"com.example.chatagent.f03","STAGE",5,0,0))
+  fail("CAS_TEST_SETUP_FAILED");
+ close_ok(testfd);
+#endif
  // A substituted leaf or content edit before this check MUST NOT be replaced.
  // A malicious same-UID writer between this check and rename is not excluded.
  struct stat now;
@@ -172,7 +224,8 @@ int main(int argc,char **argv){
     now.st_dev!=before.st_dev||now.st_ino!=before.st_ino||
     now.st_size!=before.st_size||
     now.st_mtimespec.tv_sec!=before.st_mtimespec.tv_sec||
-    now.st_mtimespec.tv_nsec!=before.st_mtimespec.tv_nsec)
+    now.st_mtimespec.tv_nsec!=before.st_mtimespec.tv_nsec||
+    !same_metadata(&before,&now))
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
  unsigned char final[CC_SHA256_DIGEST_LENGTH];struct stat verify;
  if(!hash_file(original,&verify,final))clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
@@ -181,8 +234,17 @@ int main(int argc,char **argv){
  if(!same_sha(final,argv[2])||verify.st_ino!=before.st_ino||
     verify.st_dev!=before.st_dev)
   clean_stage(parent,stage,&owned,"CAS_PRECONDITION_MISMATCH");
+ int stagefd=openat(parent,stage,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);
+ if(stagefd<0)clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
+ struct stat staged_now;
+ if(fstat(stagefd,&staged_now)||staged_now.st_dev!=owned.st_dev||
+    staged_now.st_ino!=owned.st_ino||staged_now.st_nlink!=1||
+    !same_metadata(&before,&verify)||!same_xattrs(original,stagefd))
+  clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
+ close_ok(stagefd);
  if(fstatat(parent,leaf,&now,AT_SYMLINK_NOFOLLOW)||now.st_dev!=before.st_dev||
-    now.st_ino!=before.st_ino||now.st_nlink!=1)
+    now.st_ino!=before.st_ino||now.st_nlink!=1||
+    !same_metadata(&before,&now))
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
  if(renameat(parent,stage,parent,leaf))
   clean_stage(parent,stage,&owned,"CAS_RENAME_FAILED");
