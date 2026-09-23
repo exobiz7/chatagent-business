@@ -7,6 +7,8 @@ import {randomUUID,randomBytes,createHash} from "node:crypto";
 import net from "node:net";
 import {setTimeout as delay} from "node:timers/promises";
 import {L1Broker} from "./broker-core.mjs";
+import {Client} from "@modelcontextprotocol/sdk/client/index.js";
+import {StreamableHTTPClientTransport} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const root=realpathSync(mkdtempSync(join(realpathSync("/tmp"),"ppm-")));
 const state=join(root,"owner"),memoryRoot=join(root,"personal-memory"),key=join(root,"agent.key"),mcpKey=join(root,"mcp.key");
@@ -23,7 +25,7 @@ const freePort=async()=>{
 };
 const brokerPort=await freePort(),mcpPort=await freePort();
 if(brokerPort===mcpPort)throw Error("PORT_COLLISION");
-let server=null,mcp=null,coreMcp=null;
+let server=null,mcp=null,coreMcp=null,coreSdk=null;
 const wait=async(child,port)=>{
  for(let i=0;i<70;i++){
   if(child.exitCode!==null)throw Error("EARLY_EXIT");
@@ -109,7 +111,14 @@ try{
   stdio:"ignore"
  });
  await wait(coreMcp,corePort);
- const coreTools=(await requestAt(corePort,"tools/list")).tools;
+ // Use the real MCP SDK client, not only hand-authored JSON-RPC/fetch.
+ // The server remains a fixture-owned local transport, NOT a Business app.
+ coreSdk=new Client({name:"personal-core-isolated-sdk-probe",version:"1.0.0"});
+ await coreSdk.connect(new StreamableHTTPClientTransport(
+  new URL("http://127.0.0.1:"+corePort+"/mcp"),{
+   requestInit:{headers:{"x-chatagent-l0-credential":mcpToken}}
+  }));
+ const coreTools=(await coreSdk.listTools()).tools;
  const coreNames=coreTools.map(tool=>tool.name);
  const hidden=["l0_confirmation_probe","local_replace_file","local_copy","local_process_input"];
  assert.equal(coreNames.length,32);
@@ -118,7 +127,7 @@ try{
  assert.deepEqual(coreTools.find(x=>x.name==="local_write").inputSchema.properties.mode.enum,["create"]);
  assert.equal(coreNames.some(name=>/backup|restore|archive|rotate|continuity/.test(name)),false);
  const coreCall=async(name,args)=>{
-  const x=await requestAt(corePort,"tools/call",{name,arguments:args});
+  const x=await coreSdk.callTool({name,arguments:args});
   return {value:x.structuredContent,isError:x.isError===true};
  };
  const coreFile=join(root,"work","core-profile.txt");
@@ -145,7 +154,10 @@ try{
  assert.equal(coreTerminal.exitCode,0);
  const coreOutput=await coreCall("local_process_read",{processId:coreExec.value.processId,cursor:0,maxBytes:1024});
  assert.match(coreOutput.value.content,/CORE_EXEC_OK/);
- console.log("PASS 32-tool core profile: no unavailable placeholders, create/read/memory/owned exec effects");
+ const coreHashed=await coreCall("local_hash",{path:coreFile});
+ assert.equal(coreHashed.isError,false);
+ assert.equal(coreHashed.value.sha256,sha("CORE_PROFILE_OK"));
+ console.log("PASS 32-tool real MCP SDK client initialize/list/call; create/read/hash/memory/owned exec effects");
  const hashTool=tools.find(x=>x.name==="local_async_hash_start");
  assert.deepEqual(hashTool.annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
  const ctool=tools.find(x=>x.name==="local_scratch_create");
@@ -188,11 +200,11 @@ try{
  const hashPath=join(root,"work","9mb.bin"),hashData=Buffer.alloc(9*1024*1024,0x5a);
  writeFileSync(hashPath,hashData,{mode:0o600});
  const hashKey=randomUUID();
- const hashJob=await call("local_async_hash_start",{path:hashPath,idempotencyKey:hashKey});
+ const hashJob=await coreCall("local_async_hash_start",{path:hashPath,idempotencyKey:hashKey});
  assert.equal(hashJob.isError,false);assert.ok(hashJob.value.processId);
  let terminal,uncertainObservations=0;
  for(let i=0;i<120;i++){
-  const status=await call("local_async_hash_status",{processId:hashJob.value.processId});
+  const status=await coreCall("local_async_hash_status",{processId:hashJob.value.processId});
   assert.equal(status.isError,false);
   if(status.value.state==="EXITED"){terminal=status.value;break;}
   if(status.value.state==="RECOVERY_REQUIRED")uncertainObservations++;
@@ -202,63 +214,69 @@ try{
  }
  assert.ok(terminal,"HASH_TERMINAL_TIMEOUT_UNKNOWN_"+uncertainObservations);
  console.log("HASH_UNCERTAIN_OBSERVATIONS="+uncertainObservations);
- const result=await call("local_async_hash_read",{processId:hashJob.value.processId,cursor:0,maxBytes:16384});
+ const result=await coreCall("local_async_hash_read",{processId:hashJob.value.processId,cursor:0,maxBytes:16384});
  assert.equal(result.isError,false);assert.equal(result.value.exitCode,0);
  assert.match(result.value.content,/HASH_PROGRESS/);
  assert.match(result.value.content,new RegExp(sha(hashData)));
  assert.match(result.value.content,/HASH_DONE/);
- const same=await call("local_async_hash_start",{path:hashPath,idempotencyKey:hashKey});
+ const same=await coreCall("local_async_hash_start",{path:hashPath,idempotencyKey:hashKey});
  assert.equal(same.value.processId,hashJob.value.processId);
- const stopped=await call("local_async_hash_stop",{processId:hashJob.value.processId});
+ const stopped=await coreCall("local_async_hash_stop",{processId:hashJob.value.processId});
  assert.equal(stopped.value.state,"EXITED");
- console.log("PASS actual MCP 9MiB async hash progress, terminal SHA, owned status and no replay");
+ console.log("PASS core SDK MCP 9MiB async hash progress, terminal SHA, owned status and no replay");
  const copyDestination=join(root,"work","copied.bin");
- const cp=await call("local_async_copy_start",{source:hashPath,destination:copyDestination,
-   expectedSourceSha256:sha(hashData),idempotencyKey:randomUUID()});
+ const copyKey=randomUUID();
+ const cp=await coreCall("local_async_copy_start",{source:hashPath,destination:copyDestination,
+   expectedSourceSha256:sha(hashData),idempotencyKey:copyKey});
  assert.equal(cp.isError,false);assert.ok(cp.value.processId);
  let cpTerminal;
  for(let i=0;i<120;i++){
-  const status=await call("local_async_copy_status",{processId:cp.value.processId});
+  const status=await coreCall("local_async_copy_status",{processId:cp.value.processId});
   if(status.value.state==="EXITED"){cpTerminal=status.value;break;}
   if(["FAILED","TERMINATED"].includes(status.value.state))throw Error("ASYNC_COPY_FAILED");
   // Observe this same processId only; never duplicate an uncertain copy effect.
   await delay(80);
  }
  assert.ok(cpTerminal,"ASYNC_COPY_TIMEOUT");
- const out=await call("local_async_copy_read",{processId:cp.value.processId,cursor:0,maxBytes:16384});
+ const out=await coreCall("local_async_copy_read",{processId:cp.value.processId,cursor:0,maxBytes:16384});
  assert.equal(out.value.exitCode,0,out.value.content);
  assert.match(out.value.content,/COPY_DONE/);
  assert.equal(sha(readFileSync(copyDestination)),sha(hashData));
- const denied=await call("local_async_copy_start",{source:hashPath,destination:copyDestination,
+ const sameCopy=await coreCall("local_async_copy_start",{source:hashPath,destination:copyDestination,
+   expectedSourceSha256:sha(hashData),idempotencyKey:copyKey});
+ assert.equal(sameCopy.isError,false);
+ assert.equal(sameCopy.value.processId,cp.value.processId);
+ assert.equal(sha(readFileSync(copyDestination)),sha(hashData));
+ const denied=await coreCall("local_async_copy_start",{source:hashPath,destination:copyDestination,
    expectedSourceSha256:sha(hashData),idempotencyKey:randomUUID()});
  assert.equal(denied.isError,true);assert.equal(denied.value.code,"COPY_DESTINATION_EXISTS");
- console.log("PASS real MCP create-only native async 9MiB copy, final hash, pre-existing denial");
- const corrupt=await call("local_async_copy_start",{source:hashPath,
+ console.log("PASS core SDK MCP native async 9MiB copy, original-ID no replay, existing-destination denial");
+ const corrupt=await coreCall("local_async_copy_start",{source:hashPath,
    destination:join(root,"work","bad-copy.bin"),
    expectedSourceSha256:sha("WRONG"),idempotencyKey:randomUUID()});
  assert.equal(corrupt.isError,false);
  for(let i=0;i<110;i++){
-  const st=await call("local_async_copy_status",{processId:corrupt.value.processId});
+  const st=await coreCall("local_async_copy_status",{processId:corrupt.value.processId});
   if(st.value.state==="FAILED")break;
   if(i===109)throw Error("BAD_COPY_NOT_TERMINAL");
   await delay(70);
  }
- const initial=await call("local_copy_stage_inspect",{processId:corrupt.value.processId});
+ const initial=await coreCall("local_copy_stage_inspect",{processId:corrupt.value.processId});
  assert.equal(initial.value.state,"STAGE_ABSENT_UNVERIFIED");
  const stage=join(root,"work",".personal-copy-"+initial.value.stageId+".stage");
  writeFileSync(stage,"ISOLATED_ORPHAN_STAGE",{mode:0o600,flag:"wx"});
- const found=await call("local_copy_stage_inspect",{processId:corrupt.value.processId});
+ const found=await coreCall("local_copy_stage_inspect",{processId:corrupt.value.processId});
  assert.equal(found.value.stageSha256,sha("ISOLATED_ORPHAN_STAGE"));
- const mismatch=await call("local_copy_stage_cleanup",{processId:corrupt.value.processId,
+ const mismatch=await coreCall("local_copy_stage_cleanup",{processId:corrupt.value.processId,
   expectedStageSha256:sha("wrong"),expectedDev:found.value.stageDev,
   expectedIno:found.value.stageIno});
  assert.equal(mismatch.isError,true);
- const exact=await call("local_copy_stage_cleanup",{processId:corrupt.value.processId,
+ const exact=await coreCall("local_copy_stage_cleanup",{processId:corrupt.value.processId,
   expectedStageSha256:found.value.stageSha256,expectedDev:found.value.stageDev,
   expectedIno:found.value.stageIno});
  assert.equal(exact.isError,false);assert.equal(exact.value.changed,true);
  assert.equal(existsSync(stage),false);
- console.log("PASS owner-only MCP stage inspection, wrong digest denial, exact cleanup");
+ console.log("PASS core SDK owned stage inspection, wrong digest denial, exact cleanup");
  assert.equal(tools.some(x=>x.name.startsWith("local_continuity_")),false);
  const pr=await call("personal_project_register",{projectId:"personal-test",rootLabel:"Isolated personal fixture",operationId:randomUUID()});
  assert.equal(pr.isError,false);
@@ -276,6 +294,7 @@ try{
  console.log("PERSONAL_36_TOOL_CANDIDATE=PASS");
 }catch(e){console.error("PERSONAL_36_TOOL_CANDIDATE=FAIL "+e.stack);process.exitCode=1;}
 finally{
+ if(coreSdk)try{await coreSdk.close();}catch{}
  if(coreMcp)coreMcp.kill("SIGTERM");
  if(mcp)mcp.kill("SIGTERM");
  if(server)server.kill("SIGTERM");
