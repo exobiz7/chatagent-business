@@ -1,10 +1,13 @@
 // Personal macOS expected-SHA existing-file replacement. Never creates a missing target.
- // Same-directory rename provides atomic visibility, not a kernel-atomic hash compare
- // against hostile same-UID concurrent writers. No broad locks, privileged execution
- // or arbitrary deletion. Input bytes are read only from stdin.
+// Safe Replace v2 holds flock-style exclusive locks on both the original and staged
+// inodes, then uses Darwin renameatx_np(RENAME_SWAP) so the displaced target remains
+// recoverable until post-swap identity/content/metadata validation succeeds.
+// Raw same-UID writers can ignore advisory locks, so a detected race is atomically
+// rolled back when safe; uncertainty is fail-closed and never retryable.
 #define _DARWIN_C_SOURCE 1
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -41,6 +44,18 @@ static int same_metadata(const struct stat *a,const struct stat *b){
  return a->st_mode==b->st_mode&&a->st_flags==b->st_flags&&
         a->st_ctimespec.tv_sec==b->st_ctimespec.tv_sec&&
         a->st_ctimespec.tv_nsec==b->st_ctimespec.tv_nsec;
+}
+static int same_identity(const struct stat *a,const struct stat *b){
+ return a->st_dev==b->st_dev&&a->st_ino==b->st_ino;
+}
+// rename swap changes ctime on APFS. Compare the semantic fields that the swap
+// itself does not change; xattrs are checked separately against the staged inode.
+static int same_postswap_metadata(const struct stat *a,const struct stat *b){
+ return a->st_mode==b->st_mode&&a->st_flags==b->st_flags&&
+        a->st_uid==b->st_uid&&a->st_gid==b->st_gid&&
+        a->st_nlink==b->st_nlink&&a->st_size==b->st_size&&
+        a->st_mtimespec.tv_sec==b->st_mtimespec.tv_sec&&
+        a->st_mtimespec.tv_nsec==b->st_mtimespec.tv_nsec;
 }
 static int hash_file(int fd,struct stat *before,unsigned char digest[CC_SHA256_DIGEST_LENGTH]){
  if(fstat(fd,before)||!S_ISREG(before->st_mode)||before->st_nlink!=1||
@@ -81,6 +96,27 @@ static void clean_stage(int parent,const char *stage,const struct stat *owned,
     now.st_dev!=owned->st_dev||now.st_ino!=owned->st_ino||now.st_nlink!=1||
     unlinkat(parent,stage,0))fail("CAS_STAGE_CLEANUP_UNCERTAIN");
  fail(reason);
+}
+// After a successful RENAME_SWAP, restore the exact directory entries only if
+// our staged inode still owns the public leaf and the displaced entry still owns
+// the private stage. This preserves an intervening external writer instead of
+// silently overwriting it. Any ambiguity is non-retryable uncertainty.
+static void rollback_swap(int parent,const char *stage,const char *leaf,
+                          const struct stat *owned,const struct stat *displaced){
+ struct stat leaf_now,stage_now;
+ if(fstatat(parent,leaf,&leaf_now,AT_SYMLINK_NOFOLLOW)||
+    fstatat(parent,stage,&stage_now,AT_SYMLINK_NOFOLLOW)||
+    !same_identity(&leaf_now,owned)||!same_identity(&stage_now,displaced))
+  fail("CAS_ROLLBACK_UNCERTAIN");
+ if(renameatx_np(parent,stage,parent,leaf,RENAME_SWAP|RENAME_NOFOLLOW_ANY))
+  fail("CAS_ROLLBACK_UNCERTAIN");
+ struct stat leaf_restored,stage_restored;
+ if(fstatat(parent,leaf,&leaf_restored,AT_SYMLINK_NOFOLLOW)||
+    fstatat(parent,stage,&stage_restored,AT_SYMLINK_NOFOLLOW)||
+    !same_identity(&leaf_restored,displaced)||!same_identity(&stage_restored,owned))
+  fail("CAS_ROLLBACK_UNCERTAIN");
+ if(unlinkat(parent,stage,0)||fsync(parent))fail("CAS_ROLLBACK_UNCERTAIN");
+ fail("CAS_TARGET_CHANGED");
 }
 // ACLs and file flags are not safely transferable by this candidate.
 // Refuse BEFORE the replacement effect instead of silently dropping them.
@@ -167,9 +203,23 @@ int main(int argc,char **argv){
   length+=(size_t)n;
  }
  if(length>MAX_NEW)fail("CAS_INPUT_LIMIT");
+ unsigned char incoming_digest[CC_SHA256_DIGEST_LENGTH];
+ CC_SHA256(incoming,(CC_LONG)length,incoming_digest);
  char leaf[PATH_MAX];int parent=parent_fd(argv[1],leaf);
- int original=openat(parent,leaf,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);
- if(original<0)fail(errno==ENOENT?"CAS_TARGET_MISSING":"CAS_TARGET_UNSAFE");
+ int original=openat(parent,leaf,O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_EXLOCK);
+ if(original<0){
+  int saved=errno;
+  if(saved==ENOENT)fail("CAS_TARGET_MISSING");
+  if(saved==ENOTSUP||saved==EOPNOTSUPP)fail("CAS_LOCK_UNSUPPORTED");
+  fail("CAS_TARGET_UNSAFE");
+ }
+ // O_EXLOCK may wait while another cooperating helper commits. Revalidate the
+ // path after the lock is actually acquired so a stale vnode is a conflict,
+ // not misreported as an intrinsically unsafe target.
+ struct stat opened,locked_leaf;
+ if(fstat(original,&opened))fail("CAS_TARGET_UNSAFE");
+ if(fstatat(parent,leaf,&locked_leaf,AT_SYMLINK_NOFOLLOW)||
+    !same_identity(&opened,&locked_leaf))fail("CAS_TARGET_CHANGED");
  struct stat before;unsigned char current[CC_SHA256_DIGEST_LENGTH];
  if(!hash_file(original,&before,current))fail("CAS_TARGET_UNSAFE");
  if(!same_sha(current,argv[2]))fail("CAS_PRECONDITION_MISMATCH");
@@ -185,8 +235,9 @@ int main(int argc,char **argv){
    stage[15+j*2]=hex[entropy[j]&15];
   }
   stage[46]='\0';
-  temp=openat(parent,stage,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);
+  temp=openat(parent,stage,O_RDWR|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC|O_EXLOCK,0600);
   if(temp>=0)break;
+  if(errno==ENOTSUP||errno==EOPNOTSUPP)fail("CAS_LOCK_UNSUPPORTED");
   if(errno!=EEXIST)fail("CAS_STAGE_CREATE_FAILED");
  }
  if(temp<0)fail("CAS_STAGE_CREATE_FAILED");
@@ -202,7 +253,6 @@ int main(int argc,char **argv){
   written+=(size_t)n;
  }
  if(fsync(temp))fail("CAS_STAGE_FSYNC_UNCERTAIN");
- close_ok(temp);
  // Test-only deterministic metadata drift after the staged snapshot. The
  // normal pinned production binary has none of these compile-time branches.
 #if defined(PERSONAL_TEST_CAS_MODE_DRIFT)
@@ -234,23 +284,85 @@ int main(int argc,char **argv){
  if(!same_sha(final,argv[2])||verify.st_ino!=before.st_ino||
     verify.st_dev!=before.st_dev)
   clean_stage(parent,stage,&owned,"CAS_PRECONDITION_MISMATCH");
- int stagefd=openat(parent,stage,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);
- if(stagefd<0)clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
  struct stat staged_now;
- if(fstat(stagefd,&staged_now)||staged_now.st_dev!=owned.st_dev||
-    staged_now.st_ino!=owned.st_ino||staged_now.st_nlink!=1||
-    !same_metadata(&before,&verify)||!same_xattrs(original,stagefd))
+ if(fstat(temp,&staged_now)||!same_identity(&staged_now,&owned)||
+    staged_now.st_nlink!=1||!same_metadata(&before,&verify)||
+    !same_xattrs(original,temp))
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
- close_ok(stagefd);
- if(fstatat(parent,leaf,&now,AT_SYMLINK_NOFOLLOW)||now.st_dev!=before.st_dev||
-    now.st_ino!=before.st_ino||now.st_nlink!=1||
-    !same_metadata(&before,&now))
+ if(fstatat(parent,leaf,&now,AT_SYMLINK_NOFOLLOW)||!same_identity(&now,&before)||
+    now.st_nlink!=1||!same_metadata(&before,&now))
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
- if(renameat(parent,stage,parent,leaf))
-  clean_stage(parent,stage,&owned,"CAS_RENAME_FAILED");
- // Visibility committed: any subsequent uncertainty MUST NOT be retried.
+ // Fixture-only races occur AFTER the last pre-swap check. Production builds
+ // define neither macro. They exercise the exact historical F03 window.
+#if defined(PERSONAL_TEST_CAS_PATH_RACE)
+ {
+  const char *race=".personal-cas-race-window";
+  int r=openat(parent,race,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);
+  if(r<0||write(r,"RACE_WINDOW",11)!=11||fsync(r)||close(r)||
+     renameat(parent,race,parent,leaf))fail("CAS_TEST_SETUP_FAILED");
+ }
+#elif defined(PERSONAL_TEST_CAS_CONTENT_RACE)
+ {
+  int r=openat(parent,leaf,O_WRONLY|O_NOFOLLOW|O_CLOEXEC);
+  if(r<0||ftruncate(r,0)||write(r,"RACE_WINDOW",11)!=11||fsync(r)||close(r))
+   fail("CAS_TEST_SETUP_FAILED");
+ }
+#endif
+ if(renameatx_np(parent,stage,parent,leaf,RENAME_SWAP|RENAME_NOFOLLOW_ANY)){
+  int saved=errno;
+  if(saved==ENOENT||saved==ELOOP)
+   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
+  if(saved==ENOTSUP)clean_stage(parent,stage,&owned,"CAS_SWAP_UNSUPPORTED");
+  clean_stage(parent,stage,&owned,"CAS_SWAP_FAILED");
+ }
+#if defined(PERSONAL_TEST_CAS_POSTSWAP_PATH_RACE)
+ {
+  const char *race=".personal-cas-postswap-race";
+  int r=openat(parent,race,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);
+  if(r<0||write(r,"POSTSWAP_RACE",13)!=13||fsync(r)||close(r)||
+     renameat(parent,race,parent,leaf))fail("CAS_TEST_SETUP_FAILED");
+ }
+#elif defined(PERSONAL_TEST_CAS_POSTSWAP_CONTENT_RACE)
+ {
+  int r=openat(parent,leaf,O_WRONLY|O_NOFOLLOW|O_CLOEXEC);
+  if(r<0||ftruncate(r,0)||write(r,"POSTSWAP_MUTATED",16)!=16||fsync(r)||close(r))
+   fail("CAS_TEST_SETUP_FAILED");
+ }
+#endif
+ // Both old and new inodes remain exclusively locked by this process across
+ // the swap. The old directory entry is retained at `stage` until verification.
+ struct stat committed_path,displaced;
+ if(fstatat(parent,leaf,&committed_path,AT_SYMLINK_NOFOLLOW)||
+    fstatat(parent,stage,&displaced,AT_SYMLINK_NOFOLLOW))
+  fail("CAS_ROLLBACK_UNCERTAIN");
+ if(!same_identity(&committed_path,&owned))fail("CAS_ROLLBACK_UNCERTAIN");
+ if(!same_identity(&displaced,&before))
+  rollback_swap(parent,stage,leaf,&owned,&displaced);
+ unsigned char post_digest[CC_SHA256_DIGEST_LENGTH];struct stat post;
+ if(!hash_file(original,&post,post_digest)||!same_identity(&post,&before)||
+    !same_sha(post_digest,argv[2])||!same_postswap_metadata(&before,&post)||
+    !metadata_supported(original,&post)||!same_xattrs(original,temp))
+  rollback_swap(parent,stage,leaf,&owned,&displaced);
+ // Validate the committed NEW inode too. A raw writer can ignore O_EXLOCK; if it
+ // mutates our new inode after the swap, restore the displaced original before
+ // discarding it. This keeps the old data recoverable until both sides validate.
+ unsigned char committed_digest[CC_SHA256_DIGEST_LENGTH];struct stat committed_post;
+ if(!hash_file(temp,&committed_post,committed_digest)||
+    !same_identity(&committed_post,&owned)||
+    memcmp(committed_digest,incoming_digest,CC_SHA256_DIGEST_LENGTH)||
+    !same_postswap_metadata(&staged_now,&committed_post))
+  rollback_swap(parent,stage,leaf,&owned,&displaced);
+ struct stat committed_fd,committed_again,displaced_again;
+ if(fstat(temp,&committed_fd)||!same_identity(&committed_fd,&owned)||
+    fstatat(parent,leaf,&committed_again,AT_SYMLINK_NOFOLLOW)||
+    fstatat(parent,stage,&displaced_again,AT_SYMLINK_NOFOLLOW)||
+    !same_identity(&committed_again,&owned)||!same_identity(&displaced_again,&before))
+  fail("CAS_ROLLBACK_UNCERTAIN");
+ // Make the recoverable two-name swap durable before discarding the old inode.
  if(fsync(parent))fail("CAS_COMMIT_UNCERTAIN");
- close_ok(original);close_ok(parent);
+ if(unlinkat(parent,stage,0))fail("CAS_POSTCOMMIT_UNCERTAIN");
+ if(fsync(parent))fail("CAS_POSTCOMMIT_UNCERTAIN");
+ close_ok(temp);close_ok(original);close_ok(parent);
  printf("CAS_DONE bytes=%llu\n",(unsigned long long)length);
  return 0;
 }

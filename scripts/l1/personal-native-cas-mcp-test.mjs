@@ -111,7 +111,7 @@ try{
  const changed=await call("local_replace_file",{path:target,content:"MCP_UPDATED",
   expectedSha256:made.value.sha256});
  assert.equal(changed.isError,false);
- assert.equal(changed.value.commitMode,"DIRFD_EXPECTED_SHA_RENAME");
+ assert.equal(changed.value.commitMode,"DIRFD_DUAL_EXLOCK_RENAME_SWAP");
  assert.equal(readFileSync(target,"utf8"),"MCP_UPDATED");
  const retained=spawnSync("/usr/bin/xattr",["-p","com.example.chatagent.mcp",target],
   {encoding:"utf8",timeout:5000});

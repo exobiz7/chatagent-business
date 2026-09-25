@@ -29,7 +29,7 @@ try{
  const result=await files.replace({path:target,content:"UPDATED",
    expectedSha256:sha("BASE")});
  assert.equal(result.changed,true);assert.equal(result.sha256,sha("UPDATED"));
- assert.equal(result.commitMode,"DIRFD_EXPECTED_SHA_RENAME");
+ assert.equal(result.commitMode,"DIRFD_DUAL_EXLOCK_RENAME_SWAP");
  assert.equal(readFileSync(target,"utf8"),"UPDATED");
  assert.equal(statSync(target).mode&0o777,0o644);
  const uncertainTarget=join(work,"postcommit.txt");
@@ -159,6 +159,80 @@ try{
   }
  }
  console.log("PASS F03 deterministic mode/source-xattr/stage-xattr drift refuses stale metadata without replacing target");
+ // Exercise the exact historical final-check -> commit window. Safe Replace v2
+ // must detect the displaced inode/content after RENAME_SWAP, atomically restore
+ // the intervening writer, remove only its own staged inode, and report conflict.
+ for(const [name,macro] of [["path-race","PERSONAL_TEST_CAS_PATH_RACE"],
+                            ["content-race","PERSONAL_TEST_CAS_CONTENT_RACE"]]){
+  const testBinary=join(root,"native-cas-f03-"+name);
+  const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
+   "-Wall","-Wextra","-Werror","-O2","-D"+macro,
+   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   {encoding:"utf8",timeout:10000});
+  assert.equal(built.status,0,built.stderr);chmodSync(testBinary,0o700);
+  const raceTarget=join(work,"f03-window-"+name+".txt");
+  writeFileSync(raceTarget,"F03_WINDOW_BASE",{mode:0o600,flag:"wx"});
+  const run=spawnSync(testBinary,[raceTarget,sha("F03_WINDOW_BASE")],{
+   input:"F03_WINDOW_REPLACE",encoding:"utf8",timeout:10000});
+  assert.equal(run.status,2,name+" "+run.stderr);
+  assert.equal(run.stderr.trim(),"CAS_TARGET_CHANGED",name);
+  assert.equal(readFileSync(raceTarget,"utf8"),"RACE_WINDOW",name);
+  assert.equal(readdirSync(work).some(x=>x.startsWith(".personal-cas-")),false,name);
+ }
+ console.log("PASS F03 exact pre-swap path/content races are detected after atomic exchange and rolled back");
+ // A raw writer that changes the public leaf AFTER our atomic swap makes safe
+ // rollback impossible. The helper must never report success or delete the
+ // displaced original; it returns non-retryable uncertainty with recovery data
+ // still present under the private random stage name.
+ {
+  const testBinary=join(root,"native-cas-f03-postswap-race");
+  const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
+   "-Wall","-Wextra","-Werror","-O2","-DPERSONAL_TEST_CAS_POSTSWAP_PATH_RACE",
+   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   {encoding:"utf8",timeout:10000});
+  assert.equal(built.status,0,built.stderr);chmodSync(testBinary,0o700);
+  const raceTarget=join(work,"f03-postswap-race.txt");
+  writeFileSync(raceTarget,"POSTSWAP_BASE",{mode:0o600,flag:"wx"});
+  const run=spawnSync(testBinary,[raceTarget,sha("POSTSWAP_BASE")],{
+   input:"POSTSWAP_REPLACE",encoding:"utf8",timeout:10000});
+  assert.equal(run.status,2,run.stderr);
+  assert.equal(run.stderr.trim(),"CAS_ROLLBACK_UNCERTAIN");
+  assert.equal(readFileSync(raceTarget,"utf8"),"POSTSWAP_RACE");
+  const recovery=readdirSync(work).filter(x=>x.startsWith(".personal-cas-"));
+  assert.equal(recovery.length,1,JSON.stringify(recovery));
+  assert.equal(readFileSync(join(work,recovery[0]),"utf8"),"POSTSWAP_BASE");
+  rmSync(join(work,recovery[0]));
+ }
+ console.log("PASS hostile post-swap leaf race is fail-closed UNCERTAIN and preserves displaced original for recovery");
+ {
+  const testBinary=join(root,"native-cas-f03-postswap-content-race");
+  const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
+   "-Wall","-Wextra","-Werror","-O2","-DPERSONAL_TEST_CAS_POSTSWAP_CONTENT_RACE",
+   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   {encoding:"utf8",timeout:10000});
+  assert.equal(built.status,0,built.stderr);chmodSync(testBinary,0o700);
+  const raceTarget=join(work,"f03-postswap-content-race.txt");
+  writeFileSync(raceTarget,"POSTSWAP_CONTENT_BASE",{mode:0o600,flag:"wx"});
+  const run=spawnSync(testBinary,[raceTarget,sha("POSTSWAP_CONTENT_BASE")],{
+   input:"POSTSWAP_CONTENT_REPLACE",encoding:"utf8",timeout:10000});
+  assert.equal(run.status,2,run.stderr);
+  assert.equal(run.stderr.trim(),"CAS_TARGET_CHANGED");
+  assert.equal(readFileSync(raceTarget,"utf8"),"POSTSWAP_CONTENT_BASE");
+  assert.equal(readdirSync(work).some(x=>x.startsWith(".personal-cas-")),false);
+ }
+ console.log("PASS hostile post-swap content mutation of NEW inode is detected and original is atomically restored");
+ const concurrentTarget=join(work,"concurrent.txt");
+ writeFileSync(concurrentTarget,"CONCURRENT_BASE",{mode:0o600,flag:"wx"});
+ const candidates=Array.from({length:8},(_,i)=>"CONCURRENT_WIN_"+i);
+ const outcomes=await Promise.allSettled(candidates.map(content=>files.replace({
+  path:concurrentTarget,content,expectedSha256:sha("CONCURRENT_BASE")})));
+ const won=outcomes.map((x,i)=>({x,i})).filter(({x})=>x.status==="fulfilled");
+ assert.equal(won.length,1,JSON.stringify(outcomes));
+ assert.equal(readFileSync(concurrentTarget,"utf8"),candidates[won[0].i]);
+ for(const {x} of outcomes.map((x,i)=>({x,i})).filter(({x})=>x.status==="rejected"))
+  assert.match(String(x.reason?.message),/CAS_(PRECONDITION_MISMATCH|TARGET_CHANGED)/);
+ assert.equal(readdirSync(work).some(x=>x.startsWith(".personal-cas-")),false);
+ console.log("PASS dual O_EXLOCK lock-coupling serializes same-target helper processes: exactly one expected-SHA writer commits");
  console.log("PASS pre-commit external edit rejects stale digest, preserves intervening content");
  console.log("PERSONAL_NATIVE_CAS_TEST=PASS");
 }catch(e){console.error("PERSONAL_NATIVE_CAS_TEST=FAIL "+e.stack);process.exitCode=1;}

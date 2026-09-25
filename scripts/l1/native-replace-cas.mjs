@@ -73,5 +73,5 @@ export async function nativeReplaceCAS({binary,expectedBinarySha256,target,expec
   }finally{await committed.close();}
  }catch{throw Error("CAS_POSTCOMMIT_UNCERTAIN");}
  return {path:target,bytes:buffer.length,sha256:digest(buffer),
-   changed:true,commitMode:"DIRFD_EXPECTED_SHA_RENAME"};
+   changed:true,commitMode:"DIRFD_DUAL_EXLOCK_RENAME_SWAP"};
 }
