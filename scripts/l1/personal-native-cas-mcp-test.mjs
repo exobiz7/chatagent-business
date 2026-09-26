@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,chmodSync,
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,chmodSync,readdirSync,
  realpathSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
@@ -95,8 +95,17 @@ try{
  assert.equal(names.includes("local_copy"),false);
  assert.equal(names.includes("l0_confirmation_probe"),false);
  assert.equal(names.some(x=>/backup|archive|rotate|continuity/.test(x)),false);
- assert.equal(tools.find(t=>t.name==="local_replace_file").annotations.destructiveHint,true);
- console.log("PASS opted-in core 33 names includes exact native existing-file replacement");
+ const replaceTool=tools.find(t=>t.name==="local_replace_file");
+ assert.equal(replaceTool.title,"Replace existing file");
+ assert.deepEqual(replaceTool.annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:false,idempotentHint:false});
+ assert.match(replaceTool.description,/explicitly asked|confirmation/i);
+ assert.deepEqual(tools.find(t=>t.name==="local_write").annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
+ assert.deepEqual(tools.find(t=>t.name==="local_async_copy_start").annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
+ assert.deepEqual(tools.find(t=>t.name==="local_async_hash_start").annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
+ assert.deepEqual(tools.find(t=>t.name==="local_exec_start").annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:true});
+ assert.deepEqual(tools.find(t=>t.name==="local_process_stop").annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:false});
+ assert.deepEqual(tools.find(t=>t.name==="personal_task_complete").annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:false});
+ console.log("PASS opted-in core 33 names and OpenAI write/destructive annotations match actual behavior");
  const target=join(work,"mcp-existing.txt");
  const made=await call("local_create_file",{path:target,content:"MCP_BASE"});
  assert.equal(made.isError,false);assert.equal(made.value.sha256,sha("MCP_BASE"));
@@ -111,12 +120,28 @@ try{
  const changed=await call("local_replace_file",{path:target,content:"MCP_UPDATED",
   expectedSha256:made.value.sha256});
  assert.equal(changed.isError,false);
- assert.equal(changed.value.commitMode,"DIRFD_EXPECTED_SHA_RENAME");
+ assert.equal(changed.value.commitMode,"DIRFD_DUAL_EXLOCK_RENAME_SWAP");
  assert.equal(readFileSync(target,"utf8"),"MCP_UPDATED");
  const retained=spawnSync("/usr/bin/xattr",["-p","com.example.chatagent.mcp",target],
   {encoding:"utf8",timeout:5000});
  assert.equal(retained.status,0,retained.stderr);
  assert.equal(retained.stdout.trim(),"MCP_META");
+ const inheritedDir=join(work,"mcp-inherited-acl");
+ mkdirSync(inheritedDir,{mode:0o700});
+ const inherit=spawnSync("/bin/chmod",["+a","everyone allow read,write,file_inherit,directory_inherit",inheritedDir],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(inherit.status,0,inherit.stderr);
+ const inheritedTarget=join(inheritedDir,"target.txt");
+ writeFileSync(inheritedTarget,"MCP_ACL_BASE",{mode:0o600,flag:"wx"});
+ const strip=spawnSync("/bin/chmod",["-N",inheritedTarget],{encoding:"utf8",timeout:5000});
+ assert.equal(strip.status,0,strip.stderr);
+ const inherited=await call("local_replace_file",{path:inheritedTarget,content:"MCP_ACL_NEW",
+  expectedSha256:sha("MCP_ACL_BASE")});
+ assert.equal(inherited.isError,true);
+ assert.equal(inherited.value.code,"CAS_METADATA_UNSUPPORTED");
+ assert.equal(readFileSync(inheritedTarget,"utf8"),"MCP_ACL_BASE");
+ assert.equal(readdirSync(inheritedDir).some(x=>x.startsWith(".personal-cas-")),false);
+ console.log("PASS MCP inherited-stage ACL is refused without replacement or stage debris");
  const collision=await call("local_create_file",{path:target,content:"NEVER"});
  assert.equal(collision.isError,true);
  assert.equal(readFileSync(target,"utf8"),"MCP_UPDATED");

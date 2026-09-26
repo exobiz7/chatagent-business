@@ -20,8 +20,8 @@ try{
  }
  console.log("PASS F02-R1 file mutation fetch, JSON and malformed response are UNCERTAIN, never retryable");
  const result=await callL1({...options,route:"file/replace",
-  fetchImpl:reply(true,{...receipt("file/replace"),commitMode:"DIRFD_EXPECTED_SHA_RENAME"})});
- assert.deepEqual(result,{...receipt("file/replace"),commitMode:"DIRFD_EXPECTED_SHA_RENAME"});
+  fetchImpl:reply(true,{...receipt("file/replace"),commitMode:"DIRFD_DUAL_EXLOCK_RENAME_SWAP"})});
+ assert.deepEqual(result,{...receipt("file/replace"),commitMode:"DIRFD_DUAL_EXLOCK_RENAME_SWAP"});
  for(const {code,effect} of [
   {code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED"},
   {code:"CAS_POSTCOMMIT_UNCERTAIN",effect:"UNCERTAIN"}
@@ -33,6 +33,8 @@ try{
  }
  assert.deepEqual(fileEffectDetails(Error("CAS_POSTCOMMIT_UNCERTAIN")),
   {code:"CAS_POSTCOMMIT_UNCERTAIN",effect:"UNCERTAIN",retryable:false});
+ assert.deepEqual(fileEffectDetails(Error("CAS_ROLLBACK_UNCERTAIN")),
+  {code:"CAS_ROLLBACK_UNCERTAIN",effect:"UNCERTAIN",retryable:false});
  assert.deepEqual(fileEffectDetails(Object.assign(Error("HOST_FILE_AUDIT_UNCERTAIN"),
   {effect:"COMMITTED"})),{code:"HOST_FILE_AUDIT_UNCERTAIN",effect:"COMMITTED",retryable:false});
  await assert.rejects(()=>callL1({...options,route:"file/replace",
