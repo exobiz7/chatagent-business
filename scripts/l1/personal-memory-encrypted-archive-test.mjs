@@ -50,6 +50,12 @@ try{
  assert.throws(()=>restoreEncryptedMemoryArchive({archivePath:alt,destinationDir:join(root,"tampered"),
   archiveKey,ownerStatus,...publish}),/ARCHIVE_AUTHENTICATION_FAILED/);
  assert.equal(existsSync(join(root,"tampered")),false);
+ // The exact helper hash is mandatory; a wrong pin must not create a root.
+ const untrusted=join(root,"untrusted-helper-root");
+ assert.throws(()=>restoreEncryptedMemoryArchive({archivePath:archive,destinationDir:untrusted,
+  archiveKey,ownerStatus,publishHelperPath,publishHelperSha256:"0".repeat(64)}),
+  /BACKUP_HELPER_HASH_MISMATCH/);
+ assert.equal(existsSync(untrusted),false);
  const done=restoreEncryptedMemoryArchive({archivePath:archive,destinationDir:restore,archiveKey,ownerStatus,...publish});
  assert.equal(done.verified,true);assert.equal(done.encryptedSource,true);
  const reopened=new PersonalMemoryStore(restore,{ownerStatus});
@@ -73,10 +79,19 @@ try{
  assert.equal(existsSync(check),false);
  assert.equal(restoreEncryptedMemoryArchive({archivePath:rotated,destinationDir:check,
   archiveKey:newKey,ownerStatus,...publish}).verified,true);
- assert.ok(existsSync(archive));
+ const afterRotation=new PersonalMemoryStore(check,{ownerStatus});
+ assert.equal(afterRotation.taskGet({projectId:"personal-lab",taskId:task.taskId})
+  .task.checkpoints[0].summary,"Confidential personal checkpoint");
+ afterRotation.close();
+ assert.equal(existsSync(archive),true);
+ assert.equal(readFileSync(archive,"utf8"),saved);
+ assert.equal(existsSync(rotated),true);
+ assert.notEqual(readFileSync(rotated,"utf8"),saved);
  console.log("PASS new-file offline archive rotation, old archive retained, wrong key rejected");
  console.log("PASS AES-256-GCM archive hides personal checkpoint and seal key");
  console.log("PASS wrong key / changed ciphertext refusal and verified new-root restore");
+ console.log("PASS pinned native helper SHA mismatch denied before destination creation");
+ console.log("PASS rotated-key restore reopens same checkpoint; original archive retained");
  console.log("PERSONAL_MEMORY_ENCRYPTED_ARCHIVE=PASS");
 }catch(e){console.error("PERSONAL_MEMORY_ENCRYPTED_ARCHIVE=FAIL "+e.stack);process.exitCode=1;}
 finally{try{store?.close();}catch{}rmSync(root,{recursive:true,force:true});console.log("isolated_fixture_cleanup=COMPLETE");}

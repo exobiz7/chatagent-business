@@ -22,7 +22,7 @@ Encryption and decryption each create a private .personal-{archive|decrypt}-work
 
 Exact cleanup demands matching key, target, receipt, stage device/inode, expected tree fingerprint and explicit DELETE_VERIFIED_PERSONAL_STAGE confirmation. It records a durable cleanup-issued marker before deleting the exact directory. Unknown or unexpected files, symlinks, wrong key/target, mismatching hash and an existing cleanup intent fail closed. There is no generic arbitrary-path cleanup API or automatic directory sweep. Stages missing the receipt and ambiguous interrupted cleanups require quarantine and manual review.
 
-The current cleanup uses Node recursive deletion after checks; a hostile same-UID writer could race the final check. It is NOT descriptor-anchored deletion nor a sandbox. Do not promote the current operator function to unattended production cleanup without independent review.
+As of C1-1, archive/decrypt stage cleanup deletes only verified allowlisted files non-recursively and retains cleanup intent on uncertainty; C1-2 also bounds the separate raw-backup/restore scratch cleanup. These operations still use Node pathnames: a hostile same-UID writer may race the final checks or move parents. This is NOT descriptor-anchored deletion or a sandbox. Do not promote the current operator functions to unattended hostile-environment cleanup without independent review.
 
 ## 4. Create-only restore
 

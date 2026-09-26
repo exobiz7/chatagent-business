@@ -32,6 +32,114 @@ const wait=async(fn,tries=125)=>{
  throw Error("ASYNC_COPY_TIMEOUT");
 };
 try{
+ // Regression: concurrent first-use copy starts must never lose ownership.
+ // Serialize only reservation/start/bind; worker execution itself remains parallel.
+ {
+  const concurrencyState=join(root,"concurrency-owner"),concurrencyWork=join(root,"concurrency-work");
+  mkdirSync(concurrencyWork,{mode:0o700});
+  const concurrentSource=join(concurrencyWork,"source.bin");
+  writeFileSync(concurrentSource,"CONCURRENT_COPY",{mode:0o600});
+  const cb=new L1Broker(concurrencyState,{initialize:true});cb.pair(pass);cb.setMode("FULL_HOST",pass);
+  const cf=new HostFileOps(cb,{privateRoot:concurrencyState,strictMutations:true});
+  const started=new Map(),startCalls=new Map();
+  const stubProcesses={
+   async start(input){
+    const key=input.idempotencyKey;startCalls.set(key,(startCalls.get(key)??0)+1);
+    if(started.has(key))return {processId:started.get(key),state:"RUNNING"};
+    await delay(20);
+    const processId=randomUUID();started.set(key,processId);return {processId,state:"RUNNING"};
+   },
+   status({processId}){return {processId,state:"RUNNING"};}
+  };
+  const cj=new AsyncCopyJobs(cb,cf,{processes:stubProcesses,binary:helper,binarySha:helperSha});
+  const k1=randomUUID(),k2=randomUUID();
+  const [a,b]=await Promise.all([
+   cj.start({source:concurrentSource,destination:join(concurrencyWork,"a.bin"),
+    expectedSourceSha256:sha("CONCURRENT_COPY"),idempotencyKey:k1}),
+   cj.start({source:concurrentSource,destination:join(concurrencyWork,"b.bin"),
+    expectedSourceSha256:sha("CONCURRENT_COPY"),idempotencyKey:k2})
+  ]);
+  assert.notEqual(a.processId,b.processId);
+  assert.equal(cb.state.copyJobs.length,2);
+  assert.doesNotThrow(()=>cj.record(a.processId));assert.doesNotThrow(()=>cj.record(b.processId));
+  const reopened=new L1Broker(concurrencyState);
+  assert.equal(reopened.state.copyJobs.length,2);
+  assert.ok(reopened.state.copyJobs.some(x=>x.processId===a.processId));
+  assert.ok(reopened.state.copyJobs.some(x=>x.processId===b.processId));
+
+  // Fresh-state identical-key overlap: one reservation/start, two identical receipts.
+  const sameState=join(root,"same-key-owner"),sameWork=join(root,"same-key-work");
+  mkdirSync(sameWork,{mode:0o700});
+  const sameSource=join(sameWork,"source.bin");writeFileSync(sameSource,"SAME_KEY_COPY",{mode:0o600});
+  const sb=new L1Broker(sameState,{initialize:true});sb.pair(pass);sb.setMode("FULL_HOST",pass);
+  const sf=new HostFileOps(sb,{privateRoot:sameState,strictMutations:true});
+  const sameStarted=new Map(),sameStartCalls=new Map();
+  const sameProcesses={
+   async start(input){
+    const key=input.idempotencyKey;sameStartCalls.set(key,(sameStartCalls.get(key)??0)+1);
+    if(sameStarted.has(key))return {processId:sameStarted.get(key),state:"RUNNING"};
+    await delay(20);const processId=randomUUID();sameStarted.set(key,processId);
+    return {processId,state:"RUNNING"};
+   },
+   status({processId}){return {processId,state:"RUNNING"};}
+  };
+  const sj=new AsyncCopyJobs(sb,sf,{processes:sameProcesses,binary:helper,binarySha:helperSha});
+  const sameKey=randomUUID(),sameRequest={source:sameSource,destination:join(sameWork,"same.bin"),
+   expectedSourceSha256:sha("SAME_KEY_COPY"),idempotencyKey:sameKey};
+  const [sameA,sameB]=await Promise.all([sj.start(sameRequest),sj.start(sameRequest)]);
+  assert.equal(sameA.processId,sameB.processId);
+  assert.equal(sb.state.copyJobs.filter(x=>x.key===sameKey).length,1);
+  assert.equal(sameStartCalls.get(sameKey),1);
+  assert.doesNotThrow(()=>sj.record(sameA.processId));
+
+  // Overlapping same-key but different intent: exactly one succeeds; conflict is stable.
+  const conflictKey=randomUUID(),conflictBase={source:sameSource,
+   expectedSourceSha256:sha("SAME_KEY_COPY"),idempotencyKey:conflictKey};
+  const conflict=await Promise.allSettled([
+   sj.start({...conflictBase,destination:join(sameWork,"conflict-a.bin")}),
+   sj.start({...conflictBase,destination:join(sameWork,"conflict-b.bin")})
+  ]);
+  assert.equal(conflict.filter(x=>x.status==="fulfilled").length,1);
+  const rejected=conflict.filter(x=>x.status==="rejected");
+  assert.equal(rejected.length,1);assert.match(String(rejected[0].reason?.message),/IDEMPOTENCY_KEY_CONFLICT/);
+  assert.equal(sb.state.copyJobs.filter(x=>x.key===conflictKey).length,1);
+  const afterConflictKey=randomUUID();
+  const afterConflict=await sj.start({source:sameSource,destination:join(sameWork,"after-conflict.bin"),
+   expectedSourceSha256:sha("SAME_KEY_COPY"),idempotencyKey:afterConflictKey});
+  assert.ok(afterConflict.processId);assert.doesNotThrow(()=>sj.record(afterConflict.processId));
+  const persistedSame=new L1Broker(sameState);
+  assert.equal(persistedSame.state.copyJobs.length,3);
+  assert.equal(persistedSame.state.copyJobs.filter(x=>x.key===sameKey).length,1);
+  assert.equal(persistedSame.state.copyJobs.filter(x=>x.key===conflictKey).length,1);
+  assert.equal(persistedSame.state.copyJobs.filter(x=>x.key===afterConflictKey).length,1);
+  console.log("PASS concurrent first-use distinct-key ownership, fresh same-key duplicate suppression and conflict fencing");
+ }
+ // Real runner integration: two concurrent starts on the production controller
+ // retain independent ownership while their detached native workers may overlap.
+ const realConcurrentSource=join(work,"real-concurrent.bin");
+ const realConcurrentData=Buffer.alloc(1024*1024,0x52);
+ writeFileSync(realConcurrentSource,realConcurrentData,{mode:0o600});
+ const realExpected=sha(realConcurrentData);
+ const realDestA=join(work,"real-concurrent-a.bin"),realDestB=join(work,"real-concurrent-b.bin");
+ const [realA,realB]=await Promise.all([
+  jobs.start({source:realConcurrentSource,destination:realDestA,expectedSourceSha256:realExpected,
+   idempotencyKey:randomUUID()}),
+  jobs.start({source:realConcurrentSource,destination:realDestB,expectedSourceSha256:realExpected,
+   idempotencyKey:randomUUID()})
+ ]);
+ assert.notEqual(realA.processId,realB.processId);
+ await wait(()=>["EXITED","FAILED"].includes(jobs.status({processId:realA.processId}).state));
+ await wait(()=>["EXITED","FAILED"].includes(jobs.status({processId:realB.processId}).state));
+ assert.equal(jobs.status({processId:realA.processId}).state,"EXITED");
+ assert.equal(jobs.status({processId:realB.processId}).state,"EXITED");
+ assert.equal(sha(readFileSync(realDestA)),realExpected);assert.equal(sha(readFileSync(realDestB)),realExpected);
+ assert.match(jobs.read({processId:realA.processId,cursor:0,maxBytes:16384}).content,/COPY_DONE/);
+ assert.match(jobs.read({processId:realB.processId,cursor:0,maxBytes:16384}).content,/COPY_DONE/);
+ const realReopen=new L1Broker(state);
+ assert.ok(realReopen.state.copyJobs.some(x=>x.processId===realA.processId));
+ assert.ok(realReopen.state.copyJobs.some(x=>x.processId===realB.processId));
+ console.log("PASS real concurrent native copy runners retain both owned process records");
+
  const key=randomUUID();
  const first=await jobs.start({source,destination,expectedSourceSha256:expected,idempotencyKey:key});
  assert.ok(first.processId);
@@ -90,10 +198,192 @@ try{
   argv:["-e","process.stdout.write('OTHER')"],timeoutMs:10000,idempotencyKey:randomUUID()});
  assert.throws(()=>r.status({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
  assert.throws(()=>r.stop({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
+ // F04: no action ever reserved: the original key remains sealed, no replay.
+ const beforeActionKey=randomUUID(),beforeActionDest=join(work,"before-action.bin");
+ const realStart=r.processes.start.bind(r.processes);
+ r.processes.start=async()=>{throw Error("TEST_BEFORE_ACTION");};
+ await assert.rejects(()=>r.start({source,destination:beforeActionDest,
+  expectedSourceSha256:expected,idempotencyKey:beforeActionKey}),/TEST_BEFORE_ACTION/);
+ r.processes.start=realStart;
+ await assert.rejects(()=>r.start({source,destination:beforeActionDest,
+  expectedSourceSha256:expected,idempotencyKey:beforeActionKey}),
+  /ASYNC_COPY_RECONCILIATION_REQUIRED/);
+ assert.equal(existsSync(beforeActionDest),false);
+ // An action sealed before the config/runner exists still exposes its original
+ // processId as RECOVERY_REQUIRED, not a new process or a fabricated success.
+ const reservedKey=randomUUID(),reservedDest=join(work,"reserved-action.bin");
+ const reservedId=randomUUID(),sealedNonce=sha(JSON.stringify("fixture-nonce"));
+ r.processes.start=async input=>{
+  const {idempotencyKey,...intent}=input;
+  b2.reserveAction(idempotencyKey,sha(JSON.stringify(intent)),
+   {processId:reservedId,nonceDigest:sealedNonce});
+  throw Error("TEST_AFTER_ACTION_RESERVATION");
+ };
+ await assert.rejects(()=>r.start({source,destination:reservedDest,
+  expectedSourceSha256:expected,idempotencyKey:reservedKey}),/TEST_AFTER_ACTION_RESERVATION/);
+ r.processes.start=realStart;
+ const reservedReopenBroker=new L1Broker(state);
+ const reservedReopen=new AsyncCopyJobs(reservedReopenBroker,
+  new HostFileOps(reservedReopenBroker,{privateRoot:state,strictMutations:true}),
+  {binary:helper,binarySha:helperSha});
+ const recoveredReservation=await reservedReopen.start({source,destination:reservedDest,
+  expectedSourceSha256:expected,idempotencyKey:reservedKey});
+ assert.equal(recoveredReservation.processId,reservedId);
+ assert.equal(recoveredReservation.state,"RECOVERY_REQUIRED");
+ assert.equal(reservedReopenBroker.state.actions.filter(x=>x.key===reservedKey).length,1);
+ assert.equal(reservedReopenBroker.state.copyJobs.find(x=>x.key===reservedKey).processId,reservedId);
+ assert.equal(existsSync(reservedDest),false);
+ const originalStatus=reservedReopen.processes.status.bind(reservedReopen.processes);
+ reservedReopen.processes.status=()=>{throw Error("RECOVERY_REQUIRED");};
+ const stillOwned=await reservedReopen.start({source,destination:reservedDest,
+  expectedSourceSha256:expected,idempotencyKey:reservedKey});
+ assert.equal(stillOwned.processId,reservedId);
+ assert.equal(stillOwned.state,"RECOVERY_REQUIRED");
+ reservedReopen.processes.status=originalStatus;
+ await assert.rejects(()=>reservedReopen.inspectStage({processId:reservedId}),
+  /COPY_RECONCILIATION_REQUIRED/);
+ // An unrelated or corrupted action digest must never be linked to this copy.
+ const badActionKey=randomUUID(),badActionDest=join(work,"bad-action.bin");
+ const badActionId=randomUUID();
+ r.processes.start=async input=>{
+  b2.reserveAction(input.idempotencyKey,sha(JSON.stringify({unrelated:true})),
+   {processId:badActionId,nonceDigest:sealedNonce});
+  throw Error("TEST_MISMATCHED_ACTION");
+ };
+ await assert.rejects(()=>r.start({source,destination:badActionDest,
+  expectedSourceSha256:expected,idempotencyKey:badActionKey}),/TEST_MISMATCHED_ACTION/);
+ r.processes.start=realStart;
+ await assert.rejects(()=>r.start({source,destination:badActionDest,
+  expectedSourceSha256:expected,idempotencyKey:badActionKey}),
+  /ASYNC_COPY_RECONCILIATION_REQUIRED/);
+ assert.equal(b2.state.copyJobs.find(x=>x.key===badActionKey).processId,null);
+ assert.equal(existsSync(badActionDest),false);
+ // A failed reconciliation save must not announce a durable binding.
+ const saveKey=randomUUID(),saveDest=join(work,"save-uncertain.bin"),saveId=randomUUID();
+ r.processes.start=async input=>{
+  const {idempotencyKey,...intent}=input;
+  b2.reserveAction(idempotencyKey,sha(JSON.stringify(intent)),
+   {processId:saveId,nonceDigest:sealedNonce});
+  throw Error("TEST_SAVE_WINDOW");
+ };
+ await assert.rejects(()=>r.start({source,destination:saveDest,
+  expectedSourceSha256:expected,idempotencyKey:saveKey}),/TEST_SAVE_WINDOW/);
+ r.processes.start=realStart;
+ const uncertainBroker=new L1Broker(state);
+ const uncertainJobs=new AsyncCopyJobs(uncertainBroker,
+  new HostFileOps(uncertainBroker,{privateRoot:state,strictMutations:true}),
+  {binary:helper,binarySha:helperSha});
+ const safeSave=uncertainBroker.save.bind(uncertainBroker);
+ uncertainBroker.save=()=>{throw Error("TEST_STATE_SAVE_FAILED");};
+ await assert.rejects(()=>uncertainJobs.start({source,destination:saveDest,
+  expectedSourceSha256:expected,idempotencyKey:saveKey}),
+  /ASYNC_COPY_RECONCILIATION_REQUIRED/);
+ assert.equal(uncertainBroker.state.copyJobs.find(x=>x.key===saveKey).processId,null);
+ uncertainBroker.save=safeSave;
+ const safeReconcile=await uncertainJobs.start({source,destination:saveDest,
+  expectedSourceSha256:expected,idempotencyKey:saveKey});
+ assert.equal(safeReconcile.processId,saveId);
+ assert.equal(safeReconcile.state,"RECOVERY_REQUIRED");
+ assert.equal(existsSync(saveDest),false);
+ console.log("PASS F04 no-action seal, pre-config processId reconciliation and digest mismatch denial");
+ // Real detached runner launched, then simulated copy binding interruption.
+ // Relaunch must reconnect to the SAME action/processId, never spawn again.
+ for(const legacy of [false,true]){
+  const interruptedKey=randomUUID(),interruptedDest=join(work,legacy?"legacy-recovered.bin":"recovered.bin");
+  let launchedId=null;
+  r.processes.start=async input=>{
+   const launched=await realStart(input);launchedId=launched.processId;
+   throw Error("TEST_POST_LAUNCH_BEFORE_COPY_BIND");
+  };
+  await assert.rejects(()=>r.start({source,destination:interruptedDest,
+   expectedSourceSha256:expected,idempotencyKey:interruptedKey}),/TEST_POST_LAUNCH_BEFORE_COPY_BIND/);
+  r.processes.start=realStart;
+  const pendingRec=b2.state.copyJobs.find(x=>x.key===interruptedKey);
+  assert.equal(pendingRec.processId,null);
+  if(legacy){delete pendingRec.sourceDev;delete pendingRec.sourceIno;b2.save();}
+  const restartBroker=new L1Broker(state);
+  const restartJobs=new AsyncCopyJobs(restartBroker,
+   new HostFileOps(restartBroker,{privateRoot:state,strictMutations:true}),
+   {binary:helper,binarySha:helperSha});
+  const resumed=await restartJobs.start({source,destination:interruptedDest,
+   expectedSourceSha256:expected,idempotencyKey:interruptedKey});
+  assert.equal(resumed.processId,launchedId);
+  await wait(()=>["EXITED","FAILED"].includes(restartJobs.status({processId:launchedId}).state));
+  const finished=restartJobs.read({processId:launchedId,cursor:0,maxBytes:16384});
+  assert.equal(finished.exitCode,0,finished.content);
+  assert.match(finished.content,/COPY_DONE/);
+  assert.equal(sha(readFileSync(interruptedDest)),expected);
+  assert.equal(restartBroker.state.actions.filter(x=>x.key===interruptedKey).length,1);
+  assert.equal((await restartJobs.start({source,destination:interruptedDest,
+   expectedSourceSha256:expected,idempotencyKey:interruptedKey})).processId,launchedId);
+ }
+ console.log("PASS F04 real post-launch recovery, legacy record linkage and same-ID no-replay");
  broker.setMode("ASK",pass);
  await assert.rejects(()=>jobs.start({source,destination:join(work,"blocked.bin"),
   expectedSourceSha256:expected,idempotencyKey:randomUUID()}),/ACCESS_REQUIRED/);
  console.log("PASS private state, unrelated process ID and revoked gate denial");
+ // F04-R1: the *actual* legacy runner config must match the sealed action
+ // AND the copy record. These are owner-only fixtures: never launch the
+ // intentionally mismatched configs or touch existing user paths.
+ const legacyKey=randomUUID(),legacyDest=join(work,"legacy-contract.bin");
+ const legacyId=randomUUID(),legacyNonce="f".repeat(64);
+ let originalIntent,launchAttempts=0;
+ r.processes.start=async input=>{
+  const {idempotencyKey,...intent}=input;
+  originalIntent=intent;
+  b2.reserveAction(idempotencyKey,sha(JSON.stringify(intent)),
+   {processId:legacyId,nonceDigest:sha(JSON.stringify(legacyNonce))});
+  throw Error("TEST_F04_LEGACY_PREPARED");
+ };
+ await assert.rejects(()=>r.start({source,destination:legacyDest,
+  expectedSourceSha256:expected,idempotencyKey:legacyKey}),/TEST_F04_LEGACY_PREPARED/);
+ r.processes.start=async()=>{launchAttempts++;throw Error("UNEXPECTED_SECOND_LAUNCH");};
+ const legacyRec=b2.state.copyJobs.find(x=>x.key===legacyKey);
+ delete legacyRec.sourceDev;delete legacyRec.sourceIno;b2.save();
+ const legacyJobDir=join(state,"jobs",legacyId);
+ mkdirSync(legacyJobDir,{mode:0o700});
+ const legacyConfigFile=join(legacyJobDir,"config.json");
+ const validConfig={...originalIntent,processId:legacyId,nonce:legacyNonce};
+ const changeArg=(i,v)=>c=>{c.argv[i]=v;};
+ const mutations=[
+  ["executable",c=>{c.executable="/unrelated/node";}],
+  ["cwd",c=>{c.cwd="/unrelated/work";}],
+  ["timeout",c=>{c.timeoutMs=1000;}],
+  ...[0,1,2,3,4,5,6,9].map(i=>["argv["+i+"]",
+   changeArg(i,"altered-"+i)]),
+  ["missing executable",c=>{delete c.executable;}],
+  ["missing argv",c=>{delete c.argv;}],
+  ["invalid timeout",c=>{c.timeoutMs="3600000";}],
+  ["bad argv type",c=>{c.argv[3]=3;}],
+  ["mismatched dev",changeArg(7,"999999")],
+  ["mismatched ino",changeArg(8,"999999")],
+  ["mismatched nonce",c=>{c.nonce="e".repeat(64);}]
+ ];
+ for(const [label,mutate] of mutations){
+  const candidate=JSON.parse(JSON.stringify(validConfig));mutate(candidate);
+  writeFileSync(legacyConfigFile,JSON.stringify(candidate),{mode:0o600});
+  await assert.rejects(()=>r.start({source,destination:legacyDest,
+   expectedSourceSha256:expected,idempotencyKey:legacyKey}),
+   /ASYNC_COPY_RECONCILIATION_REQUIRED/,label);
+  assert.equal(legacyRec.processId,null,label);
+  assert.equal(b2.state.audit.some(a=>a.action==="ASYNC_COPY_RECONCILED"&&
+   a.processId===legacyId),false,label);
+ }
+ const legacyBeforeReopen=new L1Broker(state);
+ assert.equal(legacyBeforeReopen.state.copyJobs.find(x=>x.key===legacyKey).processId,null);
+ assert.equal(launchAttempts,0);
+ assert.equal(existsSync(legacyDest),false);
+ writeFileSync(legacyConfigFile,JSON.stringify(validConfig),{mode:0o600});
+ const recoveredLegacy=await r.start({source,destination:legacyDest,
+  expectedSourceSha256:expected,idempotencyKey:legacyKey});
+ assert.equal(recoveredLegacy.processId,legacyId);
+ assert.equal(recoveredLegacy.state,"RECOVERY_REQUIRED");
+ assert.equal(launchAttempts,0);
+ assert.equal(b2.state.actions.filter(x=>x.key===legacyKey).length,1);
+ assert.equal((new L1Broker(state)).state.copyJobs.find(x=>x.key===legacyKey).processId,legacyId);
+ r.processes.start=realStart;
+ console.log("PASS F04-R1 "+mutations.length+" legacy config mismatches rejected, intact config same-ID recovery, no replay");
+
  console.log("L6_B05_ASYNC_COPY=PASS");
 }catch(e){console.error("L6_B05_ASYNC_COPY=FAIL "+e.stack);process.exitCode=1;}
 finally{rmSync(root,{recursive:true,force:true});console.log("isolated_fixture_cleanup=COMPLETE");}

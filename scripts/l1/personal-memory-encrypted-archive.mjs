@@ -58,12 +58,35 @@ const unpack=(contents,destination)=>{
  }
  syncDir(destination);
 };
+// Keep a completed create-only effect separate from cleanup uncertainty. This
+// adds no prompt or blocking step to normal archive/restore operations.
+const finishOwnedStage=({owned,parentDir,kind,targetPath,archiveKey,primaryError,confirmedEffect})=>{
+ try{
+  const v=inspectOwnedStage({parentDir,kind,id:owned.id,targetPath,archiveKey});
+  cleanupOwnedStage({parentDir,kind,id:owned.id,targetPath,archiveKey,
+   expectedFingerprint:v.fingerprint,expectedDev:v.stageDev,expectedIno:v.stageIno,
+   confirmation:"DELETE_VERIFIED_PERSONAL_STAGE"});
+ }catch(cleanupError){
+  if(primaryError&&typeof primaryError==="object"){
+   primaryError.cleanupState="UNCERTAIN";
+   primaryError.stageId=owned.id;
+   primaryError.cleanupError=cleanupError;
+   return;
+  }
+  const error=Error("ARCHIVE_STAGE_CLEANUP_UNCERTAIN",{cause:cleanupError});
+  error.cleanupState="UNCERTAIN";
+  error.stageId=owned.id;
+  error.effect=confirmedEffect?"COMMITTED":"UNCONFIRMED";
+  throw error;
+ }
+};
 export async function createEncryptedMemoryArchive({sourceDir,archivePath,archiveKey,ownerStatus,
  testHooks=null}){
  ownerCheck(ownerStatus);archiveKeyCheck(archiveKey);validNew(archivePath);
  const owned=createOwnedStage({parentDir:dirname(archivePath),kind:"archive",
    targetPath:archivePath,archiveKey});
  const scratch=owned.stage;
+ let primaryError=null,confirmedEffect=false;
  try{
   ownDir(scratch);
   const temporary=join(scratch,"snapshot");
@@ -83,17 +106,13 @@ export async function createEncryptedMemoryArchive({sourceDir,archivePath,archiv
    ciphertext:payload.toString("base64")})+"\n");
   if(data.length>MAX_BACKUP*2)fail("ARCHIVE_SIZE_LIMIT");
   fileWrite(archivePath,data);syncDir(dirname(archivePath));
+  confirmedEffect=true;
   return {path:archivePath,encrypted:true,containsPlaintextSealKey:false,
    ciphertextSha256:createHash("sha256").update(data).digest("hex")};
- }finally{
-  // Same scope and exact receipt for normal cleanup as for operator recovery.
-  // If uncertain, preserve the stage; never indiscriminately rm -rf.
-  const v=inspectOwnedStage({parentDir:dirname(archivePath),kind:"archive",
-    id:owned.id,targetPath:archivePath,archiveKey});
-  cleanupOwnedStage({parentDir:dirname(archivePath),kind:"archive",
-    id:owned.id,targetPath:archivePath,archiveKey,
-    expectedFingerprint:v.fingerprint,expectedDev:v.stageDev,expectedIno:v.stageIno,
-    confirmation:"DELETE_VERIFIED_PERSONAL_STAGE"});
+ }catch(e){primaryError=e;throw e;}
+ finally{
+  finishOwnedStage({owned,parentDir:dirname(archivePath),kind:"archive",
+   targetPath:archivePath,archiveKey,primaryError,confirmedEffect});
  }
 }
 export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiveKey,ownerStatus,
@@ -115,6 +134,7 @@ export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiv
  const owned=createOwnedStage({parentDir:dirname(destinationDir),kind:"decrypt",
   targetPath:destinationDir,archiveKey});
  const scratch=owned.stage;
+ let primaryError=null,confirmedEffect=false;
  try{
   ownDir(scratch);
   const decipher=createDecipheriv("aes-256-gcm",archiveKey,nonce);
@@ -130,14 +150,12 @@ export function restoreEncryptedMemoryArchive({archivePath,destinationDir,archiv
   if(timingSafeEqual(archiveKey,memorySeal))fail("ARCHIVE_KEY_REUSE_DENIED");
   const out=restorePersonalMemory({backupDir:scratch,destinationDir,ownerStatus,
    publishHelperPath,publishHelperSha256,testHooks});
+  confirmedEffect=true;
   return {...out,encryptedSource:true};
- }finally{
-  const v=inspectOwnedStage({parentDir:dirname(destinationDir),kind:"decrypt",
-   id:owned.id,targetPath:destinationDir,archiveKey});
-  cleanupOwnedStage({parentDir:dirname(destinationDir),kind:"decrypt",
-   id:owned.id,targetPath:destinationDir,archiveKey,
-   expectedFingerprint:v.fingerprint,expectedDev:v.stageDev,expectedIno:v.stageIno,
-   confirmation:"DELETE_VERIFIED_PERSONAL_STAGE"});
+ }catch(e){primaryError=e;throw e;}
+ finally{
+  finishOwnedStage({owned,parentDir:dirname(destinationDir),kind:"decrypt",
+   targetPath:destinationDir,archiveKey,primaryError,confirmedEffect});
  }
 }
 
