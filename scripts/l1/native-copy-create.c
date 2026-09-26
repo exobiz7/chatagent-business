@@ -40,7 +40,15 @@ static void hex_digest(const unsigned char*d,char*out){
  out[64]=0;
 }
 int main(int argc,char **argv){
- if(argc!=7)fail("INVALID_COPY_INPUT");
+ if(argc!=8)fail("INVALID_COPY_INPUT");
+ const char *stageId=argv[7];
+ if(strlen(stageId)!=36)fail("INVALID_COPY_STAGE_ID");
+ for(int i=0;i<36;i++){
+  char ch=stageId[i];
+  if((i==8||i==13||i==18||i==23)?ch!='-':
+     !((ch>='0'&&ch<='9')||(ch>='a'&&ch<='f')))
+   fail("INVALID_COPY_STAGE_ID");
+ }
  const char *expected=argv[3];
  if(strlen(expected)!=64)fail("INVALID_COPY_DIGEST");
  for(size_t i=0;i<64;i++)
@@ -69,9 +77,16 @@ int main(int argc,char **argv){
  // The final destination must not be a symlink or existing entry. linkat below
  // enforces the no-overwrite commit atomically; no pathname rename fallback.
  char stage[96];
- snprintf(stage,sizeof(stage),".chatagent-copy-%ld.tmp",(long)getpid());
+ snprintf(stage,sizeof(stage),".personal-copy-%s.stage",stageId);
  int staged=openat(dparent,stage,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);
  if(staged<0)fail("COPY_STAGE_FAILED");
+ // Durable record owns the random stageId BEFORE launch. This event enables
+ // a deterministic test-only SIGKILL of the helper without touching other jobs.
+ printf("COPY_STAGE_READY id=%s\n",stageId);fflush(stdout);
+#ifdef PERSONAL_TEST_STAGE_HOLD_MS
+ // Compiled only into disposable test binaries, never the release helper.
+ usleep(PERSONAL_TEST_STAGE_HOLD_MS * 1000);
+#endif
  unsigned char *buf=malloc(COPY_CHUNK);
  if(!buf){unlinkat(dparent,stage,0);fail("COPY_ALLOC_FAILED");}
  CC_SHA256_CTX ctx;CC_SHA256_Init(&ctx);
@@ -113,9 +128,10 @@ int main(int argc,char **argv){
  // Race-free in-destination-filesystem commit: an unexpected entry => EEXIST.
  if(stopping){close(staged);unlinkat(dparent,stage,0);fail("COPY_CANCELLED");}
  if(linkat(dparent,stage,dparent,dstleaf,0)){
+  int link_error=errno; // cleanup calls must not erase original EEXIST
   close(staged);unlinkat(dparent,stage,0);
   close(src);close(sparent);close(dparent);
-  fail(errno==EEXIST?"COPY_DESTINATION_EXISTS":"COPY_COMMIT_UNCERTAIN");
+  fail(link_error==EEXIST?"COPY_DESTINATION_EXISTS":"COPY_COMMIT_UNCERTAIN");
  }
  int cleanup=unlinkat(dparent,stage,0);
  int synced=fsync(dparent);

@@ -3,11 +3,12 @@ import {promises as fs,constants as C} from "node:fs";
 import {createHash} from "node:crypto";
 import {isAbsolute,dirname} from "node:path";
 
-const [binary,binarySha,source,destination,expectedSha,size,dev,ino]=process.argv.slice(2);
+const [binary,binarySha,source,destination,expectedSha,size,dev,ino,stageId]=process.argv.slice(2);
 const valid=s=>typeof s==="string"&&/^[a-f0-9]{64}$/.test(s);
 const fail=reason=>{process.stderr.write("ASYNC_COPY_"+reason+"\n");process.exitCode=3;};
 if(!isAbsolute(binary??"")||!isAbsolute(source??"")||!isAbsolute(destination??"")||
- !valid(binarySha)||!valid(expectedSha)||![size,dev,ino].every(x=>/^\d+$/.test(x??"")))
+ !valid(binarySha)||!valid(expectedSha)||![size,dev,ino].every(x=>/^\d+$/.test(x??""))||
+ !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(stageId??""))
  throw Error("INVALID_COPY_JOB");
 const parent=dirname(binary);
 if(await fs.realpath(parent)!==parent)throw Error("COPY_HELPER_UNSAFE");
@@ -21,7 +22,7 @@ try{
    (st.mode&0o077)!==0||actual!==binarySha)throw Error("COPY_HELPER_UNSAFE");
 }finally{await fd.close();}
 await new Promise((resolve,reject)=>{
- const child=spawn(binary,[source,destination,expectedSha,size,dev,ino],{
+ const child=spawn(binary,[source,destination,expectedSha,size,dev,ino,stageId],{
   stdio:["ignore","pipe","pipe"],shell:false,
   env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"en_US.UTF-8"}
  });

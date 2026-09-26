@@ -1,4 +1,6 @@
 import http from "node:http";
+import {boundedJSONBody} from "./l1/bounded-json-body.mjs";
+import {callL1} from "./l1/l1-file-transport.mjs";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -19,33 +21,44 @@ const scratchTools=process.env.L1_OWNED_SCRATCH_TOOLS==="1";
 const strictMutations=process.env.L1_STRICT_MUTATIONS==="1";
 const asyncHashTools=process.env.L1_ASYNC_HASH_TOOLS==="1";
 const asyncCopyTools=process.env.L1_ASYNC_COPY_TOOLS==="1";
-const memoryReadTools=process.env.L1_PERSONAL_MEMORY_READ_TOOLS==="1";
-if(memoryReadTools&&!powerUserTools)throw Error("MEMORY_READ_REQUIRES_POWERUSER_TOOLS");
+const copyStageTools=process.env.L1_COPY_STAGE_RECOVERY_TOOLS==="1";
+const personalMemoryTools=process.env.PERSONAL_MEMORY_TOOLS==="1";
+// Explicit Personal presentation profile: hide development probes and known
+// unavailable operations. Default development inventory remains unchanged.
+// This is discovery/schema only; L1 still enforces actual authority and effects.
+const personalCoreTools=process.env.PERSONAL_CORE_TOOLS==="1";
+const nativeReplaceEnabled=process.env.L1_NATIVE_REPLACE_ENABLED==="1";
+if(copyStageTools&&!asyncCopyTools)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY_TOOLS");
 if(asyncCopyTools&&!powerUserTools)throw Error("ASYNC_COPY_REQUIRES_POWERUSER_TOOLS");
 if(asyncHashTools&&!powerUserTools)throw Error("ASYNC_HASH_REQUIRES_POWERUSER_TOOLS");
 if(scratchTools&&!semanticWriteTools)throw Error("SEMANTIC_WRITE_TOOLS_REQUIRED");
 if(semanticWriteTools&&!powerUserTools)throw Error("POWERUSER_TOOLS_REQUIRED");
 if(powerUserTools&&!l1Url)throw Error("L1_BROKER_REQUIRED");
 async function brokerCall(route,body={}){
-  const timeoutMs=["file/hash","file/copy"].includes(route)?120000:30000;
-  const response=await fetch(l1Url+"/agent/"+route,{method:"POST",headers:{"content-type":"application/json","x-chatagent-l1-credential":l1Token},body:JSON.stringify(body),signal:AbortSignal.timeout(timeoutMs)});
-  const result=await response.json();
-  if(!response.ok)throw Error(result.code||"L1_UNAVAILABLE");
-  return result;
+  return callL1({route,body,url:l1Url,token:l1Token});
 }
 
 const requests=new Map();
 let harmlessWrites=0;
 const text=(data)=>({content:[{type:"text",text:JSON.stringify(data)}],structuredContent:data});
+const toolError=e=>({...text({code:e.message||"BROKER_UNAVAILABLE",success:false,
+  ...(["COMMITTED","UNCERTAIN"].includes(e.effect)?{effect:e.effect,retryable:false}:{}),
+  ...(e.audit==="UNCERTAIN"?{audit:"UNCERTAIN"}:{})}),isError:true});
 const error=(res,status,reason,id=null)=>{res.writeHead(status,{"content-type":"application/json"});res.end(JSON.stringify({jsonrpc:"2.0",id,error:{code:-32000,message:reason}}));};
 const eq=(a,b)=>{const x=Buffer.from(a??""),y=Buffer.from(b??"");return x.length===y.length&&timingSafeEqual(x,y);};
 const server=http.createServer(async(req,res)=>{
   if(req.url==="/health"&&req.method==="GET"){res.writeHead(200);res.end("ok");return;}
   if(req.url!=="/mcp"||req.method!=="POST")return error(res,404,"NOT_FOUND");
   if(!eq(req.headers["x-chatagent-l0-credential"],expected))return error(res,401,"UNAUTHORIZED");
-  let bodyRaw="";
-  for await(const chunk of req){bodyRaw+=chunk;if(bodyRaw.length>16384)return error(res,413,"BODY_LIMIT");}
-  let body;try{body=JSON.parse(bodyRaw);}catch{return error(res,400,"INVALID_JSON");}
+  // Parse byte-counted complete UTF-8, not per-chunk Buffer.toString().
+  // Only file text operations retain the larger authenticated envelope.
+  let parsed;
+  try{parsed=await boundedJSONBody(req,{maxBytes:350000,oversizeCode:"BODY_LIMIT"});}
+  catch(e){return error(res,e.message==="BODY_LIMIT"?413:400,e.message);}
+  const {body,bytes}=parsed;
+  if(bytes>16384&&!(body?.method==="tools/call"&&
+      ["local_write","local_create_file","local_replace_file"].includes(body?.params?.name)))
+    return error(res,413,"BODY_LIMIT");
   // Phase 6 accepted compatibility: authenticated legacy discovery negotiation is not a tool.
   if (body && !Array.isArray(body) && body.jsonrpc === "2.0" && body.method === "server/discover" &&
       (body.id == null || typeof body.id === "string" || (typeof body.id === "number" && Number.isFinite(body.id))) &&
@@ -71,28 +84,70 @@ const server=http.createServer(async(req,res)=>{
     const item=requests.get(a.requestId);
     return text({requestId:a.requestId,status:!item?"NOT_FOUND":Date.now()>item.expires?"EXPIRED":item.status,realGrant:false});
   });
-  mcp.registerTool("l0_confirmation_probe",{description:"Harmless L0 write-annotation UI probe. Only increments volatile test counter, never changes files, permissions or settings.",inputSchema:z.strictObject({note:z.string().max(120)}),annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}},async()=>{
-    harmlessWrites++;return text({result:"VOLATILE_COUNTER_UPDATED",counter:harmlessWrites,realEffect:false});
-  });
+  if(!personalCoreTools){
+    mcp.registerTool("l0_confirmation_probe",{description:"Harmless L0 write-annotation UI probe. Only increments volatile test counter, never changes files, permissions or settings.",inputSchema:z.strictObject({note:z.string().max(120)}),annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}},async()=>{
+      harmlessWrites++;return text({result:"VOLATILE_COUNTER_UPDATED",counter:harmlessWrites,realEffect:false});
+    });
+  }
+  if(personalMemoryTools){
+    if(!l1Url)throw Error("PERSONAL_MEMORY_BROKER_REQUIRED");
+    const projectId=z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/);
+    const taskId=z.string().uuid(),operationId=z.string().uuid();
+    const memoryWrite=(name,description,schema,route,{destructive=false}={})=>mcp.registerTool(name,{
+      description,inputSchema:z.strictObject(schema),
+      annotations:{readOnlyHint:false,destructiveHint:destructive,openWorldHint:false}
+    },async(a)=>{
+      try{return text(await brokerCall("personal-memory/"+route,a));}
+      catch(e){return {...text({code:e.message||"MEMORY_UNAVAILABLE",success:false}),isError:true};}
+    });
+    const memoryRead=(name,description,schema,route)=>mcp.registerTool(name,{
+      description,inputSchema:z.strictObject(schema),
+      annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false}
+    },async(a)=>{
+      try{return text(await brokerCall("personal-memory/"+route,a));}
+      catch(e){return {...text({code:e.message||"MEMORY_UNAVAILABLE",success:false}),isError:true};}
+    });
+    memoryWrite("personal_project_register","Register metadata for one project in this personal product's own private memory store; independent of P8 and host grants.",
+      {projectId,rootLabel:z.string().min(1).max(128),operationId},"project-register");
+    memoryWrite("personal_task_start","Create an owner-scoped task under an existing personal project. Requires idempotency UUID.",
+      {projectId,title:z.string().min(1).max(160),operationId},"task-start");
+    memoryWrite("personal_checkpoint_append","Append a personal task checkpoint with exact project, task, expected revision, and operation UUID; cannot authorize host execution.",
+      {projectId,taskId,expectedTaskRevision:z.number().int().nonnegative(),operationId,
+       summary:z.string().min(1).max(512),currentState:z.string().min(1).max(512),
+       nextActions:z.array(z.string().min(1).max(256)).max(5),verification:z.string().min(1).max(512),
+       artifactRefs:z.array(z.string().min(1).max(128)).max(5).optional(),
+       gitSha:z.string().regex(/^[a-f0-9]{40}$/).nullable().optional()},"checkpoint-append");
+    memoryWrite("personal_task_complete","Complete an exact project/task at the expected revision; the task becomes immutable.",
+      {projectId,taskId,expectedTaskRevision:z.number().int().nonnegative(),operationId},"task-complete",{destructive:true});
+    memoryRead("personal_task_get","Read one existing personal task only from the explicitly supplied matching project.",
+      {projectId,taskId},"task-get");
+    memoryRead("personal_project_context","Read bounded task context from an explicit personal project; no host authority.",
+      {projectId,limit:z.number().int().min(1).max(20).optional()},"project-context");
+    memoryRead("personal_memory_search","Bounded lexical checkpoint search inside an explicit personal project.",
+      {projectId,query:z.string().min(1).max(128),limit:z.number().int().min(1).max(20).optional()},"search");
+  }
   if(powerUserTools){
     const path=z.string().min(1).max(4096);
     const requestId=z.string().uuid();
     const sha=z.string().regex(/^[0-9a-f]{64}$/);
     const key=z.string().uuid();
-    const register=(name,description,schema,route,readonly=false)=>mcp.registerTool(name,{
-      description,inputSchema:z.strictObject(schema),annotations:{readOnlyHint:readonly,destructiveHint:!readonly,openWorldHint:name==="local_exec_start"}
-    },async(args)=>{
-      try{return text(await brokerCall(route,args));}
-      catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
-    });
+    const register=(name,description,schema,route,{readOnly=false,destructive=false,openWorld=false,idempotent}={})=>{
+      const annotations={readOnlyHint:readOnly,destructiveHint:destructive,openWorldHint:openWorld};
+      if(idempotent!==undefined)annotations.idempotentHint=idempotent;
+      return mcp.registerTool(name,{description,inputSchema:z.strictObject(schema),annotations},async(args)=>{
+        try{return text(await brokerCall(route,args));}
+        catch(e){return toolError(e);}
+      });
+    };
     register("local_list","List an absolute macOS path through explicit persistent owner FULL_HOST delegation; bounded and paginated.",
-      {path,offset:z.number().int().nonnegative().optional(),limit:z.number().int().min(1).max(250).optional()},"file/list",true);
-    register("local_stat","Stat an absolute macOS path under delegated ordinary-user authority.",{path},"file/stat",true);
+      {path,offset:z.number().int().nonnegative().optional(),limit:z.number().int().min(1).max(250).optional()},"file/list",{readOnly:true});
+    register("local_stat","Stat an absolute macOS path under delegated ordinary-user authority.",{path},"file/stat",{readOnly:true});
     register("local_read","Read bounded UTF-8 bytes from a regular host file; use local_hash for large/binary files.",
-      {path,offset:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(65536).optional()},"file/read",true);
-    register("local_hash","Compute SHA-256 and size of a regular host file without returning its contents.",{path},"file/hash",true);
-    register("local_write",strictMutations?"Legacy create mode only in strict mode; existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE. Use local_create_file for non-destructive creation.":"Create or replace a UTF-8 file under persistent FULL_HOST; replace requires exact existing SHA-256.",
-      {path,content:z.string().max(262144),mode:z.enum(["create","replace"]),expectedSha256:sha.nullable()},"file/write");
+      {path,offset:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(65536).optional()},"file/read",{readOnly:true});
+    register("local_hash","Compute SHA-256 and size of a regular host file without returning its contents.",{path},"file/hash",{readOnly:true});
+    register("local_write",personalCoreTools?"Create a NEW UTF-8 file only under owner FULL_HOST. Existing targets are not replaced; use local_create_file for the simpler create-only contract.":strictMutations?"Legacy create mode only in strict mode; existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE. Use local_create_file for non-destructive creation.":"Create or replace a UTF-8 file under persistent FULL_HOST; replace requires exact existing SHA-256.",
+      {path,content:z.string().max(262144),mode:z.enum(personalCoreTools?["create"]:["create","replace"]),expectedSha256:sha.nullable()},"file/write",
+      {destructive:!personalCoreTools&&!strictMutations});
     if(semanticWriteTools){
       // Per MCP annotations, a create-only O_EXCL operation does not overwrite or delete.
       mcp.registerTool("local_create_file",{
@@ -101,15 +156,16 @@ const server=http.createServer(async(req,res)=>{
         annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}
       },async(a)=>{
         try{return text(await brokerCall("file/create",a));}
-        catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+        catch(e){return toolError(e);}
       });
-      mcp.registerTool("local_replace_file",{
-        description:strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. Changes content and may lose previous data; no implicit create or delete.",
+      if(!personalCoreTools||nativeReplaceEnabled)mcp.registerTool("local_replace_file",{
+        title:"Replace existing file",
+        description:nativeReplaceEnabled?"Update the contents of one existing regular file only when its current SHA-256 exactly matches expectedSha256. This overwrites the previous contents, so use it only after the user explicitly asked to modify that file and allow the ChatGPT host to request confirmation before execution. It never creates a missing file, refuses unsupported ACL/special-flag metadata, and fails closed on concurrency uncertainty; never blindly retry an UNCERTAIN result.":strictMutations?"UNAVAILABLE in strict mode: existing-target replace returns ATOMIC_REPLACE_UNAVAILABLE until a reviewed atomic CAS implementation exists.":"Replace an existing regular file only when its current SHA-256 matches expectedSha256. This overwrites previous contents; use only after explicit user intent and host confirmation. No implicit create or delete.",
         inputSchema:z.strictObject({path,content:z.string().max(262144),expectedSha256:sha}),
-        annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
+        annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false,idempotentHint:false}
       },async(a)=>{
         try{return text(await brokerCall("file/replace",a));}
-        catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+        catch(e){return toolError(e);}
       });
     }
     if(scratchTools){
@@ -131,27 +187,31 @@ const server=http.createServer(async(req,res)=>{
         catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
       });
     }
-    register("local_copy",process.env.L1_NATIVE_CREATE_ENABLED==="1"?"UNAVAILABLE in native create-only mode: source-bound copy requires separately reviewed descriptor-anchored implementation.":strictMutations?"Copy source to NEW destination only, with exact source hash; existing-target replacement returns ATOMIC_REPLACE_UNAVAILABLE in strict mode.":"Copy a host file with exact source digest and destination-create/replace preconditions; avoid retry after ambiguous timeout.",
-      {source:path,destination:path,expectedSourceSha256:sha,expectedDestinationSha256:sha.nullable().optional()},"file/copy");
-    if(memoryReadTools){
-      register("local_continuity_context","Read bounded P8 structured context for an explicitly allowlisted project; no memory writes or process execution.",
-        {projectId:z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/)},"continuity/context",true);
-      register("local_continuity_search","Read bounded lexical task/checkpoint/decision/fact search within an allowlisted P8 project.",
-        {projectId:z.string().regex(/^[a-z0-9][a-z0-9._-]{0,127}$/),query:z.string().min(1).max(256),
-         types:z.array(z.enum(["task","checkpoint","decision","fact"])).min(1).max(4).optional(),
-         limit:z.number().int().min(1).max(20).optional()},"continuity/search",true);
-      register("local_continuity_task","Read an existing P8 task only when its returned project belongs to the personal owner allowlist.",
-        {taskId:z.string().uuid()},"continuity/task",true);
-    }
+    if(!personalCoreTools)register("local_copy",process.env.L1_NATIVE_CREATE_ENABLED==="1"?"UNAVAILABLE in native create-only mode: source-bound copy requires separately reviewed descriptor-anchored implementation.":strictMutations?"Copy source to NEW destination only, with exact source hash; existing-target replacement returns ATOMIC_REPLACE_UNAVAILABLE in strict mode.":"Copy a host file with exact source digest and destination-create/replace preconditions; avoid retry after ambiguous timeout.",
+      {source:path,destination:path,expectedSourceSha256:sha,expectedDestinationSha256:sha.nullable().optional()},"file/copy",
+      {destructive:process.env.L1_NATIVE_CREATE_ENABLED!=="1"&&!strictMutations});
     if(asyncCopyTools){
       register("local_async_copy_start","Start a create-only, bounded, owned native source-bound copy. Requires exact source SHA-256. Does not replace any existing destination. Progress and final hash require owned status/read.",
-        {source:path,destination:path,expectedSourceSha256:sha,idempotencyKey:key},"async-copy/start");
+        {source:path,destination:path,expectedSourceSha256:sha,idempotencyKey:key},"async-copy/start",{destructive:false});
       register("local_async_copy_status","Read status for an owned async copy job.",
-        {processId:requestId},"async-copy/status",true);
+        {processId:requestId},"async-copy/status",{readOnly:true});
       register("local_async_copy_read","Read bounded progress and final SHA of an owned copy job.",
-        {processId:requestId,cursor:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(16384).optional()},"async-copy/read",true);
+        {processId:requestId,cursor:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(16384).optional()},"async-copy/read",{readOnly:true});
       register("local_async_copy_stop","Stop only an owned create-only copy job.",
-        {processId:requestId},"async-copy/stop");
+        {processId:requestId},"async-copy/stop",{destructive:false});
+      if(copyStageTools){
+        register("local_copy_stage_inspect","Inspect only this Broker-owned terminal copy job's UUID-named staging artifact. Returns bounded SHA, inode and size for operator reconciliation; never deletes.",
+          {processId:requestId},"async-copy/stage-inspect",{readOnly:true});
+        mcp.registerTool("local_copy_stage_cleanup",{
+          description:"Delete ONLY the exact orphan stage of a terminal Broker-owned copy after matching SHA-256, device and inode. No arbitrary path input; unknown or running job denied.",
+          inputSchema:z.strictObject({processId:requestId,expectedStageSha256:sha,
+            expectedDev:z.string().regex(/^\d+$/),expectedIno:z.string().regex(/^\d+$/)}),
+          annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false}
+        },async(a)=>{
+          try{return text(await brokerCall("async-copy/stage-cleanup",a));}
+          catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
+        });
+      }
     }
     if(asyncHashTools){
       mcp.registerTool("local_async_hash_start",{
@@ -163,21 +223,22 @@ const server=http.createServer(async(req,res)=>{
         catch(e){return {...text({code:e.message||"BROKER_UNAVAILABLE",success:false}),isError:true};}
       });
       register("local_async_hash_status","Read status of this Broker-owned hash job.",
-        {processId:requestId},"async-hash/status",true);
+        {processId:requestId},"async-hash/status",{readOnly:true});
       register("local_async_hash_read","Read bounded progress and terminal digest for this owned hash job.",
         {processId:requestId,cursor:z.number().int().nonnegative().optional(),
-         maxBytes:z.number().int().min(1).max(16384).optional()},"async-hash/read",true);
+         maxBytes:z.number().int().min(1).max(16384).optional()},"async-hash/read",{readOnly:true});
       register("local_async_hash_stop","Stop only the identified Broker-owned hash job.",
-        {processId:requestId},"async-hash/stop");
+        {processId:requestId},"async-hash/stop",{destructive:false});
     }
     register("local_exec_start","Start an owner-delegated ordinary-user host process; absolute executable, argv, cwd and idempotency key. Shell interpreters can access user files/network; no sandbox or sudo bypass is claimed.",
-      {executable:path,argv:z.array(z.string().max(8192)).max(48),cwd:path,timeoutMs:z.number().int().min(100).max(3600000).optional(),idempotencyKey:key},"process/start");
-    register("local_process_status","Status of a process owned by this broker.",{processId:requestId},"process/status",true);
+      {executable:path,argv:z.array(z.string().max(8192)).max(48),cwd:path,timeoutMs:z.number().int().min(100).max(3600000).optional(),idempotencyKey:key},"process/start",
+      {destructive:true,openWorld:true});
+    register("local_process_status","Status of a process owned by this broker.",{processId:requestId},"process/status",{readOnly:true});
     register("local_process_read","Read bounded UTF-8 output for an owned process with cursor.",
-      {processId:requestId,cursor:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(16384).optional()},"process/read",true);
-    register("local_process_input","Send bounded stdin to a currently running owned process.",
-      {processId:requestId,content:z.string().max(16384)},"process/input");
-    register("local_process_stop","Stop only a process owned by this broker.",{processId:requestId},"process/stop");
+      {processId:requestId,cursor:z.number().int().nonnegative().optional(),maxBytes:z.number().int().min(1).max(16384).optional()},"process/read",{readOnly:true});
+    if(!personalCoreTools)register("local_process_input","Send bounded stdin to a currently running owned process.",
+      {processId:requestId,content:z.string().max(16384)},"process/input",{destructive:true,openWorld:true});
+    register("local_process_stop","Stop only a process owned by this broker.",{processId:requestId},"process/stop",{destructive:true});
   }
   const transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
   try{await mcp.connect(transport);await transport.handleRequest(req,res,body);}

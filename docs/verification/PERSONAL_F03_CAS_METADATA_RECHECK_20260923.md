@@ -1,0 +1,22 @@
+# ChatAgent Personal — F03 existing-file CAS metadata recheck
+
+Date: 2026-09-23 KST. Base code SHA: `fc518c70693e570c54dedd41afb2190653627235` (the previous Astra-reviewed F04-R1 source); current branch parent `dbe2a0152da977bbf6a0f6ae7d79357b5e49d2e9` contains only F04-R1 handoff docs. New F03 implementation SHA is the commit containing this document, to be recorded in PR #5.
+Earlier independent F03 P1 finding: `/Users/macstudio/CodexReview/chatagent-personal/90f1b89cb71b247a768e589fdc7987f6a6835d1c-static-n78czyco/02_FINDINGS_AND_REPRO.md`; still OPEN pending independent re-review / owner judgment.
+**Engineering candidate, not independent F03 closure, unconditional CAS guarantee, 33-tool beta approval or deployment.**
+
+## Narrow implementation
+- `scripts/l1/native-replace-cas.c`: compare target `st_mode`, `st_flags`, and high-resolution `st_ctimespec` against the initial snapshot during initial/final hashing and direct directory-fd leaf rechecks. This detects observed metadata-only edits even when size/mtime/SHA are unchanged.
+- After staging, re-open the same verified staged inode no-follow. Compare the complete bounded original xattr name/value set against the staged xattr set. Mismatched names, value bytes, sizes or read failures refuse `CAS_TARGET_CHANGED` and clean only the verified stage.
+- Retain the existing precondition SHA, dev/inode/nlink and content checks, ACL and file-flag denial, xattr and 0777 mode snapshot copy, same-directory rename, postcommit uncertain/nonretryable handling and stage cleanup restrictions. No new lock, owner permission, broad deletion, new tool or retry.
+- The native source includes three **compile-time test-only** metadata drift branches; normal production and MCP helper build commands do not define these macros. They do not appear in the pinned production helper binary.
+
+## Observed tests
+- Expanded existing `scripts/l1/personal-native-cas-test.mjs` to compile fixture-only variants that edit **original mode**, **original xattr**, or **staged xattr** after stage snapshot and before final compare. All three refuse `CAS_TARGET_CHANGED`, leave original text intact and retain the externally changed source metadata, and leave no staged artifacts.
+- The standard pinned helper still succeeds in normal mode/xattr-preserving replacement, rejects unsupported ACL/flags, wrong SHA/missing path, symlink/hardlink, parent path switch, and handles postcommit observation uncertainty. Isolated opted-in **33-tool L0/MCP** existing-file CAS test also PASS.
+- Final local `npm test`: `PERSONAL_STANDALONE_SUITE=PASS count=34` / exit 0. Exact implementation SHA Push/PR macOS CI must be verified after commit and recorded in the PR.
+## Security/acceptance boundary — important
+- Snapshot and recheck do **not** make `renameat` a kernel-atomic hash/metadata compare. An independent same-UID writer may still change bytes or metadata **after the final checks and before rename**. Reversion/ABA, rapid xattr changes, parent movement, filesystem-specific semantics and hostile concurrent actors have not been excluded.
+- The deterministic fixture branches change only test-owned isolated files, not a live second writer racing a real service. A synthetic mid-check refusal is not evidence of safe handling of all physical fault windows.
+- Replacement creates a *new inode*: owner/group, creation time, flags/ACL outside the explicitly supported subset and special-mode bits outside 0777 are not promised as preserved. Unsupported flags/extended ACL are refused before effect. A failed copy stage must not be treated as a backup or safe-to-delete arbitrary file.
+- **Proposed bounded 33-tool acceptance**, only after independent review and the owner's explicit choice: opt-in existing-file CAS on quiescent, user-owned, locally recoverable regular files without concurrent editor/sync/tagging or same-UID competing writers. Require exact expected SHA, supported metadata, independent backup/restore strategy at owner's discretion; never claim arbitrary concurrent writers or kernel-atomic CAS.
+- F04-R1 and F02-R1.1 previously passed only within their own independent code/contract scopes. F01 actual intentionally split HTTP, physical SIGKILL/disk/power, current end-to-end Personal Business client behavior and concurrent-client coordination remain UNVERIFIED. 32/33 beta gates remain on HOLD until separate owner decision. The optional offline encrypted archive is not silently added as a core prerequisite.

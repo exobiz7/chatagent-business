@@ -1,4 +1,6 @@
 import http from "node:http";
+import {boundedJSONBody} from "./bounded-json-body.mjs";
+import {auditedFileMutation,auditedFileRead,fileEffectDetails} from "./file-effect-status.mjs";
 import net from "node:net";
 import { readFileSync, existsSync, chmodSync, unlinkSync, lstatSync } from "node:fs";
 import { timingSafeEqual, createHash } from "node:crypto";
@@ -9,19 +11,37 @@ import { HostProcesses } from "./host-processes.mjs";
 import { DurableHostProcesses } from "./durable-host-processes.mjs";
 import { AsyncHashJobs } from "./async-hash-jobs.mjs";
 import { AsyncCopyJobs } from "./async-copy-jobs.mjs";
-import { PersonalMemoryReadAdapter } from "./personal-memory-read.mjs";
-import { dirname } from "node:path";
+import { PersonalMemoryStore } from "./personal-memory-store.mjs";
+import { dirname,resolve,sep,isAbsolute } from "node:path";
 
 const dir=process.env.L1_STATE_DIR;
 const tokenFile=process.env.L1_AGENT_KEY_FILE;
 if(!dir||!tokenFile)throw Error("L1_CONFIG_REQUIRED");
 const broker=new L1Broker(dir);
 const fileOpsEnabled=process.env.L1_FILE_OPS_ENABLED==="1";
+const personalMemoryEnabled=process.env.PERSONAL_MEMORY_ENABLED==="1";
+const personalMemoryRoot=process.env.PERSONAL_MEMORY_STATE_DIR;
+if(personalMemoryEnabled&&(!personalMemoryRoot||!isAbsolute(personalMemoryRoot)))
+ throw Error("PERSONAL_MEMORY_ROOT_REQUIRED");
+const within=(child,parent)=>child===parent||child.startsWith(parent+sep);
+if(personalMemoryEnabled&&(within(resolve(personalMemoryRoot),resolve(dir))||
+   within(resolve(dir),resolve(personalMemoryRoot))))
+ throw Error("PERSONAL_MEMORY_OWNER_ROOT_OVERLAP");
+const memory=personalMemoryEnabled?new PersonalMemoryStore(personalMemoryRoot,{
+ initialize:process.env.PERSONAL_MEMORY_INIT==="1",ownerStatus:()=>broker.status()}):null;
 const supportRoot=dir.includes("/Application Support/chatagent/")?dirname(dirname(dir)):null;
-const files=fileOpsEnabled?new HostFileOps(broker,{privateRoot:dir,protectedRoots:supportRoot?[supportRoot]:[],
+const files=fileOpsEnabled?new HostFileOps(broker,{privateRoot:dir,
+ protectedRoots:[...(supportRoot?[supportRoot]:[]),...(personalMemoryEnabled?[personalMemoryRoot]:[])],
  strictMutations:process.env.L1_STRICT_MUTATIONS==="1",
  nativeCreateBinary:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_BIN:null,
- nativeCreateSha256:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_SHA256:null}):null;
+ nativeCreateSha256:process.env.L1_NATIVE_CREATE_ENABLED==="1"?process.env.L1_NATIVE_CREATE_SHA256:null,
+ nativeReplaceBinary:process.env.L1_NATIVE_REPLACE_ENABLED==="1"?process.env.L1_NATIVE_REPLACE_BIN:null,
+ nativeReplaceSha256:process.env.L1_NATIVE_REPLACE_ENABLED==="1"?process.env.L1_NATIVE_REPLACE_SHA256:null}):null;
+if(process.env.L1_NATIVE_REPLACE_ENABLED==="1"&&
+   (!fileOpsEnabled||process.env.L1_STRICT_MUTATIONS!=="1"||
+    process.env.L1_NATIVE_CREATE_ENABLED!=="1"||
+    !process.env.L1_NATIVE_REPLACE_BIN||!process.env.L1_NATIVE_REPLACE_SHA256))
+ throw Error("NATIVE_REPLACE_REQUIRES_STRICT_NATIVE_CREATE");
 const scratchEnabled=fileOpsEnabled&&process.env.L1_OWNED_SCRATCH_ENABLED==="1";
 const scratch=scratchEnabled?await new OwnedScratch(broker).init():null;
 const processesEnabled=process.env.L1_HOST_EXEC_ENABLED==="1";
@@ -40,11 +60,8 @@ if(asyncCopyRequested&&(!fileOpsEnabled||!processesEnabled||!durableProcesses||
  throw Error("ASYNC_COPY_REQUIRES_DURABLE_NATIVE_STRICT_GATES");
 const asyncCopy=asyncCopyRequested?new AsyncCopyJobs(broker,files,{processes,
  binary:process.env.L1_NATIVE_COPY_BIN,binarySha:process.env.L1_NATIVE_COPY_SHA256}):null;
-const memoryReadEnabled=process.env.L1_PERSONAL_MEMORY_READ_ENABLED==="1";
-const memoryRead=memoryReadEnabled?new PersonalMemoryReadAdapter(broker,{
- url:process.env.L1_MEMORY_BASE_URL,
- tokenFile:process.env.L1_MEMORY_TOKEN_FILE,
- allowedProjects:process.env.L1_MEMORY_ALLOWED_PROJECTS}):null;
+const copyStageRecovery=process.env.L1_COPY_STAGE_RECOVERY_ENABLED==="1";
+if(copyStageRecovery&&!asyncCopyRequested)throw Error("COPY_STAGE_REQUIRES_ASYNC_COPY");
 const effectiveStatus=()=>({...broker.status(),realFilesystemAccess:fileOpsEnabled&&broker.status().paired&&broker.status().mode==="FULL_HOST",realHostExec:processesEnabled&&broker.status().paired&&broker.status().mode==="FULL_HOST",grantsEnforced:fileOpsEnabled||processesEnabled});
 const token=readFileSync(tokenFile,"utf8").trim();
 if(!/^[A-Za-z0-9_-]{43,256}$/.test(token))throw Error("AGENT_TOKEN_INVALID");
@@ -92,10 +109,9 @@ const json=(res,code,value)=>{
  res.end(JSON.stringify(value));
 };
 const read=async req=>{
- let s="";for await(const chunk of req){
-  s+=chunk;if(s.length>8192)throw Error("PAYLOAD_LIMIT");
- }
- try{return JSON.parse(s||"{}");}catch{throw Error("INVALID_JSON");}
+ // Keep ordinary operations bounded; UTF-8 file create/replace may carry 256 KiB.
+ const limit=["/agent/file/write","/agent/file/create","/agent/file/replace"].includes(req.url)?350000:8192;
+ return (await boundedJSONBody(req,{maxBytes:limit})).body;
 };
 let ownerFailures=0, lockedUntil=0;
 function rejectOwner(pass){
@@ -113,7 +129,11 @@ async function handleAgent(req,res){
     ...(scratchEnabled?["/agent/scratch/create","/agent/scratch/cleanup"]:[]),
     ...(asyncHashEnabled?["/agent/async-hash/start","/agent/async-hash/status", "/agent/async-hash/read","/agent/async-hash/stop"]:[]),
     ...(asyncCopyRequested?["/agent/async-copy/start","/agent/async-copy/status", "/agent/async-copy/read","/agent/async-copy/stop"]:[]),
-    ...(memoryReadEnabled?["/agent/continuity/context","/agent/continuity/search","/agent/continuity/task"]:[]),
+    ...(copyStageRecovery?["/agent/async-copy/stage-inspect","/agent/async-copy/stage-cleanup"]:[]),
+    ...(personalMemoryEnabled?["/agent/personal-memory/project-register","/agent/personal-memory/task-start",
+      "/agent/personal-memory/checkpoint-append","/agent/personal-memory/task-complete",
+      "/agent/personal-memory/task-get","/agent/personal-memory/project-context",
+      "/agent/personal-memory/search"]:[]),
     ...(processesEnabled?["/agent/process/start","/agent/process/status","/agent/process/read","/agent/process/input","/agent/process/stop"]:[])];
  if(req.method!=="POST"||!allowedAgentRoutes.includes(req.url))
   return json(res,404,{code:"NOT_FOUND"});
@@ -123,21 +143,25 @@ async function handleAgent(req,res){
   if(req.url==="/agent/status")return json(res,200,effectiveStatus());
   if(req.url==="/agent/request")return json(res,200,broker.propose(a));
   if(req.url==="/agent/check")return json(res,200,broker.check(a.requestId));
+  if(personalMemoryEnabled&&req.url.startsWith("/agent/personal-memory/")){
+    const op=req.url.slice("/agent/personal-memory/".length);
+    const methods={"project-register":"projectRegister","task-start":"taskStart",
+      "checkpoint-append":"checkpointAppend","task-complete":"taskComplete",
+      "task-get":"taskGet","project-context":"projectContext",search:"search"};
+    if(!Object.hasOwn(methods,op))throw Error("UNSUPPORTED_OPERATION");
+    return json(res,200,memory[methods[op]](a));
+  }
   if(processesEnabled&&req.url.startsWith("/agent/process/")){
     const op=req.url.slice("/agent/process/".length);
     if(!["start","status","read","input","stop"].includes(op))throw Error("UNSUPPORTED_OPERATION");
     return json(res,200,await processes[op](a));
   }
-  if(memoryReadEnabled&&req.url.startsWith("/agent/continuity/")){
-    const op=req.url.slice("/agent/continuity/".length);
-    const allowed={context:"get_project_context",search:"search_memory",task:"get_task"};
-    if(!Object.hasOwn(allowed,op))throw Error("UNSUPPORTED_OPERATION");
-    return json(res,200,await memoryRead.call(allowed[op],a));
-  }
   if(asyncCopyRequested&&req.url.startsWith("/agent/async-copy/")){
     const op=req.url.slice("/agent/async-copy/".length);
-    if(!["start","status","read","stop"].includes(op))throw Error("UNSUPPORTED_OPERATION");
-    return json(res,200,await asyncCopy[op](a));
+    const method={start:"start",status:"status",read:"read",stop:"stop",
+     ...(copyStageRecovery?{"stage-inspect":"inspectStage","stage-cleanup":"cleanupStage"}:{})}[op];
+    if(!method)throw Error("UNSUPPORTED_OPERATION");
+    return json(res,200,await asyncCopy[method](a));
   }
   if(asyncHashEnabled&&req.url.startsWith("/agent/async-hash/")){
     const op=req.url.slice("/agent/async-hash/".length);
@@ -153,19 +177,18 @@ async function handleAgent(req,res){
     const op=req.url.slice("/agent/file/".length);
     if(!["list","stat","read","hash","write","copy","create","replace"].includes(op))throw Error("UNSUPPORTED_OPERATION");
     const pathDigest=pathFingerprint(a);
-    if(["write","copy","create","replace"].includes(op)){
-      broker.record("HOST_FILE_ISSUED",{operation:op,pathDigest});broker.save();
-    }
-    try{
-      const result=await files[op](a);
-      broker.record("HOST_FILE_COMPLETED",{operation:op,pathDigest});broker.save();
-      return json(res,200,result);
-    }catch(e){
-      broker.record("HOST_FILE_FAILED",{operation:op,pathDigest,code:safeError(e)});broker.save();
-      throw e;
-    }
+    const execute=()=>files[op](a);
+    const result=["write","copy","create","replace"].includes(op)
+     ?await auditedFileMutation(broker,op,pathDigest,execute)
+     :await auditedFileRead(broker,op,pathDigest,execute);
+    return json(res,200,result);
   }
- }catch(e){return json(res,400,{code:safeError(e)});}
+ }catch(e){
+  const details=fileEffectDetails(e);
+  return json(res,400,{code:safeError(e),...(
+   details.effect?{effect:details.effect,retryable:false}:{}),
+   ...(e.audit==="UNCERTAIN"?{audit:"UNCERTAIN"}:{})});
+ }
 }
 async function handleOwner(req,res){
  if(req.method!=="POST"||!["/owner/status","/owner/pending","/owner/grants","/owner/approve","/owner/revoke","/owner/mode","/owner/audit"].includes(req.url))
