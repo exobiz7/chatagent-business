@@ -76,29 +76,52 @@ Full local regression:
 - `PERSONAL_STANDALONE_SUITE=PASS count=34`
 - exit 0.
 
-## 6. Required Business configuration gate
+## 6. Actual Business dev-mode configuration and corrected guidance
 
-For the AIspace private 33-tool test app, use the workspace/app permission mode equivalent to:
+The actual AIspace Business dev-mode private app UI did **not** expose a per-app Permissions selector such as `Allow read actions`. The app showed development metadata, no connected account/authentication, `도구 새로 고침` (Refresh Tools), and workspace publication controls. The earlier assumption that this specific dev-mode app could set `Allow read actions` directly in its management screen was therefore incorrect and is superseded by this section.
 
-`Allow read actions`
+The correct supported refresh path for this app was:
 
-This is the preferred test posture:
-- reads do not require repeated approval;
-- write/modify actions require an explicit ChatGPT confirmation prompt;
-- destructive replace remains correctly marked and is not silently auto-approved.
+1. run the updated L0 metadata on the isolated candidate;
+2. use the Business app's `도구 새로 고침`;
+3. verify the 33-tool snapshot is refreshed;
+4. execute the explicitly user-requested destructive action and allow ChatGPT's platform policy to decide whether additional confirmation is required.
 
-Do not use `Allow all actions` merely to make the test pass. Do not disable safety controls. If the workspace exposes only admin-controlled action settings, the workspace admin should allow the `local_replace_file` action and keep write approval enabled.
+After refresh, Business displayed the new `local_replace_file` description beginning with `Update the contents of one existing regular file only when its current SHA-256 exactly matches expectedSha256`, proving the `ab341c48...` metadata snapshot had been loaded. Tool inventory remained exactly 33 (Write 17 / Read 16).
 
-After deploying this metadata change, refresh/rescan the private app because OpenAI documents that tool-definition updates must be refreshed/scanned before the app uses the latest action set.
+No safety control was disabled, no permission escalation was added, and no hidden approval token or bypass was used.
 
-## 7. Escalation if still blocked
+## 7. Actual Business positive replace closure
 
-If a correctly annotated `local_replace_file` under `Allow read actions` is still denied before MCP delivery, do not retry around the block.
+The refreshed Business app then executed one explicitly requested disposable existing-file replacement successfully. No platform pre-call block occurred on this attempt. No separate confirmation card was reported, so this record does not claim that a confirmation UI was shown; it only records that the normal platform path accepted and delivered the action.
 
-The next compliant design is a narrower two-step contract:
-1. a read-only preview/snapshot operation that identifies the exact file version and proposed modification;
-2. a destructive commit operation scoped to that preview rather than an unrestricted fresh path selection.
+Target:
+`/Users/macstudio/ChatAgentPersonalCandidate/personal-f03-33-3951c07-q0OcnC/fixture-work/business-33-replace-20260926.txt`
 
-This follows OpenAI's recommendation to split operations when permissions, safety, or confirmation requirements differ. It should be implemented only if the normal app-permission/confirmation path remains blocked.
+Precondition:
+- content: `CHATAGENT_PERSONAL_33_E2E_BASE_20260926`
+- SHA-256: `b456303d87327ffdb346be00030849ec7a0133b0a392a11311c74440643dd6c3`
+- mode: `0600`
 
-No merge, beta, production promotion, or safety bypass is approved by this record.
+Actual Business `local_replace_file` success receipt:
+- `changed: true`
+- `bytes: 43`
+- `sha256: 043dcdf39eeed3dc13a175acde923aa2ac0e3bfdb8841eb40db081f5d4c7a0d7`
+- `commitMode: DIRFD_DUAL_EXLOCK_RENAME_SWAP`
+
+Business post-read returned exactly:
+`CHATAGENT_PERSONAL_33_E2E_REPLACED_20260926`
+
+Business post-hash matched the replace receipt. Independent Mac-side verification then confirmed the same content and SHA, mode `0600`, link count 1 and owner `macstudio`.
+
+The owner subsequently returned the candidate to ASK. Local L1 health confirmed `paired=true` and `realAccess=false`.
+
+Therefore the previous platform-blocked positive-path state is superseded:
+- metadata refresh: PASS;
+- actual Business correct-SHA replace: PASS;
+- Safe Replace v2 commit mode: PASS;
+- Business post-read/hash: PASS;
+- independent Mac post-state: PASS;
+- post-effect ASK rollback: PASS.
+
+The next gate is no longer write-action policy compatibility. It is aggregate 33-tool Core beta-readiness assessment and release/baseline governance.
