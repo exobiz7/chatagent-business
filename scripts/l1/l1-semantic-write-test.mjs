@@ -57,8 +57,11 @@ try{
  for(const tool of ["local_create_file","local_replace_file"])assert.ok(tools.includes(tool));
  const registered=(await request(31523,"tools/list")).tools;
  assert.deepEqual(registered.find(x=>x.name==="local_create_file").annotations,{readOnlyHint:false,destructiveHint:false,openWorldHint:false});
- assert.deepEqual(registered.find(x=>x.name==="local_replace_file").annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:false});
- console.log("PASS 17 tools discovered with accurate create-only and replace hints");
+ assert.deepEqual(registered.find(x=>x.name==="local_replace_file").annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:false,idempotentHint:false});
+ assert.equal(registered.find(x=>x.name==="local_write").annotations.destructiveHint,true);
+ assert.equal(registered.find(x=>x.name==="local_copy").annotations.destructiveHint,true);
+ assert.deepEqual(registered.find(x=>x.name==="local_exec_start").annotations,{readOnlyHint:false,destructiveHint:true,openWorldHint:true});
+ console.log("PASS 17 tools discovered with accurate create/replace/copy/process risk hints");
  async function call(name,args){
   const result=await request(31523,"tools/call",{name,arguments:args});
   return {value:result.structuredContent,isError:result.isError===true};

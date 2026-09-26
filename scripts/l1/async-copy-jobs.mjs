@@ -12,6 +12,15 @@ export class AsyncCopyJobs {
   if(!isAbsolute(binary??"")||!validSha(binarySha))throw Error("INVALID_COPY_HELPER_CONFIG");
   this.broker=broker;this.files=files;this.binary=binary;this.binarySha=binarySha;
   this.processes=processes??new DurableHostProcesses(broker);
+  // Serialize only copy job reservation/start/bind. The detached copy workers
+  // still run concurrently; this queue prevents concurrent first-use/same-key
+  // requests from observing separate or incomplete ownership records.
+  this.startQueue=Promise.resolve();
+ }
+ start(request){
+  const run=this.startQueue.then(()=>this.startUnlocked(request));
+  this.startQueue=run.then(()=>undefined,()=>undefined);
+  return run;
  }
  actionInput(rec,dev,ino){
   return {executable:process.execPath,
@@ -92,7 +101,7 @@ export class AsyncCopyJobs {
   }
   return action.processId;
  }
- async start({source,destination,expectedSourceSha256,idempotencyKey}){
+ async startUnlocked({source,destination,expectedSourceSha256,idempotencyKey}){
   if(typeof source!=="string"||typeof destination!=="string"||
     !validSha(expectedSourceSha256)||typeof idempotencyKey!=="string")
     throw Error("INVALID_ASYNC_COPY_REQUEST");

@@ -32,6 +32,114 @@ const wait=async(fn,tries=125)=>{
  throw Error("ASYNC_COPY_TIMEOUT");
 };
 try{
+ // Regression: concurrent first-use copy starts must never lose ownership.
+ // Serialize only reservation/start/bind; worker execution itself remains parallel.
+ {
+  const concurrencyState=join(root,"concurrency-owner"),concurrencyWork=join(root,"concurrency-work");
+  mkdirSync(concurrencyWork,{mode:0o700});
+  const concurrentSource=join(concurrencyWork,"source.bin");
+  writeFileSync(concurrentSource,"CONCURRENT_COPY",{mode:0o600});
+  const cb=new L1Broker(concurrencyState,{initialize:true});cb.pair(pass);cb.setMode("FULL_HOST",pass);
+  const cf=new HostFileOps(cb,{privateRoot:concurrencyState,strictMutations:true});
+  const started=new Map(),startCalls=new Map();
+  const stubProcesses={
+   async start(input){
+    const key=input.idempotencyKey;startCalls.set(key,(startCalls.get(key)??0)+1);
+    if(started.has(key))return {processId:started.get(key),state:"RUNNING"};
+    await delay(20);
+    const processId=randomUUID();started.set(key,processId);return {processId,state:"RUNNING"};
+   },
+   status({processId}){return {processId,state:"RUNNING"};}
+  };
+  const cj=new AsyncCopyJobs(cb,cf,{processes:stubProcesses,binary:helper,binarySha:helperSha});
+  const k1=randomUUID(),k2=randomUUID();
+  const [a,b]=await Promise.all([
+   cj.start({source:concurrentSource,destination:join(concurrencyWork,"a.bin"),
+    expectedSourceSha256:sha("CONCURRENT_COPY"),idempotencyKey:k1}),
+   cj.start({source:concurrentSource,destination:join(concurrencyWork,"b.bin"),
+    expectedSourceSha256:sha("CONCURRENT_COPY"),idempotencyKey:k2})
+  ]);
+  assert.notEqual(a.processId,b.processId);
+  assert.equal(cb.state.copyJobs.length,2);
+  assert.doesNotThrow(()=>cj.record(a.processId));assert.doesNotThrow(()=>cj.record(b.processId));
+  const reopened=new L1Broker(concurrencyState);
+  assert.equal(reopened.state.copyJobs.length,2);
+  assert.ok(reopened.state.copyJobs.some(x=>x.processId===a.processId));
+  assert.ok(reopened.state.copyJobs.some(x=>x.processId===b.processId));
+
+  // Fresh-state identical-key overlap: one reservation/start, two identical receipts.
+  const sameState=join(root,"same-key-owner"),sameWork=join(root,"same-key-work");
+  mkdirSync(sameWork,{mode:0o700});
+  const sameSource=join(sameWork,"source.bin");writeFileSync(sameSource,"SAME_KEY_COPY",{mode:0o600});
+  const sb=new L1Broker(sameState,{initialize:true});sb.pair(pass);sb.setMode("FULL_HOST",pass);
+  const sf=new HostFileOps(sb,{privateRoot:sameState,strictMutations:true});
+  const sameStarted=new Map(),sameStartCalls=new Map();
+  const sameProcesses={
+   async start(input){
+    const key=input.idempotencyKey;sameStartCalls.set(key,(sameStartCalls.get(key)??0)+1);
+    if(sameStarted.has(key))return {processId:sameStarted.get(key),state:"RUNNING"};
+    await delay(20);const processId=randomUUID();sameStarted.set(key,processId);
+    return {processId,state:"RUNNING"};
+   },
+   status({processId}){return {processId,state:"RUNNING"};}
+  };
+  const sj=new AsyncCopyJobs(sb,sf,{processes:sameProcesses,binary:helper,binarySha:helperSha});
+  const sameKey=randomUUID(),sameRequest={source:sameSource,destination:join(sameWork,"same.bin"),
+   expectedSourceSha256:sha("SAME_KEY_COPY"),idempotencyKey:sameKey};
+  const [sameA,sameB]=await Promise.all([sj.start(sameRequest),sj.start(sameRequest)]);
+  assert.equal(sameA.processId,sameB.processId);
+  assert.equal(sb.state.copyJobs.filter(x=>x.key===sameKey).length,1);
+  assert.equal(sameStartCalls.get(sameKey),1);
+  assert.doesNotThrow(()=>sj.record(sameA.processId));
+
+  // Overlapping same-key but different intent: exactly one succeeds; conflict is stable.
+  const conflictKey=randomUUID(),conflictBase={source:sameSource,
+   expectedSourceSha256:sha("SAME_KEY_COPY"),idempotencyKey:conflictKey};
+  const conflict=await Promise.allSettled([
+   sj.start({...conflictBase,destination:join(sameWork,"conflict-a.bin")}),
+   sj.start({...conflictBase,destination:join(sameWork,"conflict-b.bin")})
+  ]);
+  assert.equal(conflict.filter(x=>x.status==="fulfilled").length,1);
+  const rejected=conflict.filter(x=>x.status==="rejected");
+  assert.equal(rejected.length,1);assert.match(String(rejected[0].reason?.message),/IDEMPOTENCY_KEY_CONFLICT/);
+  assert.equal(sb.state.copyJobs.filter(x=>x.key===conflictKey).length,1);
+  const afterConflictKey=randomUUID();
+  const afterConflict=await sj.start({source:sameSource,destination:join(sameWork,"after-conflict.bin"),
+   expectedSourceSha256:sha("SAME_KEY_COPY"),idempotencyKey:afterConflictKey});
+  assert.ok(afterConflict.processId);assert.doesNotThrow(()=>sj.record(afterConflict.processId));
+  const persistedSame=new L1Broker(sameState);
+  assert.equal(persistedSame.state.copyJobs.length,3);
+  assert.equal(persistedSame.state.copyJobs.filter(x=>x.key===sameKey).length,1);
+  assert.equal(persistedSame.state.copyJobs.filter(x=>x.key===conflictKey).length,1);
+  assert.equal(persistedSame.state.copyJobs.filter(x=>x.key===afterConflictKey).length,1);
+  console.log("PASS concurrent first-use distinct-key ownership, fresh same-key duplicate suppression and conflict fencing");
+ }
+ // Real runner integration: two concurrent starts on the production controller
+ // retain independent ownership while their detached native workers may overlap.
+ const realConcurrentSource=join(work,"real-concurrent.bin");
+ const realConcurrentData=Buffer.alloc(1024*1024,0x52);
+ writeFileSync(realConcurrentSource,realConcurrentData,{mode:0o600});
+ const realExpected=sha(realConcurrentData);
+ const realDestA=join(work,"real-concurrent-a.bin"),realDestB=join(work,"real-concurrent-b.bin");
+ const [realA,realB]=await Promise.all([
+  jobs.start({source:realConcurrentSource,destination:realDestA,expectedSourceSha256:realExpected,
+   idempotencyKey:randomUUID()}),
+  jobs.start({source:realConcurrentSource,destination:realDestB,expectedSourceSha256:realExpected,
+   idempotencyKey:randomUUID()})
+ ]);
+ assert.notEqual(realA.processId,realB.processId);
+ await wait(()=>["EXITED","FAILED"].includes(jobs.status({processId:realA.processId}).state));
+ await wait(()=>["EXITED","FAILED"].includes(jobs.status({processId:realB.processId}).state));
+ assert.equal(jobs.status({processId:realA.processId}).state,"EXITED");
+ assert.equal(jobs.status({processId:realB.processId}).state,"EXITED");
+ assert.equal(sha(readFileSync(realDestA)),realExpected);assert.equal(sha(readFileSync(realDestB)),realExpected);
+ assert.match(jobs.read({processId:realA.processId,cursor:0,maxBytes:16384}).content,/COPY_DONE/);
+ assert.match(jobs.read({processId:realB.processId,cursor:0,maxBytes:16384}).content,/COPY_DONE/);
+ const realReopen=new L1Broker(state);
+ assert.ok(realReopen.state.copyJobs.some(x=>x.processId===realA.processId));
+ assert.ok(realReopen.state.copyJobs.some(x=>x.processId===realB.processId));
+ console.log("PASS real concurrent native copy runners retain both owned process records");
+
  const key=randomUUID();
  const first=await jobs.start({source,destination,expectedSourceSha256:expected,idempotencyKey:key});
  assert.ok(first.processId);
