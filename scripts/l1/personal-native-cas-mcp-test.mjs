@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,chmodSync,
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,chmodSync,readdirSync,
  realpathSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
@@ -117,6 +117,22 @@ try{
   {encoding:"utf8",timeout:5000});
  assert.equal(retained.status,0,retained.stderr);
  assert.equal(retained.stdout.trim(),"MCP_META");
+ const inheritedDir=join(work,"mcp-inherited-acl");
+ mkdirSync(inheritedDir,{mode:0o700});
+ const inherit=spawnSync("/bin/chmod",["+a","everyone allow read,write,file_inherit,directory_inherit",inheritedDir],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(inherit.status,0,inherit.stderr);
+ const inheritedTarget=join(inheritedDir,"target.txt");
+ writeFileSync(inheritedTarget,"MCP_ACL_BASE",{mode:0o600,flag:"wx"});
+ const strip=spawnSync("/bin/chmod",["-N",inheritedTarget],{encoding:"utf8",timeout:5000});
+ assert.equal(strip.status,0,strip.stderr);
+ const inherited=await call("local_replace_file",{path:inheritedTarget,content:"MCP_ACL_NEW",
+  expectedSha256:sha("MCP_ACL_BASE")});
+ assert.equal(inherited.isError,true);
+ assert.equal(inherited.value.code,"CAS_METADATA_UNSUPPORTED");
+ assert.equal(readFileSync(inheritedTarget,"utf8"),"MCP_ACL_BASE");
+ assert.equal(readdirSync(inheritedDir).some(x=>x.startsWith(".personal-cas-")),false);
+ console.log("PASS MCP inherited-stage ACL is refused without replacement or stage debris");
  const collision=await call("local_create_file",{path:target,content:"NEVER"});
  assert.equal(collision.isError,true);
  assert.equal(readFileSync(target,"utf8"),"MCP_UPDATED");

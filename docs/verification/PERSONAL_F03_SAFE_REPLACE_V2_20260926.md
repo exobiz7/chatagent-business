@@ -97,3 +97,28 @@ This materially changes F03 from an undetectable last-check clobber window into 
 - An attempted benchmark under `/tmp` was correctly refused as `CAS_PARENT_UNSAFE` because macOS `/tmp` is a symlink to `/private/tmp`; the no-follow parent policy remained active.
 
 Exact commit SHA and remote CI are to be recorded after the implementation commit/push. Independent F03 security review remains a separate next gate.
+
+## 9. Independent re-review delta and ACL remediation
+
+Independent Codex Astra re-review of implementation SHA `22881de46c938ee61c118cd5c864430549a105bf` was executed in an isolated 0700 detached snapshot under:
+
+`/Users/macstudio/CodexReview/chatagent-personal/22881de46c938ee61c118cd5c864430549a105bf-f03-safe-replace-v2-rereview/`
+
+That review independently reran the focused native CAS fixture, added an external flock barrier challenge, reran the F02 contract fixture, and created a separate ACL challenge. Its scoped disposition was:
+
+- original F03 final-check -> destructive replacement P1: **CLOSED for the bounded Personal model**;
+- P0 0 / P1 0 / **P2 1**;
+- new P2 `F03-V2-ACL`: an ACL-free target inside a directory with an inheritable extended ACL could be replaced successfully while the newly created stage inherited that ACL. The final replacement silently gained the inherited ACL even though the tool contract states extended ACLs are unsupported/refused.
+
+The independent reviewer reproduced the issue both with the exact native helper and through `HostFileOps.replace`, receiving a successful `DIRFD_DUAL_EXLOCK_RENAME_SWAP` receipt while the resulting file had an inherited `everyone allow read,write` ACL. The live 33-tool gate therefore remained OFF.
+
+### Remediation on the follow-up worktree
+
+The native helper now validates the NEW staged inode with the same `metadata_supported()` policy before any public swap. This detects an inherited extended ACL (or unsupported nonzero flags) on the stage and refuses with `CAS_METADATA_UNSUPPORTED`, cleaning only the verified owned stage. The committed NEW inode is checked again after `RENAME_SWAP`; an unsupported ACL/flag introduced after the pre-swap check causes the existing safe rollback path rather than deletion of OLD.
+
+New regressions:
+
+- native `personal-native-cas-test.mjs`: create a directory with inheritable `everyone allow read,write,file_inherit,directory_inherit`, create an ACL-free `0600` OLD inside it, then assert replace fails `CAS_METADATA_UNSUPPORTED`, OLD bytes remain unchanged, and no `.personal-cas-*` stage remains;
+- MCP `personal-native-cas-mcp-test.mjs`: reproduce the same ACL-free OLD / inheritable parent condition through actual `local_replace_file`; assert MCP error code `CAS_METADATA_UNSUPPORTED`, original bytes unchanged and no stage debris.
+
+Focused native and MCP ACL regressions PASS on the current worktree. Exact follow-up SHA, full-suite result, remote CI and independent re-review are recorded only after the remediation commit is created.

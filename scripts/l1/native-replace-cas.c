@@ -289,6 +289,12 @@ int main(int argc,char **argv){
     staged_now.st_nlink!=1||!same_metadata(&before,&verify)||
     !same_xattrs(original,temp))
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
+ // A newly created stage can inherit an extended ACL from its parent directory
+ // even when the original target itself has no ACL. Extended ACLs are outside
+ // this replace contract, so refuse before the swap rather than silently adding
+ // permissions to the replacement file.
+ if(!metadata_supported(temp,&staged_now))
+  clean_stage(parent,stage,&owned,"CAS_METADATA_UNSUPPORTED");
  if(fstatat(parent,leaf,&now,AT_SYMLINK_NOFOLLOW)||!same_identity(&now,&before)||
     now.st_nlink!=1||!same_metadata(&before,&now))
   clean_stage(parent,stage,&owned,"CAS_TARGET_CHANGED");
@@ -350,7 +356,8 @@ int main(int argc,char **argv){
  if(!hash_file(temp,&committed_post,committed_digest)||
     !same_identity(&committed_post,&owned)||
     memcmp(committed_digest,incoming_digest,CC_SHA256_DIGEST_LENGTH)||
-    !same_postswap_metadata(&staged_now,&committed_post))
+    !same_postswap_metadata(&staged_now,&committed_post)||
+    !metadata_supported(temp,&committed_post))
   rollback_swap(parent,stage,leaf,&owned,&displaced);
  struct stat committed_fd,committed_again,displaced_again;
  if(fstat(temp,&committed_fd)||!same_identity(&committed_fd,&owned)||

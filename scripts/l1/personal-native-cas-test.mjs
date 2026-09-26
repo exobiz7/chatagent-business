@@ -109,6 +109,23 @@ try{
  assert.equal(readFileSync(aclTarget,"utf8"),"ACL_BASE");
  assert.equal(readdirSync(work).some(x=>x.startsWith(".personal-cas-")),false);
  console.log("PASS unsupported ACL refused before effect; no orphan stage");
+ // A parent directory ACL can be inherited by a newly created stage even when
+ // the existing target is ACL-free. Safe Replace must reject that NEW inode
+ // rather than silently widening the replacement file's permissions.
+ const inheritedDir=join(work,"inherited-acl-dir");
+ mkdirSync(inheritedDir,{mode:0o700});
+ const inherit=spawnSync("/bin/chmod",["+a","everyone allow read,write,file_inherit,directory_inherit",inheritedDir],
+  {encoding:"utf8",timeout:5000});
+ assert.equal(inherit.status,0,inherit.stderr);
+ const inheritedTarget=join(inheritedDir,"target.txt");
+ writeFileSync(inheritedTarget,"INHERITED_BASE",{mode:0o600,flag:"wx"});
+ const strip=spawnSync("/bin/chmod",["-N",inheritedTarget],{encoding:"utf8",timeout:5000});
+ assert.equal(strip.status,0,strip.stderr);
+ await assert.rejects(()=>files.replace({path:inheritedTarget,content:"INHERITED_NEW",
+  expectedSha256:sha("INHERITED_BASE")}),/CAS_METADATA_UNSUPPORTED/);
+ assert.equal(readFileSync(inheritedTarget,"utf8"),"INHERITED_BASE");
+ assert.equal(readdirSync(inheritedDir).some(x=>x.startsWith(".personal-cas-")),false);
+ console.log("PASS inherited stage ACL is refused; ACL-free original content remains unchanged");
  const flagged=join(work,"with-flags.txt");
  writeFileSync(flagged,"FLAG_BASE",{mode:0o600,flag:"wx"});
  const setFlag=spawnSync("/usr/bin/chflags",["uchg",flagged],{encoding:"utf8",timeout:5000});
