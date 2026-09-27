@@ -1,0 +1,46 @@
+{
+  "product": "ChatAgent Personal",
+  "version": "1.0.0",
+  "releaseScope": "PRIVATE_SINGLE_OWNER_PRODUCTION",
+  "parentMainSha": "c507fdb002a9ec4641217d91d643b638db5dbe9d",
+  "node": {
+    "exact": "24.21.0",
+    "engines": ">=24.15.0 <25"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "4.4.3"
+  },
+  "toolCount": 33,
+  "helperBuild": {
+    "platform": "macOS 26.5.2 arm64",
+    "compiler": "Apple clang 21.0.0",
+    "flags": [
+      "-std=c11",
+      "-D_DARWIN_C_SOURCE",
+      "-Wno-deprecated-declarations",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O2"
+    ],
+    "hashes": {
+      "native-create-excl": "5db079d0b132ac196cb49a74f7aef35db30d8ba91f63e59ff0526a0fc9ffb0c4",
+      "native-copy-create": "9d77cd7ad5370afb09308a20c38d1d65dd23cfbe89dd1b031950a2327cfc3265",
+      "native-replace-cas": "3c9b54143bda17f1e66126bd1d9c9ebc1350033019bbb21190d1876ca9258ab7"
+    },
+    "rebuiltMatchesActive": true,
+    "signing": "ADHOC_LINKER_SIGNED",
+    "publicDistributionSigning": "NOT_IN_SCOPE"
+  },
+  "betaEvidence": {
+    "privateBetaCanary": "PASS",
+    "releaseCoreSmoke": "PASS",
+    "findings": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    }
+  },
+  "productionStartMode": "ASK"
+}
