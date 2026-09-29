@@ -1,8 +1,8 @@
 {
-  "name": "chatagent-personal",
-  "version": "1.0.0",
+  "name": "chatagent-business",
+  "version": "0.1.0-dev.0",
   "private": true,
-  "description": "Standalone single-owner macOS Power-User MCP development product",
+  "description": "ChatAgent Business SMB Edition foundation derived from ChatAgent Personal v1.0.0",
   "type": "module",
   "engines": {
     "node": ">=24.15.0 <25"
