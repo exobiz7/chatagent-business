@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
 import {mkdtempSync,mkdirSync,writeFileSync,lstatSync,unlinkSync,rmSync,existsSync} from "node:fs";
@@ -28,7 +29,7 @@ const wait=async(fn,n=100)=>{
 };
 async function boot(){
  stderr="";
- server=spawn(process.execPath,[new URL("./broker-server.mjs",import.meta.url).pathname],{
+ server=spawn(process.execPath,[fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
   env:{...process.env,L1_STATE_DIR:state,L1_AGENT_KEY_FILE:tokenFile,
    L1_AGENT_PORT:String(port),L1_HOST_EXEC_ENABLED:"1",L1_FILE_OPS_ENABLED:"0",
    L1_DURABLE_PROCESS_ENABLED:"1"},stdio:["ignore","pipe","pipe"]

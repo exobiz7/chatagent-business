@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdtempSync,realpathSync,readFileSync,writeFileSync,
@@ -15,7 +16,7 @@ const archiveKey=randomBytes(32),ownerStatus=()=>({paired:true,mode:"ASK"});
 const digest=x=>createHash("sha256").update(x).digest("hex");
 writeFileSync(keyFile,archiveKey,{mode:0o600,flag:"wx"});
 const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
- "-Wall","-Wextra","-Werror","-O2",new URL("./native-restore-publish.c",import.meta.url).pathname,
+ "-Wall","-Wextra","-Werror","-O2",fileURLToPath(new URL("./native-restore-publish.c",import.meta.url)),
  "-o",helper],{encoding:"utf8",timeout:10000});
 assert.equal(cc.status,0,cc.stderr);chmodSync(helper,0o700);
 const helperSha=digest(readFileSync(helper));
@@ -23,7 +24,7 @@ let child=null,completed=false;
 const runCrash=async(mode,source,destination)=>{
  const receipt=await new Promise((resolve,reject)=>{
   let output="",settled=false;
-  child=spawn(process.execPath,[new URL("./personal-stage-crash-worker.mjs",import.meta.url).pathname,
+  child=spawn(process.execPath,[fileURLToPath(new URL("./personal-stage-crash-worker.mjs",import.meta.url)),
    mode,source,destination,keyFile,helper,helperSha],{stdio:["ignore","pipe","pipe"]});
   let errors="";
   child.stderr.on("data",chunk=>{errors=(errors+String(chunk)).slice(-900);});

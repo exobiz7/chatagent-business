@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
 import {mkdtempSync,mkdirSync,writeFileSync,rmSync,existsSync} from "node:fs";
@@ -35,7 +36,7 @@ try {
  const dir=join(state,"jobs",id);
  mkdirSync(dir,{mode:0o700});
  writeFileSync(join(dir,"config.json"),JSON.stringify({...input,processId:id,nonce})+"\n",{mode:0o600,flag:"wx"});
- runner=spawn(process.execPath,[new URL("./durable-process-runner.mjs",import.meta.url).pathname,dir],{
+ runner=spawn(process.execPath,[fileURLToPath(new URL("./durable-process-runner.mjs",import.meta.url)),dir],{
   detached:true,stdio:"ignore",cwd:work
  });
  runner.on("error",()=>{});

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,realpathSync,writeFileSync,readFileSync,rmSync,existsSync,
@@ -27,7 +28,7 @@ let jobId;
 try{
  const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
  "-Wno-deprecated-declarations","-Wall","-Wextra","-Werror","-O2",
- new URL("./native-copy-create.c",import.meta.url).pathname,"-o",join(privateRoot,"copy")],
+ fileURLToPath(new URL("./native-copy-create.c",import.meta.url)),"-o",join(privateRoot,"copy")],
  {encoding:"utf8",timeout:10000});
  if(cc.status!==0)throw Error("NATIVE_BUILD_FAILED");
  chmodSync(join(privateRoot,"copy"),0o700);

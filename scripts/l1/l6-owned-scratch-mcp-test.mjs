@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,realpathSync,chmodSync,rmSync,existsSync,readdirSync} from "node:fs";
@@ -51,19 +52,19 @@ try{
  const native=join(root,"native-create-excl");
  const compilation=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
    "-Wall","-Wextra","-Werror","-O2",
-   new URL("./native-create-excl.c",import.meta.url).pathname,"-o",native],
+   fileURLToPath(new URL("./native-create-excl.c",import.meta.url)),"-o",native],
    {encoding:"utf8",timeout:10000});
  if(compilation.status!==0)throw Error("NATIVE_BUILD_FAILED");
  chmodSync(native,0o700);
  const binarySha=sha(readFileSync(native));
- server=spawn(process.execPath,[new URL("./broker-server.mjs",import.meta.url).pathname],{
+ server=spawn(process.execPath,[fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
   env:{...process.env,L1_STATE_DIR:state,L1_AGENT_KEY_FILE:key,L1_AGENT_PORT:String(brokerPort),
    L1_FILE_OPS_ENABLED:"1",L1_OWNED_SCRATCH_ENABLED:"1",L1_STRICT_MUTATIONS:"1",
    L1_NATIVE_CREATE_ENABLED:"1",L1_NATIVE_CREATE_BIN:native,L1_NATIVE_CREATE_SHA256:binarySha},
   stdio:"ignore"
  });
  await wait(server,brokerPort);
- mcp=spawn(process.execPath,[new URL("../l0-ui-probe.mjs",import.meta.url).pathname],{
+ mcp=spawn(process.execPath,[fileURLToPath(new URL("../l0-ui-probe.mjs",import.meta.url))],{
   env:{...process.env,L0_AUTH_FILE:mcpKey,L0_PORT:String(mcpPort),L1_AGENT_KEY_FILE:key,
    L1_BROKER_URL:"http://127.0.0.1:"+brokerPort,L1_POWERUSER_TOOLS:"1",
    L1_SEMANTIC_WRITE_TOOLS:"1",L1_OWNED_SCRATCH_TOOLS:"1",L1_STRICT_MUTATIONS:"1"},

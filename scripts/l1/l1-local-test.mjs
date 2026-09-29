@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, chmodSync, statSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -68,7 +69,7 @@ try{
  const token=randomBytes(32).toString("base64url");
  writeFileSync(keyfile,token,{mode:0o600});chmodSync(keyfile,0o600);
  const port=31517;
- child=spawn(process.execPath,[new URL("./broker-server.mjs",import.meta.url).pathname],{
+ child=spawn(process.execPath,[fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
   env:{...process.env,L1_STATE_DIR:dir,L1_AGENT_KEY_FILE:keyfile,L1_AGENT_PORT:String(port)},
   stdio:["ignore","pipe","pipe"]
  });

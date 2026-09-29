@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,realpathSync,readFileSync,writeFileSync,rmSync,existsSync,symlinkSync} from "node:fs";
@@ -14,7 +15,7 @@ const root=realpathSync(mkdtempSync(join(tmpdir(),"chatagent-b05-copy-")));
 const state=join(root,"owner"),work=join(root,"work");mkdirSync(work,{mode:0o700});
 const helper=join(root,"native-copy");
 const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE","-Wno-deprecated-declarations",
- "-Wall","-Wextra","-Werror","-O2",new URL("./native-copy-create.c",import.meta.url).pathname,"-o",helper],
+ "-Wall","-Wextra","-Werror","-O2",fileURLToPath(new URL("./native-copy-create.c",import.meta.url)),"-o",helper],
  {encoding:"utf8",timeout:10000});
 if(cc.status!==0)throw Error("NATIVE_COPY_BUILD_FAILED "+cc.stderr);
 const {chmodSync}=await import("node:fs");chmodSync(helper,0o700);

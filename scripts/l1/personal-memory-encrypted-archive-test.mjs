@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import {spawnSync} from "node:child_process";
 import assert from "node:assert/strict";
 import {mkdtempSync,realpathSync,readFileSync,rmSync,existsSync,lstatSync,chmodSync} from "node:fs";
@@ -11,7 +12,7 @@ const source=join(root,"original"),archive=join(root,"sealed.json"),restore=join
 const ownerStatus=()=>({paired:true,mode:"ASK"}),archiveKey=randomBytes(32);
 const publishHelperPath=join(root,"publish");
 const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE","-Wall","-Wextra","-Werror","-O2",
- new URL("./native-restore-publish.c",import.meta.url).pathname,"-o",publishHelperPath],
+ fileURLToPath(new URL("./native-restore-publish.c",import.meta.url)),"-o",publishHelperPath],
  {encoding:"utf8",timeout:10000});
 assert.equal(cc.status,0,cc.stderr);chmodSync(publishHelperPath,0o700);
 const publishHelperSha256=createHash("sha256").update(readFileSync(publishHelperPath)).digest("hex");

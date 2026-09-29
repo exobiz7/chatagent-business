@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import {spawn,spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,lstatSync,readFileSync,writeFileSync,openSync,closeSync,readSync,statSync,accessSync,constants as C} from "node:fs";
 import {isAbsolute,join} from "node:path";
@@ -27,7 +28,7 @@ const procIdentity=pid=>{
 };
 
 export class DurableHostProcesses {
- constructor(broker,{runnerPath=new URL("./durable-process-runner.mjs",import.meta.url).pathname}={}){
+ constructor(broker,{runnerPath=fileURLToPath(new URL("./durable-process-runner.mjs",import.meta.url))}={}){
   this.broker=broker;
   this.dir=join(broker.dir,"jobs");
   if(!existsSync(this.dir))mkdirSync(this.dir,{mode:0o700});

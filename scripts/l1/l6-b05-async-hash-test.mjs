@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,realpathSync,writeFileSync,readFileSync,rmSync} from "node:fs";
@@ -42,7 +43,7 @@ try{
  assert.equal(duplicate.processId,job.processId);
  console.log("PASS sealed completion, independent reopen and exact-key no replay");
  const st=(await import("node:fs")).statSync(source);
- const bad=spawnSync(process.execPath,[new URL("./async-file-hash-worker.mjs",import.meta.url).pathname,
+ const bad=spawnSync(process.execPath,[fileURLToPath(new URL("./async-file-hash-worker.mjs",import.meta.url)),
   source,String(st.dev),String(st.ino),String(st.size),String(st.mtimeMs+1)],{
   encoding:"utf8",timeout:3000});
  assert.equal(bad.status,3);assert.match(bad.stderr,/ASYNC_HASH_SOURCE_CHANGED/);

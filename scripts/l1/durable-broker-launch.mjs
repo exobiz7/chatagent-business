@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import {spawn} from "node:child_process";
 import {openSync,closeSync,fstatSync,lstatSync,constants as C} from "node:fs";
 import {isAbsolute,join} from "node:path";
@@ -19,7 +20,7 @@ try{
    (process.getuid&&f.uid!==process.getuid()))throw Error("LOCK_FILE_UNSAFE");
 }finally{closeSync(fd);}
 const child=spawn("/usr/bin/lockf",["-k","-t","0",lock,process.execPath,
- new URL("./broker-server.mjs",import.meta.url).pathname],{
+ fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
  stdio:"inherit",env:{...process.env,L1_LOCKED_STARTUP:"1"}
 });
 child.on("error",()=>{process.exitCode=1;});

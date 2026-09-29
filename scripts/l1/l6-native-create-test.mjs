@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,renameSync,symlinkSync,existsSync,realpathSync,rmSync,chmodSync,copyFileSync} from "node:fs";
@@ -14,7 +15,7 @@ const state=join(root,"owner"),work=join(root,"work"),outside=join(root,"outside
 mkdirSync(work,{mode:0o700});mkdirSync(outside,{mode:0o700});
 const binary=join(root,"native-create-excl");
 const compiled=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE","-Wall","-Wextra","-Werror","-O2",
- new URL("./native-create-excl.c",import.meta.url).pathname,"-o",binary],{encoding:"utf8",timeout:10000});
+ fileURLToPath(new URL("./native-create-excl.c",import.meta.url)),"-o",binary],{encoding:"utf8",timeout:10000});
 if(compiled.status!==0)throw Error("NATIVE_BUILD_FAILED "+compiled.stderr);
 chmodSync(binary,0o700);
 const binarySha=sha(readFileSync(binary));

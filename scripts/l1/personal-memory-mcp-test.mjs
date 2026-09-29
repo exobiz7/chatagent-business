@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
 import net from "node:net";
@@ -52,7 +53,7 @@ const call=async(name,args)=>{
  return {value:result.structuredContent,isError:result.isError===true};
 };
 try{
- server=spawn(process.execPath,[new URL("./broker-server.mjs",import.meta.url).pathname],{
+ server=spawn(process.execPath,[fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
   env:{...process.env,L1_STATE_DIR:state,L1_AGENT_KEY_FILE:key,L1_AGENT_PORT:String(brokerPort),
    L1_FILE_OPS_ENABLED:"0",L1_HOST_EXEC_ENABLED:"0",
    PERSONAL_MEMORY_ENABLED:"1",PERSONAL_MEMORY_INIT:"1",
@@ -60,7 +61,7 @@ try{
   stdio:"ignore"
  });
  await wait(server,brokerPort);
- mcp=spawn(process.execPath,[new URL("../l0-ui-probe.mjs",import.meta.url).pathname],{
+ mcp=spawn(process.execPath,[fileURLToPath(new URL("../l0-ui-probe.mjs",import.meta.url))],{
   env:{...process.env,L0_AUTH_FILE:mcpKey,L0_PORT:String(mcpPort),
    L1_AGENT_KEY_FILE:key,L1_BROKER_URL:"http://127.0.0.1:"+brokerPort,
    PERSONAL_MEMORY_TOOLS:"1",L1_POWERUSER_TOOLS:"0"},

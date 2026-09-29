@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import {promises as fs,constants as C,existsSync,lstatSync,fstatSync,openSync,readFileSync,closeSync} from "node:fs";
 import {dirname,join,isAbsolute} from "node:path";
 import {createHash,randomUUID} from "node:crypto";
@@ -24,7 +25,7 @@ export class AsyncCopyJobs {
  }
  actionInput(rec,dev,ino){
   return {executable:process.execPath,
-   argv:[new URL("./async-file-copy-worker.mjs",import.meta.url).pathname,
+   argv:[fileURLToPath(new URL("./async-file-copy-worker.mjs",import.meta.url)),
     this.binary,this.binarySha,rec.sourcePath,rec.destinationPath,
     rec.expectedSourceSha256,String(rec.bytes),dev,ino,rec.stageId],
    cwd:dirname(rec.destinationPath),timeoutMs:3600000};
