@@ -8,8 +8,9 @@
     "node": ">=24.15.0 <25"
   },
   "scripts": {
-    "test": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs",
+    "test": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs",
     "test:business:b1": "node scripts/business/b1-project-boundary-test.mjs",
+    "test:business:b2": "node scripts/business/b2-safe-files-test.mjs",
     "test:copy": "node scripts/l1/l6-b05-async-copy-test.mjs",
     "test:stage": "node scripts/l1/personal-copy-e2e-kill-test.mjs",
     "test:compat": "node test/compat/p8-read-adapter-test.mjs",

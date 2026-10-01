@@ -163,18 +163,22 @@ export function authorizeProjectTool(registry,{projectId,tool}){
   profile:project.profile,hostRoot:project.hostRoot,tool,requiredProfile:required};
 }
 
-export function businessStatus(registry){
+export function businessStatus(registry,{safeFilesReady=false}={}){
  const organization=registry.organization(),projects=registry.list().map(p=>{
   const inspected=registry.inspect(p.projectId);
   return {projectId:p.projectId,displayName:p.displayName,profile:p.profile,enabled:p.enabled,
    available:inspected.rootAvailable};
  });
  return {
-  product:"ChatAgent Business",edition:"SMB",version:BUSINESS_VERSION,phase:"B1",
+  product:"ChatAgent Business",edition:"SMB",version:BUSINESS_VERSION,
+  phase:safeFilesReady?"B2":"B1",
   organization,
   projects,
   projectCounts:{registered:projects.length,enabled:projects.filter(p=>p.enabled).length,
    available:projects.filter(p=>p.available).length},
-  continuity:"NOT_IMPLEMENTED_B1",exec:"NOT_IMPLEMENTED_B1",runtimeHealth:"READY_B1"
+  safeFiles:safeFilesReady?"READY_B2":"NOT_CONFIGURED_B1",
+  continuity:safeFilesReady?"NOT_IMPLEMENTED_B2":"NOT_IMPLEMENTED_B1",
+  exec:safeFilesReady?"NOT_IMPLEMENTED_B2":"NOT_IMPLEMENTED_B1",
+  runtimeHealth:safeFilesReady?"READY_B2":"READY_B1"
  };
 }
