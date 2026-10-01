@@ -1,7 +1,7 @@
 import http from "node:http";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import {timingSafeEqual} from "node:crypto";
+import {timingSafeEqual,randomUUID} from "node:crypto";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StreamableHTTPServerTransport} from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {z} from "zod";
@@ -9,6 +9,7 @@ import {boundedJSONBody} from "../l1/bounded-json-body.mjs";
 import {BusinessRegistry,businessStatus} from "./business-core.mjs";
 import {BusinessFileOps} from "./business-file-ops.mjs";
 import {BusinessContinuity} from "./business-continuity.mjs";
+import {BusinessAuditLedger} from "./business-audit.mjs";
 
 const state=process.env.CHATAGENT_BUSINESS_STATE_DIR;
 const authFile=process.env.CHATAGENT_BUSINESS_AUTH_FILE;
@@ -34,11 +35,20 @@ if(continuityReady&&!safeFilesReady)throw Error("BUSINESS_CONTINUITY_REQUIRES_B2
 const continuity=continuityReady?new BusinessContinuity(registry,{
  root:process.env.CHATAGENT_BUSINESS_CONTINUITY_STATE_DIR||join(state,"continuity")
 }):null;
+const auditFlag=process.env.CHATAGENT_BUSINESS_AUDIT_ENABLED;
+if(auditFlag!==undefined&&!["0","1"].includes(auditFlag))
+ throw Error("BUSINESS_AUDIT_CONFIG_INVALID");
+const auditReady=auditFlag==="1";
+if(auditReady&&!continuityReady)throw Error("BUSINESS_AUDIT_REQUIRES_B3");
+const audit=auditReady?new BusinessAuditLedger(
+ process.env.CHATAGENT_BUSINESS_AUDIT_DIR||join(state,"audit")):null;
 const expected=readFileSync(authFile,"utf8").trim();
 if(!/^[A-Za-z0-9_-]{43,256}$/.test(expected))throw Error("BUSINESS_AUTH_INVALID");
 
 const port=Number(process.env.CHATAGENT_BUSINESS_PORT||31850);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error("BUSINESS_PORT_INVALID");
+const instanceId=process.env.CHATAGENT_BUSINESS_INSTANCE_ID||randomUUID();
+if(!/^[0-9a-f-]{36}$/i.test(instanceId))throw Error("BUSINESS_INSTANCE_ID_INVALID");
 const equal=(a,b)=>{
  const x=Buffer.from(typeof a==="string"?a:""),y=Buffer.from(b);
  return x.length===y.length&&timingSafeEqual(x,y);
@@ -52,9 +62,38 @@ const jsonError=(res,status,message,id=null)=>{
 };
 const text=data=>({content:[{type:"text",text:JSON.stringify(data)}],structuredContent:data});
 const toolError=e=>{
- const code=/^[A-Z][A-Z0-9_]{2,64}$/.test(String(e?.message))?String(e.message):"BUSINESS_FILE_OPERATION_FAILED";
- const data={code,success:false,...(e?.effect==="UNCERTAIN"?{effect:"UNCERTAIN",retryable:false}:{})};
+ const code=/^[A-Z][A-Z0-9_]{2,64}$/.test(String(e?.message))?String(e.message):"BUSINESS_OPERATION_FAILED";
+ const data={code,success:false,
+  ...(typeof e?.effect==="string"?{effect:e.effect}:{}),
+  ...(e?.retryable===false?{retryable:false}:{}),
+  ...(e?.audit==="UNCERTAIN"?{audit:"UNCERTAIN"}:{})};
  return {...text(data),isError:true};
+};
+const EFFECT_CLASS=Object.freeze({
+ make_directory:"CREATE",create_file:"CREATE",replace_file:"REPLACE",apply_patch:"PATCH",
+ continuity_start_task:"CONTINUITY_WRITE",continuity_checkpoint:"CONTINUITY_WRITE",
+ continuity_complete_task:"CONTINUITY_WRITE"
+});
+const audited=async(tool,args,run)=>{
+ if(!audit||!EFFECT_CLASS[tool])return run();
+ let profile="UNKNOWN",organizationId=registry.organization().organizationId;
+ try{profile=registry.inspect(args.projectId).profile;}catch{}
+ const base={organizationId,projectId:args.projectId,profile,tool,effectClass:EFFECT_CLASS[tool],
+  targetRelativePath:typeof args.relativePath==="string"?args.relativePath:null,
+  preconditionDigest:typeof args.expectedSha256==="string"?args.expectedSha256:null};
+ try{
+  const value=await run();
+  try{audit.append({...base,resultCode:"OK"});}
+  catch{
+   const e=Error("BUSINESS_AUDIT_UNCERTAIN");e.effect="COMMITTED";e.retryable=false;e.audit="UNCERTAIN";throw e;
+  }
+  return value;
+ }catch(e){
+  if(e?.message==="BUSINESS_AUDIT_UNCERTAIN")throw e;
+  try{audit.append({...base,resultCode:/^[A-Z][A-Z0-9_]{1,63}$/.test(String(e?.message))?String(e.message):"BUSINESS_OPERATION_FAILED"});}
+  catch{e.audit="UNCERTAIN";e.retryable=false;}
+  throw e;
+ }
 };
 
 const projectId=z.string().regex(/^[a-z0-9][a-z0-9._-]{0,63}$/);
@@ -68,13 +107,13 @@ function registerTools(mcp){
   description:"Read bounded organization, project-profile and runtime readiness status. Never returns host roots or secrets.",
   inputSchema:z.strictObject({}),
   annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false}
- },async()=>text(businessStatus(registry,{safeFilesReady,continuityReady})));
+ },async()=>text(businessStatus(registry,{safeFilesReady,continuityReady,auditReady})));
 
  if(!files)return;
  const register=(name,description,schema,method,{readOnly=false,destructive=false}={})=>
   mcp.registerTool(name,{description,inputSchema:z.strictObject(schema),
    annotations:{readOnlyHint:readOnly,destructiveHint:destructive,openWorldHint:false}},async(args)=>{
-    try{return text(await files[method](args));}catch(e){return toolError(e);}
+    try{return text(await audited(name,args,()=>files[method](args)));}catch(e){return toolError(e);}
   });
 
  register("list_directory","List one registered project directory by projectId + relativePath only.",
@@ -104,7 +143,7 @@ function registerTools(mcp){
  const cRegister=(name,description,schema,method,{readOnly=false,destructive=false}={})=>
   mcp.registerTool(name,{description,inputSchema:z.strictObject(schema),
    annotations:{readOnlyHint:readOnly,destructiveHint:destructive,openWorldHint:false}},async(args)=>{
-    try{return text(await continuity[method](args));}catch(e){return toolError(e);}
+    try{return text(await audited(name,args,()=>continuity[method](args)));}catch(e){return toolError(e);}
   });
  cRegister("continuity_open","Open current bounded continuity context for a registered project/task; optional prior digest is checked for freshness. Context never grants authority.",
   {projectId,taskId:uuid.nullable().optional(),expectedContextDigest:contextDigest.nullable().optional()},
@@ -129,8 +168,8 @@ function registerTools(mcp){
 const server=http.createServer(async(req,res)=>{
  if(req.url==="/health"&&req.method==="GET"){
   res.writeHead(200,{"content-type":"application/json","cache-control":"no-store"});
-  res.end(JSON.stringify({ready:true,phase:continuityReady?"B3":safeFilesReady?"B2":"B1",
-   safeFilesReady,continuityReady}));return;
+  res.end(JSON.stringify({ready:true,phase:auditReady?"B4":continuityReady?"B3":safeFilesReady?"B2":"B1",
+   safeFilesReady,continuityReady,auditReady,instanceId}));return;
  }
  if(req.url!=="/mcp"||req.method!=="POST")return jsonError(res,404,"NOT_FOUND");
  if(forbiddenAuthorityHeader(req))return jsonError(res,400,"AUTHORITY_INPUT_FORBIDDEN");
@@ -145,6 +184,6 @@ const server=http.createServer(async(req,res)=>{
  finally{try{await mcp.close();}catch{}}
 });
 server.listen(port,"127.0.0.1",()=>console.log(JSON.stringify({event:"business_mcp_started",port,
- phase:continuityReady?"B3":safeFilesReady?"B2":"B1"})));
+ phase:auditReady?"B4":continuityReady?"B3":safeFilesReady?"B2":"B1",instanceId})));
 const stop=()=>{try{continuity?.close();}catch{}server.close();};
 process.once("SIGTERM",stop);process.once("SIGINT",stop);

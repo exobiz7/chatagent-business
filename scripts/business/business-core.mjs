@@ -163,7 +163,7 @@ export function authorizeProjectTool(registry,{projectId,tool}){
   profile:project.profile,hostRoot:project.hostRoot,tool,requiredProfile:required};
 }
 
-export function businessStatus(registry,{safeFilesReady=false,continuityReady=false}={}){
+export function businessStatus(registry,{safeFilesReady=false,continuityReady=false,auditReady=false}={}){
  const organization=registry.organization(),projects=registry.list().map(p=>{
   const inspected=registry.inspect(p.projectId);
   return {projectId:p.projectId,displayName:p.displayName,profile:p.profile,enabled:p.enabled,
@@ -171,14 +171,16 @@ export function businessStatus(registry,{safeFilesReady=false,continuityReady=fa
  });
  return {
   product:"ChatAgent Business",edition:"SMB",version:BUSINESS_VERSION,
-  phase:continuityReady?"B3":safeFilesReady?"B2":"B1",
+  phase:auditReady?"B4":continuityReady?"B3":safeFilesReady?"B2":"B1",
   organization,
   projects,
   projectCounts:{registered:projects.length,enabled:projects.filter(p=>p.enabled).length,
    available:projects.filter(p=>p.available).length},
   safeFiles:safeFilesReady?"READY_B2":"NOT_CONFIGURED_B1",
   continuity:continuityReady?"READY_B3":safeFilesReady?"NOT_IMPLEMENTED_B2":"NOT_IMPLEMENTED_B1",
-  exec:continuityReady?"NOT_IMPLEMENTED_B3":safeFilesReady?"NOT_IMPLEMENTED_B2":"NOT_IMPLEMENTED_B1",
-  runtimeHealth:continuityReady?"READY_B3":safeFilesReady?"READY_B2":"READY_B1"
+  audit:auditReady?"READY_B4":"NOT_CONFIGURED",
+  ops:auditReady?"LOCAL_OPERATOR_B4":"NOT_CONFIGURED",
+  exec:auditReady?"NOT_IMPLEMENTED_B4":continuityReady?"NOT_IMPLEMENTED_B3":safeFilesReady?"NOT_IMPLEMENTED_B2":"NOT_IMPLEMENTED_B1",
+  runtimeHealth:auditReady?"READY_B4":continuityReady?"READY_B3":safeFilesReady?"READY_B2":"READY_B1"
  };
 }

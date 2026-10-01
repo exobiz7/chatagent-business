@@ -1,40 +1,36 @@
 # ChatAgent Business — SMB Edition
 
-> Current stage: B3 Shared Continuity implemented and locally verified.
-> B4 Audit + Ops / SAFE Pilot Gate has not started.
+> Current stage: B4 Audit + Ops + SAFE Pilot Gate implemented and locally verified.
+> B5 Isolated STANDARD Exec has not started.
 
 Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
 ## Foundation
-- Seed: Personal main `9ac3d6df9d3e4616d85083719291af41350da016`
+
+- Seed: ChatAgent Personal main `9ac3d6df9d3e4616d85083719291af41350da016`
 - Functional lineage: Personal v1.0.0 `d3279ee948f44f6b8bc66d446be52dc085983eee`
 - Runtime baseline: Node `24.21.0`
 - Development version: `0.1.0-dev.0`
 - Git remote: intentionally unset pending user confirmation.
 - P7/P8/P9 remain reference-only; no wholesale merge.
 
-## Authority
-One deployment has one organization and an owner-private registry.
-Every operation resolves `projectId → enabled canonical root → stored profile → tool minimum profile`.
-Callers never provide a host root or authority profile.
+## Current MCP surface — SAFE pilot
 
-Profiles remain `READ_ONLY / SAFE / STANDARD`.
-No runtime `set_profile` exists.
-
-## B3 MCP surface
-
-Configured B3 publishes exactly 14 tools:
+B4 keeps the B3 14-tool contract. No exec tool is published yet.
 
 ```text
 business_status
+
 list_directory
 stat_path
 read_file
 hash_file
+
 make_directory
 create_file
 replace_file
 apply_patch
+
 continuity_open
 continuity_start_task
 continuity_checkpoint
@@ -42,58 +38,85 @@ continuity_prepare_handoff
 continuity_complete_task
 ```
 
-File tools accept `projectId + relativePath` only.
-Direct `.git` access, absolute paths, `..` traversal and symlink components are denied.
-READ_ONLY projects cannot use mutation tools.
+All project operations still resolve
+`projectId → registered root → enabled state → stored profile → tool minimum profile`.
+No caller-selected host root or profile elevation exists.
 
-## Safe mutation model
+## B4 audit
 
-- `make_directory`: descriptor-traversed native create-only directory.
-- `create_file`: Personal-derived native O_EXCL create-only primitive.
-- `replace_file`: expected-SHA Safe Replace using Darwin atomic swap, post-verify and fail-closed uncertainty.
-- `apply_patch`: one UTF-8 file, bounded exact-text replacement, current SHA required, committed through `replace_file`.
-- No delete, rename, copy, Git mutation or multi-file transaction tool.
+Effectful SAFE/continuity mutations write a lightweight owner-private JSONL ledger.
 
-All mutation helpers are pinned by absolute binary path + SHA-256 and must live in an owner-private directory.
-A partial native-helper configuration fails startup; no native configuration preserves the B1 status-only surface.
+Stored fields are bounded metadata only:
+request id, timestamp, organization/project, stored profile, tool, effect class,
+relative target when applicable, precondition SHA when applicable, and result code.
 
-## Shared continuity
+File contents, continuity summaries/objectives and deployment credentials are not written.
+Audit files use bounded internal rotation; there is no arbitrary-delete API.
+A committed mutation whose audit append cannot be confirmed returns
+`BUSINESS_AUDIT_UNCERTAIN`, `effect=COMMITTED`, `retryable=false`.
 
-B3 reuses the Personal HMAC-sealed SQLite event store inside the Business state root.
-It adds organization/project membership validation while retaining task revision CAS,
-idempotency UUIDs, immutable completion and secret rejection.
+## Operator commands
 
-`continuity_prepare_handoff` derives a bounded context-only package; it is not a second SSOT.
-The package carries a deterministic `sha256:` context digest, an 8 KiB target with deterministic
-optional-field pruning, and `FRESH / STALE / UNVERIFIED` continuity-state freshness.
-Global/unrelated project event advancement is excluded from the digest to avoid false staleness.
-Git observation is intentionally not an authority input in B3 and is emitted as `null`.
-No generic memory search, decision/fact tools, automatic replay or authority grant is exposed.
+Local wrappers are under `ops/`:
 
-## Admin CLI
-
-Set `CHATAGENT_BUSINESS_STATE_DIR`, then use:
-
-```bash
-node scripts/business/business-admin.mjs organization init <organizationId> "<displayName>"
-node scripts/business/business-admin.mjs project add <projectId> "<displayName>" "<absoluteRoot>" <READ_ONLY|SAFE|STANDARD>
-node scripts/business/business-admin.mjs project list
-node scripts/business/business-admin.mjs project enable <projectId>
-node scripts/business/business-admin.mjs project disable <projectId>
-node scripts/business/business-admin.mjs project inspect <projectId>
+```text
+Start.command
+Stop.command
+Status.command
+Doctor.command
+Backup.command
+Restore.command
 ```
 
-## Current boundary
+They use `CHATAGENT_BUSINESS_OPERATOR_CONFIG` when set, otherwise
+`~/ChatAgentBusiness/operator.json`.
 
-B3 completes local registered-project read/safe-file workflows plus shared cross-chat task continuity.
-Audit/ops and the SAFE pilot gate are next; isolated STANDARD execution remains later.
-Arbitrary delete, root/sudo, Docker socket, generic host shell, automatic Git push,
-multi-tenant SaaS and autonomous transport remain out of scope.
+B4 Start is deliberately SAFE-pilot-only:
+- `safePilotMode=true` is mandatory.
+- Any enabled `STANDARD` project blocks startup.
+- Runtime ownership is tied to PID + server path + unique instance id.
+- Health must return the same instance id before the runtime is accepted as RUNNING.
 
-The host file boundary is not claimed as a sandbox against a malicious process already
-running as the same macOS user. Mutation primitives are descriptor-bound; ordinary read
-operations still assume the local same-UID environment is trusted.
+Doctor checks Node pinning, repo/state identity and permissions, registry roots,
+SAFE-pilot profile constraints, deployment credential validity, native helper hashes,
+continuity, audit, runtime ownership/health, optional tunnel status, disk/log bounds,
+and explicitly reports the exec plane as `NOT_IMPLEMENTED_B4`.
+
+## Backup / restore
+
+B4 backup is offline operational-state recovery, not credential escrow.
+
+Included:
+- project registry
+- continuity SQLite + integrity material
+- audit ledger/archives
+- bounded non-secret operator policy manifest
+
+Excluded:
+- deployment credential / auth file
+- external tunnel credential material
+
+The continuity seal key is included because it is required to verify and reopen the
+continuity event chain; therefore backup storage must remain owner-controlled/private.
+
+Backup and restore use no-overwrite native directory publication.
+Restore always targets a new state root and requires separately provisioned deployment
+credentials/operator configuration before that restored state can run.
+
+## Current release boundary
+
+B4 local SAFE pilot has passed actual read/mutate/continuity/restart/audit/backup/restore
+workflows on disposable projects. This is not yet the v0.9 private workspace publication:
+B6 remains responsible for the final Business app E2E/release path.
+
+No isolated STANDARD execution, root/sudo, Docker socket, generic host shell,
+arbitrary delete, automatic Git push, multi-tenant SaaS, or autonomous agent transport
+is present.
 
 Normative baseline: `docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md`
-B2 evidence: `docs/verification/B2_SAFE_FILES_VERIFICATION.md`
-B3 evidence: `docs/verification/B3_SHARED_CONTINUITY_VERIFICATION.md`
+
+Verification:
+- `docs/verification/B1_PROJECT_BOUNDARY_VERIFICATION.md`
+- `docs/verification/B2_SAFE_FILES_VERIFICATION.md`
+- `docs/verification/B3_SHARED_CONTINUITY_VERIFICATION.md`
+- `docs/verification/B4_AUDIT_OPS_SAFE_PILOT_VERIFICATION.md`
