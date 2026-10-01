@@ -82,11 +82,15 @@ function auditNames(dir){
 function cleanNonSecretConfig(value){
  if(!value||typeof value!=="object"||Array.isArray(value))fail("BUSINESS_BACKUP_CONFIG_INVALID");
  const allowed=["schemaVersion","expectedNodeVersion","port","continuityEnabled","auditEnabled",
-  "safePilotMode","nativeSha256","tunnelConfigured"];
+  "safePilotMode","nativeSha256","tunnelConfigured","execEnabled","execImageRef","execImageId"];
  if(Object.keys(value).some(k=>!allowed.includes(k))||value.schemaVersion!==1||
     typeof value.expectedNodeVersion!=="string"||!Number.isInteger(value.port)||
     typeof value.continuityEnabled!=="boolean"||typeof value.auditEnabled!=="boolean"||
     typeof value.safePilotMode!=="boolean"||typeof value.tunnelConfigured!=="boolean"||
+    typeof value.execEnabled!=="boolean"||
+    (value.execEnabled&&(typeof value.execImageRef!=="string"||value.execImageRef.length<1||
+      value.execImageRef.length>256||!/^sha256:[a-f0-9]{64}$/.test(value.execImageId??"")))||
+    (!value.execEnabled&&(value.execImageRef!==null||value.execImageId!==null))||
     !value.nativeSha256||typeof value.nativeSha256!=="object"||Array.isArray(value.nativeSha256)||
     Object.keys(value.nativeSha256).sort().join(",")!=="create,mkdir,publish,replace"||
     Object.values(value.nativeSha256).some(v=>!/^[a-f0-9]{64}$/.test(v)))

@@ -13,6 +13,7 @@ import {BusinessRegistry} from "./business-core.mjs";
 import {BusinessContinuity} from "./business-continuity.mjs";
 import {BusinessAuditLedger} from "./business-audit.mjs";
 import {backupBusinessState,restoreBusinessState} from "./business-backup.mjs";
+import {verifyExecRuntimeConfig} from "./business-exec.mjs";
 
 const NAME=/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 const SHA=/^[a-f0-9]{64}$/;
@@ -52,7 +53,7 @@ function loadConfig(path=process.env.CHATAGENT_BUSINESS_OPERATOR_CONFIG||default
  let c;try{c=JSON.parse(readFileSync(path,"utf8"));}catch{fail("OPS_CONFIG_INVALID");}
  const allowed=["schemaVersion","expectedNodeVersion","nodeBinary","repoRoot","stateDir","authFile","port",
   "continuityEnabled","auditEnabled","safePilotMode","runtimeDir","logsDir","backupsDir",
-  "restoreRootDir","tunnelHealthUrl","native"];
+  "restoreRootDir","tunnelHealthUrl","native","exec"];
  if(!c||typeof c!=="object"||Array.isArray(c)||Object.keys(c).some(k=>!allowed.includes(k))||
     c.schemaVersion!==1||typeof c.expectedNodeVersion!=="string"||
     !/^v24\.[0-9]+\.[0-9]+$/.test(c.expectedNodeVersion)||
@@ -72,7 +73,17 @@ function loadConfig(path=process.env.CHATAGENT_BUSINESS_OPERATOR_CONFIG||default
   if(!v||typeof v.path!=="string"||!isAbsolute(v.path)||!SHA.test(v.sha256??""))
    fail("OPS_CONFIG_INVALID");
  }
- return {...c,configPath:path};
+ const exec=c.exec??{enabled:false};
+ if(!exec||typeof exec!=="object"||Array.isArray(exec)||
+    Object.keys(exec).some(k=>!["enabled","dockerBinary","dockerSha256","imageRef","imageId"].includes(k))||
+    typeof exec.enabled!=="boolean")fail("OPS_CONFIG_INVALID");
+ if(exec.enabled){
+  if(typeof exec.dockerBinary!=="string"||!isAbsolute(exec.dockerBinary)||
+     !SHA.test(exec.dockerSha256??"")||typeof exec.imageRef!=="string"||
+     exec.imageRef.length<1||exec.imageRef.length>256||
+     !/^sha256:[a-f0-9]{64}$/.test(exec.imageId??""))fail("OPS_CONFIG_INVALID");
+ }else if(Object.keys(exec).some(k=>k!=="enabled"))fail("OPS_CONFIG_INVALID");
+ return {...c,exec,configPath:path};
 }
 function verifyHelper(item){
  privateDir(dirname(item.path));privateFile(item.path);
@@ -138,7 +149,7 @@ async function runtimeStatus(c){
  if(h.instanceId!==record.instanceId)return {state:"IDENTITY_MISMATCH",healthy:false,pid:record.pid};
  return {state:"RUNNING",healthy:true,pid:record.pid,phase:h.phase,
   safeFilesReady:h.safeFilesReady===true,continuityReady:h.continuityReady===true,
-  auditReady:h.auditReady===true};
+  auditReady:h.auditReady===true,execReady:h.execReady===true,execHealthy:h.execHealthy!==false};
 }
 
 function rotateLog(c,{maxBytes=1024*1024,maxArchives=3}={}){
@@ -160,13 +171,14 @@ function rotateLog(c,{maxBytes=1024*1024,maxArchives=3}={}){
  const dfd=openSync(c.logsDir,"r");try{fsyncSync(dfd);}finally{closeSync(dfd);}
 }
 function configEnv(c,instanceId){
- return {
+ const env={
   ...process.env,
   CHATAGENT_BUSINESS_STATE_DIR:c.stateDir,
   CHATAGENT_BUSINESS_AUTH_FILE:c.authFile,
   CHATAGENT_BUSINESS_PORT:String(c.port),
   CHATAGENT_BUSINESS_CONTINUITY_ENABLED:c.continuityEnabled?"1":"0",
   CHATAGENT_BUSINESS_AUDIT_ENABLED:c.auditEnabled?"1":"0",
+  CHATAGENT_BUSINESS_EXEC_ENABLED:c.exec.enabled?"1":"0",
   CHATAGENT_BUSINESS_CONTINUITY_STATE_DIR:join(c.stateDir,"continuity"),
   CHATAGENT_BUSINESS_AUDIT_DIR:join(c.stateDir,"audit"),
   CHATAGENT_BUSINESS_INSTANCE_ID:instanceId,
@@ -177,6 +189,13 @@ function configEnv(c,instanceId){
   CHATAGENT_BUSINESS_NATIVE_MKDIR_BIN:c.native.mkdir.path,
   CHATAGENT_BUSINESS_NATIVE_MKDIR_SHA256:c.native.mkdir.sha256
  };
+ if(c.exec.enabled){
+  env.CHATAGENT_BUSINESS_DOCKER_BIN=c.exec.dockerBinary;
+  env.CHATAGENT_BUSINESS_DOCKER_SHA256=c.exec.dockerSha256;
+  env.CHATAGENT_BUSINESS_EXEC_IMAGE_REF=c.exec.imageRef;
+  env.CHATAGENT_BUSINESS_EXEC_IMAGE_ID=c.exec.imageId;
+ }
+ return env;
 }
 async function checkResult(name,fn,{required=true}={}){
  try{return {name,required,ok:true,...await fn()};}
@@ -203,9 +222,13 @@ export async function doctorBusiness(configPath){
  checks.push(await checkResult("profile",async()=>{
   registry??=new BusinessRegistry(c.stateDir);
   const standard=registry.list().filter(p=>p.enabled&&p.profile==="STANDARD").length;
-  if(!c.safePilotMode)fail("OPS_B4_SAFE_PILOT_MODE_REQUIRED");
-  if(standard>0)fail("OPS_SAFE_PILOT_STANDARD_PROJECT_DENIED");
-  return {status:"SAFE_PILOT",standardEnabled:standard};
+  if(c.safePilotMode){
+   if(c.exec.enabled)fail("OPS_SAFE_PILOT_EXEC_DENIED");
+   if(standard>0)fail("OPS_SAFE_PILOT_STANDARD_PROJECT_DENIED");
+   return {status:"SAFE_PILOT",standardEnabled:standard};
+  }
+  if(!c.exec.enabled)fail("OPS_B4_SAFE_PILOT_MODE_REQUIRED");
+  return {status:"STANDARD_ENABLED",standardEnabled:standard};
  }));
  checks.push(await checkResult("auth",async()=>{verifyAuth(c.authFile);return {status:"PRIVATE_VALID"};}));
  checks.push(await checkResult("native_helpers",async()=>{
@@ -247,10 +270,11 @@ export async function doctorBusiness(configPath){
  checks.push(await checkResult("control_plane",async()=>{
   const s=await runtimeStatus(c);
   if(s.state==="RUNNING"&&!s.healthy)fail("OPS_CONTROL_PLANE_UNHEALTHY");
-  return {status:s.state==="RUNNING"?"HTTP_HEALTHY":"STOPPED",legacyL0L1:"NOT_APPLICABLE_B4"};
+  return {status:s.state==="RUNNING"?"HTTP_HEALTHY":"STOPPED",
+   legacyL0L1:c.exec.enabled?"NOT_APPLICABLE_B5":"NOT_APPLICABLE_B4"};
  }));
  checks.push(await checkResult("tunnel",async()=>{
-  if(!c.tunnelHealthUrl)return {status:"NOT_CONFIGURED_B4"};
+  if(!c.tunnelHealthUrl)return {status:c.exec.enabled?"NOT_CONFIGURED_B5":"NOT_CONFIGURED_B4"};
   const r=await fetch(c.tunnelHealthUrl,{signal:AbortSignal.timeout(1500)});
   if(!r.ok)fail("OPS_TUNNEL_UNHEALTHY");
   return {status:"HTTP_"+r.status};
@@ -264,14 +288,20 @@ export async function doctorBusiness(configPath){
   if(logBytes>10*1024*1024)fail("OPS_LOG_SIZE_EXCESSIVE");
   return {status:"OK",freeMiB:Math.floor(free/1024/1024),logBytes};
  }));
- checks.push({name:"exec_plane",required:false,ok:true,status:"NOT_IMPLEMENTED_B4"});
+ checks.push(await checkResult("exec_plane",async()=>{
+  if(!c.exec.enabled)return {status:"NOT_IMPLEMENTED_B4"};
+  const verified=verifyExecRuntimeConfig(c.exec);
+  return {status:"READY_B5",imageId:verified.imageId,platform:verified.platform};
+ },{required:!c.safePilotMode}));
  const ok=checks.filter(x=>x.required).every(x=>x.ok);
- return {product:"ChatAgent Business",phase:"B4",ok,safePilotMode:c.safePilotMode,checks};
+ return {product:"ChatAgent Business",phase:c.exec.enabled&&!c.safePilotMode?"B5":"B4",
+  ok,safePilotMode:c.safePilotMode,checks};
 }
 
 export async function statusBusiness(configPath){
  const c=loadConfig(configPath),s=await runtimeStatus(c);
- return {product:"ChatAgent Business",phase:"B4",...s,safePilotMode:c.safePilotMode};
+ return {product:"ChatAgent Business",phase:c.exec.enabled&&!c.safePilotMode?"B5":"B4",
+  ...s,safePilotMode:c.safePilotMode,execConfigured:c.exec.enabled};
 }
 function removeRuntimeRecord(c){
  const p=runtimeRecordPath(c);
@@ -282,7 +312,7 @@ function removeRuntimeRecord(c){
 async function stopOwnedRecord(c,record){
  if(!processMatches(record))fail("OPS_RUNTIME_RECONCILIATION_REQUIRED");
  try{process.kill(record.pid,"SIGTERM");}catch(e){if(e.code!=="ESRCH")throw e;}
- for(let i=0;i<40;i++){
+ for(let i=0;i<80;i++){
   if(!processCommand(record.pid))return;
   await delay(100);
  }
@@ -316,13 +346,17 @@ export async function startBusiness(configPath){
  }finally{closeSync(fd);}
  if(!child.pid)fail("OPS_START_FAILED");
  record.pid=child.pid;atomicJson(runtimeRecordPath(c),record);child.unref();
- for(let i=0;i<60;i++){
+ const expectedPhase=c.exec.enabled&&!c.safePilotMode?"B5":"B4";
+ for(let i=0;i<100;i++){
   if(!processMatches(record))break;
-  const h=await health(c.port,400);
-  if(h&&h.instanceId===instanceId&&h.phase==="B4"&&h.safeFilesReady===true&&
-     h.continuityReady===true&&h.auditReady===true)
-   return {state:"RUNNING",healthy:true,pid:record.pid,phase:"B4",
-    safeFilesReady:true,continuityReady:true,auditReady:true,safePilotMode:c.safePilotMode};
+  const h=await health(c.port,500);
+  const baseReady=h&&h.instanceId===instanceId&&h.phase===expectedPhase&&
+   h.safeFilesReady===true&&h.continuityReady===true&&h.auditReady===true;
+  const execReady=c.exec.enabled?h?.execReady===true&&h?.execHealthy!==false:h?.execReady!==true;
+  if(baseReady&&execReady)
+   return {state:"RUNNING",healthy:true,pid:record.pid,phase:expectedPhase,
+    safeFilesReady:true,continuityReady:true,auditReady:true,
+    execReady:c.exec.enabled,safePilotMode:c.safePilotMode};
   await delay(100);
  }
  try{if(processMatches(record))await stopOwnedRecord(c,record);}catch{}
@@ -362,6 +396,9 @@ export async function backupBusiness(configPath,name=null){
    schemaVersion:1,expectedNodeVersion:c.expectedNodeVersion,port:c.port,
    continuityEnabled:c.continuityEnabled,auditEnabled:c.auditEnabled,
    safePilotMode:c.safePilotMode,tunnelConfigured:Boolean(c.tunnelHealthUrl),
+   execEnabled:c.exec.enabled,
+   execImageRef:c.exec.enabled?c.exec.imageRef:null,
+   execImageId:c.exec.enabled?c.exec.imageId:null,
    nativeSha256:Object.fromEntries(Object.entries(c.native).map(([k,v])=>[k,v.sha256]))
   }
  });

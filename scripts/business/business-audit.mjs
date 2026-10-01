@@ -6,7 +6,7 @@ import {join,isAbsolute,resolve} from "node:path";
 import {randomUUID} from "node:crypto";
 
 const PROFILES=new Set(["READ_ONLY","SAFE","STANDARD","UNKNOWN"]);
-const EFFECTS=new Set(["CREATE","REPLACE","PATCH","CONTINUITY_WRITE"]);
+const EFFECTS=new Set(["CREATE","REPLACE","PATCH","CONTINUITY_WRITE","EXEC_START","EXEC_TERMINATE"]);
 const CODE=/^[A-Z][A-Z0-9_]{1,63}$/;
 const SHA=/^[a-f0-9]{64}$/;
 const fail=code=>{throw Error(code);};
