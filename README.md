@@ -1,7 +1,7 @@
 # ChatAgent Business — SMB Edition
 
-> Current stage: B2 Safe Files implemented and locally verified.
-> B3 Shared Continuity has not started.
+> Current stage: B3 Shared Continuity implemented and locally verified.
+> B4 Audit + Ops / SAFE Pilot Gate has not started.
 
 Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
@@ -21,9 +21,9 @@ Callers never provide a host root or authority profile.
 Profiles remain `READ_ONLY / SAFE / STANDARD`.
 No runtime `set_profile` exists.
 
-## B2 MCP surface
+## B3 MCP surface
 
-Configured B2 publishes exactly 9 tools:
+Configured B3 publishes exactly 14 tools:
 
 ```text
 business_status
@@ -35,6 +35,11 @@ make_directory
 create_file
 replace_file
 apply_patch
+continuity_open
+continuity_start_task
+continuity_checkpoint
+continuity_prepare_handoff
+continuity_complete_task
 ```
 
 File tools accept `projectId + relativePath` only.
@@ -52,6 +57,19 @@ READ_ONLY projects cannot use mutation tools.
 All mutation helpers are pinned by absolute binary path + SHA-256 and must live in an owner-private directory.
 A partial native-helper configuration fails startup; no native configuration preserves the B1 status-only surface.
 
+## Shared continuity
+
+B3 reuses the Personal HMAC-sealed SQLite event store inside the Business state root.
+It adds organization/project membership validation while retaining task revision CAS,
+idempotency UUIDs, immutable completion and secret rejection.
+
+`continuity_prepare_handoff` derives a bounded context-only package; it is not a second SSOT.
+The package carries a deterministic `sha256:` context digest, an 8 KiB target with deterministic
+optional-field pruning, and `FRESH / STALE / UNVERIFIED` continuity-state freshness.
+Global/unrelated project event advancement is excluded from the digest to avoid false staleness.
+Git observation is intentionally not an authority input in B3 and is emitted as `null`.
+No generic memory search, decision/fact tools, automatic replay or authority grant is exposed.
+
 ## Admin CLI
 
 Set `CHATAGENT_BUSINESS_STATE_DIR`, then use:
@@ -67,8 +85,8 @@ node scripts/business/business-admin.mjs project inspect <projectId>
 
 ## Current boundary
 
-B2 completes local registered-project read/safe-file workflows.
-Continuity remains deferred to B3; isolated STANDARD execution is later.
+B3 completes local registered-project read/safe-file workflows plus shared cross-chat task continuity.
+Audit/ops and the SAFE pilot gate are next; isolated STANDARD execution remains later.
 Arbitrary delete, root/sudo, Docker socket, generic host shell, automatic Git push,
 multi-tenant SaaS and autonomous transport remain out of scope.
 
@@ -78,3 +96,4 @@ operations still assume the local same-UID environment is trusted.
 
 Normative baseline: `docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md`
 B2 evidence: `docs/verification/B2_SAFE_FILES_VERIFICATION.md`
+B3 evidence: `docs/verification/B3_SHARED_CONTINUITY_VERIFICATION.md`

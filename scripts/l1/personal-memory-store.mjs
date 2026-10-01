@@ -173,6 +173,7 @@ export class PersonalMemoryStore {
      const cp={checkpointId:event.checkpointId,projectId:event.projectId,taskId:event.taskId,
       revision:task.revision,summary:event.summary,currentState:event.currentState,
       nextActions:event.nextActions,verification:event.verification,
+      decisions:event.decisions??[],facts:event.facts??[],
       artifactRefs:event.artifactRefs,gitSha:event.gitSha,createdAt:event.at};
      task.checkpoints.push(cp);checkpoints.push(cp);
     }else{
@@ -253,7 +254,8 @@ export class PersonalMemoryStore {
  }
  checkpointAppend(input){
   noExtra(input,["projectId","taskId","expectedTaskRevision","operationId",
-   "summary","currentState","nextActions","verification","artifactRefs","gitSha"]);
+   "summary","currentState","nextActions","verification","decisions","facts",
+   "artifactRefs","gitSha"]);
   const projectId=slug(input.projectId),taskId=uuid(input.taskId);
   const expectedTaskRevision=revision(input.expectedTaskRevision);
   const summary=text(input.summary,1,512);
@@ -262,13 +264,18 @@ export class PersonalMemoryStore {
   if(!Array.isArray(input.nextActions)||input.nextActions.length>5||
     input.nextActions.some(x=>typeof x!=="string"))fail("MEMORY_INVALID_INPUT");
   const nextActions=input.nextActions.map(x=>text(x,1,256));
+  if(!Array.isArray(input.decisions??[])||input.decisions?.length>8||
+     !Array.isArray(input.facts??[])||input.facts?.length>8)
+   fail("MEMORY_INVALID_INPUT");
+  const decisions=(input.decisions??[]).map(x=>text(x,1,256));
+  const facts=(input.facts??[]).map(x=>text(x,1,256));
   if(!Array.isArray(input.artifactRefs??[])||input.artifactRefs?.length>5)
    fail("MEMORY_INVALID_INPUT");
   const artifactRefs=(input.artifactRefs??[]).map(x=>text(x,1,128));
   const gitSha=input.gitSha??null;
   if(gitSha!==null&&!/^[a-f0-9]{40}$/.test(gitSha))fail("MEMORY_INVALID_INPUT");
   const sanitized={projectId,taskId,expectedTaskRevision,summary,currentState,
-   nextActions,verification,artifactRefs,gitSha};
+   nextActions,verification,decisions,facts,artifactRefs,gitSha};
   return this.write("CHECKPOINT",input.operationId,sanitized,view=>{
    const task=view.tasks.get(taskId);
    if(!task||task.projectId!==projectId)fail("MEMORY_PROJECT_DENIED");
