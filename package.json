@@ -1,6 +1,6 @@
 {
   "name": "chatagent-business",
-  "version": "0.1.0-dev.0",
+  "version": "1.0.0-rc.1",
   "private": true,
   "description": "ChatAgent Business SMB Edition foundation derived from ChatAgent Personal v1.0.0",
   "type": "module",
@@ -8,12 +8,13 @@
     "node": ">=24.15.0 <25"
   },
   "scripts": {
-    "test": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node scripts/business/b5-isolated-standard-exec-test.mjs",
+    "test": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node scripts/business/b5-isolated-standard-exec-test.mjs && node scripts/business/b6-release-e2e-test.mjs",
     "test:business:b1": "node scripts/business/b1-project-boundary-test.mjs",
     "test:business:b2": "node scripts/business/b2-safe-files-test.mjs",
     "test:business:b3": "node scripts/business/b3-shared-continuity-test.mjs",
     "test:business:b4": "node scripts/business/b4-audit-ops-safe-pilot-test.mjs",
     "test:business:b5": "node scripts/business/b5-isolated-standard-exec-test.mjs",
+    "test:business:b6": "node scripts/business/b6-release-e2e-test.mjs",
     "test:copy": "node scripts/l1/l6-b05-async-copy-test.mjs",
     "test:stage": "node scripts/l1/personal-copy-e2e-kill-test.mjs",
     "test:compat": "node test/compat/p8-read-adapter-test.mjs",

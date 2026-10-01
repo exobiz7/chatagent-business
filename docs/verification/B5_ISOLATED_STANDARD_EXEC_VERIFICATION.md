@@ -169,9 +169,11 @@ while a newly created Linux container can momentarily see the replaced path as a
 This was reproduced as an immediate `ENOENT` during the accepted edit→test loop.
 
 B5 absorbs the transport quirk internally:
-after the container bind mount starts, the wrapper waits 0.5 seconds before executing the
-actual user command. The user command is supplied as a separate shell positional argument,
-not concatenated into a host shell command.
+B6 release E2E reproduced one remaining 0.5-second visibility miss. The wrapper was
+therefore hardened to wait 1.5 seconds after the container bind mount starts before
+executing the actual user command. A repeated immediate Safe Replace → exec stress fixture
+then passed without caller-side delay. The user command is supplied as a separate shell
+positional argument, not concatenated into a host shell command.
 
 With no caller-side delay, the focused test verified:
 

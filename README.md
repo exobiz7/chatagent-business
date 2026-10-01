@@ -1,7 +1,7 @@
 # ChatAgent Business — SMB Edition
 
-> Current stage: B5 Isolated STANDARD Exec implemented and locally verified.
-> B6 Full Business E2E / Release has not started.
+> Current stage: B6 local release candidate implemented and locally verified.
+> External ChatGPT Business Draft/private publish is not yet configured, so final RELEASED status is intentionally withheld.
 
 Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
@@ -10,7 +10,7 @@ Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 - Seed: ChatAgent Personal main `9ac3d6df9d3e4616d85083719291af41350da016`
 - Functional lineage: Personal v1.0.0 `d3279ee948f44f6b8bc66d446be52dc085983eee`
 - Runtime baseline: Node `24.21.0`
-- Development version: `0.1.0-dev.0`
+- Development version: `1.0.0-rc.1`
 - Git remote: intentionally unset pending user confirmation.
 - P7/P8/P9 remain read-only reference inputs; no wholesale P8 merge.
 
@@ -108,8 +108,9 @@ that ChatAgent can sandbox an already-malicious process running as the same macO
 - owned containers are cleaned on startup and shutdown
 
 Docker Desktop on macOS can briefly lag after Personal-derived Darwin atomic file-swap
-replacement. The exec container therefore waits 0.5 seconds after the bind mount starts
-before launching the user command. This is internal transport settling; callers do not
+replacement. B6 release E2E reproduced one 0.5-second visibility miss, so the exec
+container now waits 1.5 seconds after the bind mount starts before launching the user
+command. This is internal transport settling; callers do not
 need to add a delay between Safe Replace and a test rerun.
 
 ## B4 SAFE mode remains available
@@ -177,8 +178,14 @@ Network remains `none` by default. B5 does not add a package installer, Internet
 Docker-control MCP tool, service-control plane, arbitrary host shell, arbitrary delete,
 Git commit/push, root/sudo, or durable remote shell.
 
-B6 still owns final Business E2E, release candidate hardening, Draft/private app canary,
-publication/rollback evidence and production smoke.
+B6 local release-candidate hardening is complete: E1–E6, backup/restore, previous-B5
+rollback rehearsal, exact 17-tool contract, release-candidate runtime Doctor/Start/Stop,
+and effect-minimized local smoke all pass.
+
+Final RELEASED status still requires the external gates that are not configured in this
+repository/environment: ChatGPT Business Draft/private app publication, a Business tunnel
+target/profile, private workspace publish, and post-publish production smoke. The repository
+also intentionally has no Git remote until the user confirms the Business repo destination.
 
 Normative baseline:
 `docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md`
@@ -189,3 +196,5 @@ Verification:
 - `docs/verification/B3_SHARED_CONTINUITY_VERIFICATION.md`
 - `docs/verification/B4_AUDIT_OPS_SAFE_PILOT_VERIFICATION.md`
 - `docs/verification/B5_ISOLATED_STANDARD_EXEC_VERIFICATION.md`
+- `docs/verification/B6_FULL_E2E_AND_RELEASE_VERIFICATION.md`
+- `docs/release/CHATAGENT_BUSINESS_RELEASE_CANDIDATE_v1.0.0-rc.1.md`

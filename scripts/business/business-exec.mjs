@@ -362,7 +362,7 @@ export class BusinessExecManager{
     "PIP_NO_INDEX=1","PIP_DISABLE_PIP_VERSION_CHECK=1"
    ])args.push("--env",env);
    args.push("--entrypoint","/bin/sh",this.imageRef,
-    "-lc",'sleep 0.5; exec /bin/sh -lc "$1"',"chatagent-exec",command);
+    "-lc",'sleep 1.5; exec /bin/sh -lc "$1"',"chatagent-exec",command);
    try{containerId=String(execFile(this.dockerBinary,args,{timeout:15000})).trim();}
    catch{fail("EXEC_START_FAILED");}
    if(!/^[a-f0-9]{12,64}$/.test(containerId))fail("EXEC_START_FAILED");

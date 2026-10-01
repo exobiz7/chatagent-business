@@ -3,7 +3,7 @@ import {dirname,isAbsolute,join,resolve,sep} from "node:path";
 import {homedir} from "node:os";
 import {randomUUID} from "node:crypto";
 
-export const BUSINESS_VERSION="0.1.0-dev.0";
+export const BUSINESS_VERSION="1.0.0-rc.1";
 export const PROFILES=Object.freeze(["READ_ONLY","SAFE","STANDARD"]);
 const PROFILE_RANK=Object.freeze({READ_ONLY:0,SAFE:1,STANDARD:2});
 const SLUG=/^[a-z0-9][a-z0-9._-]{0,63}$/;
