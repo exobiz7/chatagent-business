@@ -5,6 +5,12 @@
 
 Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
+## Product documentation
+
+- Product specification: `docs/product/CHATAGENT_BUSINESS_PRODUCT_SPECIFICATION_v1.0.0.md`
+- User manual: `docs/manual/CHATAGENT_BUSINESS_USER_MANUAL_v1.0.0.md`
+- Release record: `docs/release/CHATAGENT_BUSINESS_RELEASE_v1.0.0.md`
+
 ## Foundation
 
 - Seed: ChatAgent Personal main `9ac3d6df9d3e4616d85083719291af41350da016`
