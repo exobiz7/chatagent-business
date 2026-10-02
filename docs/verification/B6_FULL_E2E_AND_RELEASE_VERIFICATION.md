@@ -3,8 +3,8 @@
 > Date: 2026-10-01 KST
 > Baseline: B5 `167df3aa33fc5c7191ab1768545ca8a8d7f74f82`
 > Branch: `feat/business-b6-release-e2e`
-> Candidate version: `1.0.0-rc.1`
-> Result: **LOCAL RELEASE CANDIDATE PASS / EXTERNAL RELEASE BLOCKED**
+> Final version: `1.0.0`
+> Result: **RELEASED / PRODUCTION_ACTIVE_V1.0.0**
 
 ## 1. Gate summary
 
@@ -14,10 +14,9 @@
 | G2 Security | PASS | path/profile/stale-write/delete/SAFE-exec denials; B1-B5 security suites |
 | G3 Recovery | PASS | restart, continuity, concurrent CAS, process cleanup, backup/restore, previous-B5 rollback rehearsal |
 | G4 Business E2E | PASS | local E1-E6 plus actual ChatGPT Business Draft fresh-chat canary PASS |
-| G5 Production | PRODUCTION ROOT READY / PUBLISH PENDING | production root + tunnel Doctor/Start/Status/backup PASS; private workspace publish/post-publish smoke pending |
+| G5 Production | PASS | private workspace publish + published-app post-publish smoke + production Doctor/backup PASS |
 
-The product is **not yet declared RELEASED** because private workspace publish and the
-post-publish production smoke have not yet been completed.
+The product satisfies G1–G5 and is released as **ChatAgent Business v1.0.0**.
 
 ## 2. Actual B6 E1-E6
 
@@ -147,25 +146,29 @@ a fresh production deployment credential was provisioned, and the same tunnel ID
 to the production credential. Production Doctor reports runtime healthy, exec READY_B5, and
 tunnel HTTP_200. Backup `pre-private-publish` is verified.
 
-Remaining release gates:
-- private workspace publish
-- post-publish effect-minimized production smoke
-- final PR merge to `main`
-- final `v1.0.0` tag/release declaration
+Private workspace publish: **PASS**.
+
+Published-app post-publish effect-minimized production smoke: **PASS**. The published app
+returned the expected `business_status`, `docs/README.txt`, and continuity freshness result.
+Tunnel evidence records three forwarded production MCP commands at 14:17 KST.
+
+Final source merge/tag/deployment is performed from this verified release boundary.
 
 ## 7. Severity closure
 
-Local implementation evidence at RC boundary:
+Final release boundary:
 
 - P0 open: **0**
 - P1 open: **0**
 - P2 open: **0 known**
 
-External publication gates are release prerequisites, not implementation defects.
+No P0/P1/P2 implementation findings remain open at the final release boundary.
 
-## 8. Final-release rule
+## 8. Final release
 
-Do **not** relabel this RC as `v1.0.0 RELEASED` until the external gates above pass.
-The appropriate local tag is `v1.0.0-rc.1`.
+Final version: `v1.0.0`
 
-Resume from this production-promoted RC. Do not reopen B0-B5 without new evidence.
+Status: `PRODUCTION_ACTIVE_V1.0.0`
+
+Do not reopen B0–B5 findings without new evidence. Future changes should start from a new
+bounded maintenance or feature unit and preserve the v1.0.0 release evidence.

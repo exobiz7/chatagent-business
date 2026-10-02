@@ -227,7 +227,7 @@ const server=http.createServer(async(req,res)=>{
  if(!equal(req.headers["x-chatagent-business-credential"],expected))return jsonError(res,401,"UNAUTHORIZED");
  let body;try{body=(await boundedJSONBody(req,{maxBytes:350000,oversizeCode:"BODY_LIMIT"})).body;}
  catch(e){return jsonError(res,e.message==="BODY_LIMIT"?413:400,e.message);}
- const mcp=new McpServer({name:"chatagent-business",version:"1.0.0-rc.1"});
+ const mcp=new McpServer({name:"chatagent-business",version:"1.0.0"});
  registerTools(mcp);
  const transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
  try{await mcp.connect(transport);await transport.handleRequest(req,res,body);}

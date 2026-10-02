@@ -1,6 +1,6 @@
 {
   "name": "chatagent-business",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "private": true,
   "description": "ChatAgent Business SMB Edition foundation derived from ChatAgent Personal v1.0.0",
   "type": "module",

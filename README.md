@@ -1,7 +1,7 @@
 # ChatAgent Business — SMB Edition
 
-> Current stage: B6 release candidate verified through an actual ChatGPT Business Draft app canary and promoted to the production runtime root.
-> Final RELEASED status is intentionally withheld until private workspace publish and post-publish smoke pass.
+> Status: **PRODUCTION_ACTIVE_V1.0.0**
+> Private AIspace workspace publish and post-publish production smoke completed successfully.
 
 Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
@@ -10,11 +10,11 @@ Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 - Seed: ChatAgent Personal main `9ac3d6df9d3e4616d85083719291af41350da016`
 - Functional lineage: Personal v1.0.0 `d3279ee948f44f6b8bc66d446be52dc085983eee`
 - Runtime baseline: Node `24.21.0`
-- Development version: `1.0.0-rc.1`
-- Git remote: intentionally unset pending user confirmation.
+- Release version: `1.0.0`
+- GitHub: `exobiz7/chatagent-business` (Private)
 - P7/P8/P9 remain read-only reference inputs; no wholesale P8 merge.
 
-## Fixed v1 candidate MCP contract — 17 tools
+## Fixed v1.0.0 MCP contract — 17 tools
 
 ```text
 business_status
@@ -182,11 +182,10 @@ B6 local release-candidate hardening is complete: E1–E6, backup/restore, previ
 rollback rehearsal, exact 17-tool contract, release-candidate runtime Doctor/Start/Stop,
 and effect-minimized local smoke all pass.
 
-External Draft validation is complete. `exobiz7/chatagent-business` is the private GitHub
+External release validation is complete. `exobiz7/chatagent-business` is the private GitHub
 repository, tunnel `tunnel_6abe54973cb48191a1c54c50ede05748` is live for AIspace workspace
-`d4b71d66-372a-4cff-ad5f-07a3cdbaa55c`, and a fresh ChatGPT Business Draft chat passed
-the READ / SAFE / continuity / STANDARD exec / SAFE-exec-denial canary. The remaining
-release gates are private workspace publish, post-publish smoke, PR merge, and final `v1.0.0`.
+`d4b71d66-372a-4cff-ad5f-07a3cdbaa55c`, the Draft canaries passed, the final-icon app was
+privately published, and the published app passed the effect-minimized production smoke.
 
 Normative baseline:
 `docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md`
@@ -199,3 +198,4 @@ Verification:
 - `docs/verification/B5_ISOLATED_STANDARD_EXEC_VERIFICATION.md`
 - `docs/verification/B6_FULL_E2E_AND_RELEASE_VERIFICATION.md`
 - `docs/release/CHATAGENT_BUSINESS_RELEASE_CANDIDATE_v1.0.0-rc.1.md`
+- `docs/release/CHATAGENT_BUSINESS_RELEASE_v1.0.0.md`
