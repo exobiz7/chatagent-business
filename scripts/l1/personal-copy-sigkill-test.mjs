@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,realpathSync,writeFileSync,readFileSync,
@@ -18,7 +19,7 @@ const expected=sha(data);
 const sourceStat=lstatSync(source);
 const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
  "-Wno-deprecated-declarations","-Wall","-Wextra","-Werror","-O2",
- new URL("./native-copy-create.c",import.meta.url).pathname,"-o",native],
+ fileURLToPath(new URL("./native-copy-create.c",import.meta.url)),"-o",native],
  {encoding:"utf8",timeout:10000});
 assert.equal(cc.status,0,cc.stderr);chmodSync(native,0o700);
 let child,verified=false;

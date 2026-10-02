@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -42,11 +43,11 @@ async function owner(route,body={}){
 try{
  const b=new L1Broker(state,{initialize:true});b.pair(pass);b.setMode("FULL_HOST",pass);
  writeFileSync(key,agentToken,{mode:0o600});writeFileSync(mcpKey,mcpToken,{mode:0o600});
- brokerProc=spawn(process.execPath,[new URL("./broker-server.mjs",import.meta.url).pathname],{
+ brokerProc=spawn(process.execPath,[fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
   env:{...process.env,L1_STATE_DIR:state,L1_AGENT_KEY_FILE:key,L1_AGENT_PORT:"31522",
    L1_FILE_OPS_ENABLED:"1",L1_HOST_EXEC_ENABLED:"1"},stdio:"ignore"});
  await ready(brokerProc,31522);
- mcpProc=spawn(process.execPath,[new URL("../l0-ui-probe.mjs",import.meta.url).pathname],{
+ mcpProc=spawn(process.execPath,[fileURLToPath(new URL("../l0-ui-probe.mjs",import.meta.url))],{
   env:{...process.env,L0_AUTH_FILE:mcpKey,L0_PORT:"31523",
    L1_AGENT_KEY_FILE:key,L1_BROKER_URL:"http://127.0.0.1:31522",L1_POWERUSER_TOOLS:"1"},stdio:"ignore"});
  await ready(mcpProc,31523);

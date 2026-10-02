@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,realpathSync,readFileSync,writeFileSync,rmSync,existsSync,symlinkSync} from "node:fs";
@@ -14,7 +15,7 @@ const root=realpathSync(mkdtempSync(join(tmpdir(),"chatagent-b05-copy-")));
 const state=join(root,"owner"),work=join(root,"work");mkdirSync(work,{mode:0o700});
 const helper=join(root,"native-copy");
 const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE","-Wno-deprecated-declarations",
- "-Wall","-Wextra","-Werror","-O2",new URL("./native-copy-create.c",import.meta.url).pathname,"-o",helper],
+ "-Wall","-Wextra","-Werror","-O2",fileURLToPath(new URL("./native-copy-create.c",import.meta.url)),"-o",helper],
  {encoding:"utf8",timeout:10000});
 if(cc.status!==0)throw Error("NATIVE_COPY_BUILD_FAILED "+cc.stderr);
 const {chmodSync}=await import("node:fs");chmodSync(helper,0o700);
@@ -198,6 +199,12 @@ try{
   argv:["-e","process.stdout.write('OTHER')"],timeoutMs:10000,idempotencyKey:randomUUID()});
  assert.throws(()=>r.status({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
  assert.throws(()=>r.stop({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
+ // This unrelated ownership fixture must be terminal before later F04 cases intentionally
+ // consume three RECOVERY_REQUIRED capacity slots. Fast local runners usually settle
+ // immediately, while hosted macOS CI can otherwise transiently hit PROCESS_LIMIT.
+ await wait(()=>["EXITED","FAILED","TERMINATED"].includes(
+  r.processes.status({processId:unrelated.processId}).state));
+ assert.equal(r.processes.status({processId:unrelated.processId}).state,"EXITED");
  // F04: no action ever reserved: the original key remains sealed, no replay.
  const beforeActionKey=randomUUID(),beforeActionDest=join(work,"before-action.bin");
  const realStart=r.processes.start.bind(r.processes);

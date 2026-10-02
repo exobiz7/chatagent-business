@@ -1,87 +1,201 @@
-# ChatAgent Personal — independent single-owner macOS agent
+# ChatAgent Business — SMB Edition
 
-Private personal product and independent git history: `exobiz7/chatagent-personal`.
-Only selected code was copied from the former chatagent feature evidence (source commit
-`359b9acb9c9391f3d9f88d60bcac924f07bb6186`). No P8/enterprise repository,
-container, tunnel, shared database, shared secret, original state directory or remote
-Git history is a runtime dependency. The old P8 and current Business v2 apps remain separate.
+> Status: **PRODUCTION_ACTIVE_V1.0.0**
+> Private AIspace workspace publish and post-publish production smoke completed successfully.
 
-**Development candidate, not a deployed or accepted Business product.** All advanced
-host/process/copy flags default OFF. Use newly initialized, owner-private personal
-state and credentials; never point a personal runtime at P8's state, tunnel or token.
+Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
-The P8-compatible memory adapter is retained ONLY in `test/compat/` for API comparison;
-it is absent from the personal Broker/MCP runtime. The **personal product now implements
-its own** owner-private SQLite event store, HMAC-sealed journal and seven optional scoped
-memory tools (project/task/checkpoint/complete/read/context/search). These are independent
-of the P8 container, token and database. See
-`docs/verification/PERSONAL_MEMORY_IMPLEMENTATION_CHECKPOINT.md`. The memory implementation
-has local/MCP/SIGKILL test evidence but is NOT released or security-approved.
+## Foundation
 
-Install dependencies with `npm ci --ignore-scripts --no-audit`. Run `npm test` for
-isolated 26-suite macOS tests (including owner-scoped stage SIGKILL recovery).
-For a separately authorized actual APFS SSD test:
-`PERSONAL_TEST_SSD_ROOT="/Volumes/SSD 4T" npm test`. This creates and deletes
-ONLY a unique, verified 32MiB disposable test fixture. No CI job runs this SSD test.
+- Seed: ChatAgent Personal main `9ac3d6df9d3e4616d85083719291af41350da016`
+- Functional lineage: Personal v1.0.0 `d3279ee948f44f6b8bc66d446be52dc085983eee`
+- Runtime baseline: Node `24.21.0`
+- Release version: `1.0.0`
+- GitHub: `exobiz7/chatagent-business` (Private)
+- P7/P8/P9 remain read-only reference inputs; no wholesale P8 merge.
 
-No existing-file atomic replace is provided in strict mode. New-destination copy
-cannot overwrite an existing entry, and only an owned, terminal job with matching
-stage SHA-256/device/inode is eligible for orphan-stage cleanup. These checks
-mitigate ordinary faults but are not a same-UID hostile-process sandbox.
+## Fixed v1.0.0 MCP contract — 17 tools
 
-Security and release gates remain open: independently signed/pinned native helper,
-full stage crash-window and same-UID concurrency review, self-contained personal
-memory implementation, copied M16 workload, and a separately approved private
-Business app/cutover.
+```text
+business_status
 
-For standalone memory regression only: `npm run test:memory`. To run an **isolated**
-Broker with memory, initialize a brand-new, owner-private state directory with
-`PERSONAL_MEMORY_ENABLED=1`, `PERSONAL_MEMORY_INIT=1` and an independent absolute
-`PERSONAL_MEMORY_STATE_DIR` outside the Broker state. Set `PERSONAL_MEMORY_INIT=0` on
-subsequent starts and `PERSONAL_MEMORY_TOOLS=1` in the separately authenticated MCP
-process. Do not reuse P8 or any other product state or credential. Memory functions
-require a paired owner but are not tied to FULL_HOST permission. These flags remain
-OFF in the existing apps.
+list_directory
+stat_path
+read_file
+hash_file
 
-### Offline backup candidate (NOT production-ready)
+make_directory
+create_file
+replace_file
+apply_patch
 
-`personal-memory-backup.mjs` offers library-only backup into a **new** owner-private bundle
-and verified restore into a **new** personal root. It has no MCP endpoint. The bundle contains
-a copy of the raw 32-byte memory seal key; treat it as a credential and only keep it in an
-independently encrypted, access-controlled location. Stop writers before invoking backup.
-A changing source fails closed. There is no managed key rotation, backup scheduler or
-P8 migration. Run `node scripts/l1/personal-memory-backup-test.mjs` for an isolated test.
-Details: `docs/verification/PERSONAL_MEMORY_BACKUP_RECOVERY_CHECKPOINT.md`.
+continuity_open
+continuity_start_task
+continuity_checkpoint
+continuity_prepare_handoff
+continuity_complete_task
 
-### Optional encrypted archive — development only
+exec_command
+read_process
+terminate_process
+```
 
-`personal-memory-encrypted-archive.mjs` wraps the offline snapshot into one
-AES-256-GCM encrypted archive file. The caller **must supply a separate random
-32-byte archive key** from an independently protected source; using the memory
-seal key as the archive encryption key is rejected. The completed archive
-contains no plaintext SQLite, head or seal key. Temporary private working
-folders DO contain plaintext until cleanup, and crash/orphan reconciliation,
-external key custody/rotation and independent review remain open. No memory
-backup or restore capability is exposed through Business/MCP.
+Authority remains server-side:
 
-The intermittent runner `RECOVERY_REQUIRED` remains under investigation. Do not
-retry the same uncertain effect on another host/transport. Diagnostic repetitions
-only use new isolated, test-owned effects. See
-`docs/security/PERSONAL_INDEPENDENT_REVIEW_HANDOFF.md`.
+`projectId → registered canonical root → enabled state → stored profile → tool minimum profile`
 
-### Exact orphan recovery, native restore and key rotation — development candidate
+Profiles are exactly `READ_ONLY / SAFE / STANDARD`.
+The caller cannot supply a host root or elevate a profile.
 
-An owner-private, HMAC-receipted UUID scratch stage is created *before* an archive
-or decrypt operation produces plaintext. The offline operator can inspect and
-manually clean ONLY that owned stage using its original target, stage dev/ino,
-expected tree fingerprint and explicit confirmation. The SIGKILL test covers
-real archive and decrypt plaintext stages; unattended cleanup and a same-UID
-adversary guarantee are NOT provided. Restoring a memory root requires a
-locally pinned private native macOS no-overwrite publish helper. Archive key
-rotation rewraps ciphertext in memory to a NEW file and retains the old archive;
-keys are still externally supplied, not automatically stored in Keychain.
+## B5 STANDARD execution plane
 
-Full contract: docs/architecture/PERSONAL_ARCHIVE_KEY_STAGE_CONTRACT.md.
-Evidence: docs/verification/PERSONAL_ARCHIVE_STAGE_ATOMIC_CHECKPOINT.md.
-Production use and Business registration remain BLOCKED pending independent
-security review and explicit owner acceptance.
+The three exec tools are available only when the operator explicitly enables the B5
+exec plane and the selected project has stored profile `STANDARD`.
+
+Each `exec_command` runs in a disposable Linux arm64 Docker container.
+The control plane invokes only a bounded, fixed Docker lifecycle; user command text is
+never executed by the macOS host shell.
+
+Current pinned base image:
+
+```text
+node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
+image id: sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
+platform: linux/arm64
+```
+
+Docker CLI itself is operator-configured by canonical absolute path + SHA-256 and is
+verified by Doctor before B5 startup.
+
+### Isolation contract
+
+Each disposable exec container is created with:
+
+- selected registered project mounted at `/project` only
+- project mount read/write for the accepted edit → test loop
+- nested `/project/.git` read-only when Git metadata exists
+- non-root numeric UID/GID
+- read-only container root filesystem
+- `--network none`
+- `--cap-drop ALL`
+- `no-new-privileges`
+- PID limit 128
+- memory limit 512 MiB
+- CPU limit 2
+- bounded 64 MiB `/tmp` tmpfs
+- no Docker socket mount
+- no control/deployment credential mount
+- bounded explicit child environment
+- package-manager network use disabled by environment defaults
+
+Project preflight rejects unsupported Git indirection, Git symlinks/special files,
+hard-linked files and unsupported special files before starting execution.
+
+This is container isolation for the selected project execution plane. It is not a claim
+that ChatAgent can sandbox an already-malicious process running as the same macOS host user.
+
+### Process/session bounds
+
+- one running exec session at a time per Business runtime
+- maximum 32 retained session records
+- maximum timeout 15 minutes
+- maximum per-read output 512 KiB
+- retained output window 2 MiB
+- process output returned as base64 + sequence cursor
+- explicit truncation / `hasMore`
+- session/project ownership rechecked by `read_process` and `terminate_process`
+- sessions are intentionally non-durable across control-plane recreation
+- owned containers are cleaned on startup and shutdown
+
+Docker Desktop on macOS can briefly lag after Personal-derived Darwin atomic file-swap
+replacement. B6 release E2E reproduced one 0.5-second visibility miss, so the exec
+container now waits 1.5 seconds after the bind mount starts before launching the user
+command. This is internal transport settling; callers do not
+need to add a delay between Safe Replace and a test rerun.
+
+## B4 SAFE mode remains available
+
+The B4 SAFE pilot remains unchanged when exec is not configured:
+
+- `safePilotMode=true`
+- exec disabled
+- enabled `STANDARD` projects rejected by the B4 startup gate
+- 14-tool B3/B4 surface only
+
+B5 STANDARD mode requires:
+
+- `safePilotMode=false`
+- `exec.enabled=true`
+- pinned Docker CLI path/SHA
+- pinned exec image reference and image ID
+- B1–B4 continuity/audit/native prerequisites
+
+Doctor refuses a missing/mismatched Docker binary, wrong image ID/platform, or an attempt
+to silently enable exec while still declaring SAFE-pilot mode.
+
+## Audit / continuity / backup
+
+B1–B4 guarantees remain in force.
+
+Exec audit records bounded effect metadata only:
+- `EXEC_START` for `exec_command`
+- `EXEC_TERMINATE` for `terminate_process`
+- organization/project/profile/tool/result metadata
+
+Command text, process output and deployment credentials are not written to the audit ledger.
+
+Operational backup records the non-secret pinned exec image identity when B5 is enabled,
+but does not store the Docker executable absolute path or deployment credential.
+
+## Operator commands
+
+```text
+ops/Start.command
+ops/Stop.command
+ops/Status.command
+ops/Doctor.command
+ops/Backup.command
+ops/Restore.command
+```
+
+B5 Start/Stop uses the same PID + server path + runtime instance-id ownership contract
+established in B4. Stop waits for exec cleanup and refuses unverified process ownership.
+
+## Current boundary
+
+B5 provides the accepted startup/dev-team loop:
+
+```text
+read source
+→ safe edit / Safe Replace
+→ isolated test
+→ read output
+→ repair
+→ isolated rerun
+```
+
+Network remains `none` by default. B5 does not add a package installer, Internet egress,
+Docker-control MCP tool, service-control plane, arbitrary host shell, arbitrary delete,
+Git commit/push, root/sudo, or durable remote shell.
+
+B6 local release-candidate hardening is complete: E1–E6, backup/restore, previous-B5
+rollback rehearsal, exact 17-tool contract, release-candidate runtime Doctor/Start/Stop,
+and effect-minimized local smoke all pass.
+
+External release validation is complete. `exobiz7/chatagent-business` is the private GitHub
+repository, tunnel `tunnel_6abe54973cb48191a1c54c50ede05748` is live for AIspace workspace
+`d4b71d66-372a-4cff-ad5f-07a3cdbaa55c`, the Draft canaries passed, the final-icon app was
+privately published, and the published app passed the effect-minimized production smoke.
+
+Normative baseline:
+`docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md`
+
+Verification:
+- `docs/verification/B1_PROJECT_BOUNDARY_VERIFICATION.md`
+- `docs/verification/B2_SAFE_FILES_VERIFICATION.md`
+- `docs/verification/B3_SHARED_CONTINUITY_VERIFICATION.md`
+- `docs/verification/B4_AUDIT_OPS_SAFE_PILOT_VERIFICATION.md`
+- `docs/verification/B5_ISOLATED_STANDARD_EXEC_VERIFICATION.md`
+- `docs/verification/B6_FULL_E2E_AND_RELEASE_VERIFICATION.md`
+- `docs/release/CHATAGENT_BUSINESS_RELEASE_CANDIDATE_v1.0.0-rc.1.md`
+- `docs/release/CHATAGENT_BUSINESS_RELEASE_v1.0.0.md`

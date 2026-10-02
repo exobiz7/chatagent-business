@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
 import {mkdtempSync,realpathSync,rmSync} from "node:fs";
@@ -16,7 +17,7 @@ try{
  original.projectRegister({projectId,rootLabel:"Single owner",operationId:randomUUID()});
  original.close();
  const operationId=randomUUID();
- const worker=new URL("./personal-memory-crash-worker.mjs",import.meta.url).pathname;
+ const worker=fileURLToPath(new URL("./personal-memory-crash-worker.mjs",import.meta.url));
  const receipt=await new Promise((resolve,reject)=>{
   let output="",settled=false;
   child=spawn(process.execPath,[worker,state,projectId,operationId],{

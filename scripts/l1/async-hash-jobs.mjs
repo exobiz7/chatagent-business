@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import {promises as fs,constants as C} from "node:fs";
 import {dirname} from "node:path";
 import {createHash} from "node:crypto";
@@ -23,7 +24,7 @@ export class AsyncHashJobs {
    throw Error("ASYNC_HASH_RECORD_LIMIT");
   const job=await this.processes.start({
    executable:process.execPath,
-   argv:[new URL("./async-file-hash-worker.mjs",import.meta.url).pathname,
+   argv:[fileURLToPath(new URL("./async-file-hash-worker.mjs",import.meta.url)),
     target,String(st.dev),String(st.ino),String(st.size),String(st.mtimeMs)],
    cwd:dirname(target),
    timeoutMs:3600000,

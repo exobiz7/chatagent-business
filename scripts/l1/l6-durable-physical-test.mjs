@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn,execFileSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,rmSync,readFileSync,existsSync} from "node:fs";
@@ -24,7 +25,7 @@ async function wait(fn,tries=100,step=90){
 const trace=s=>console.log("PASS "+s);
 try{
  const key=randomUUID();
- testWorker=spawn(process.execPath,[new URL("./l6-durable-worker.mjs",import.meta.url).pathname,state,cwd,key],
+ testWorker=spawn(process.execPath,[fileURLToPath(new URL("./l6-durable-worker.mjs",import.meta.url)),state,cwd,key],
    {stdio:["ignore","pipe","pipe"]});
  let data="",errors="";
  testWorker.stdout.on("data",x=>data+=String(x));

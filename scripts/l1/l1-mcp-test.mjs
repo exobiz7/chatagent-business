@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -42,9 +43,9 @@ try{
  const b=new L1Broker(dir,{initialize:true});b.pair(pass);
  writeFileSync(keyFile,agentKey,{mode:0o600});writeFileSync(l0File,l0Key,{mode:0o600});
  const brokerPort=31519,l0Port=31520;
- brokerProcess=await start(new URL("./broker-server.mjs",import.meta.url).pathname,{
+ brokerProcess=await start(fileURLToPath(new URL("./broker-server.mjs",import.meta.url)),{
   L1_STATE_DIR:dir,L1_AGENT_KEY_FILE:keyFile,L1_AGENT_PORT:String(brokerPort)},brokerPort);
- l0Process=await start(new URL("../l0-ui-probe.mjs",import.meta.url).pathname,{
+ l0Process=await start(fileURLToPath(new URL("../l0-ui-probe.mjs",import.meta.url)),{
   L0_AUTH_FILE:l0File,L0_PORT:String(l0Port),L1_AGENT_KEY_FILE:keyFile,
   L1_BROKER_URL:"http://127.0.0.1:"+brokerPort},l0Port);
  const headers={"x-chatagent-l0-credential":l0Key};

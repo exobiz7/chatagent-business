@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,
@@ -14,7 +15,7 @@ mkdirSync(work,{mode:0o700});mkdirSync(outside,{mode:0o700});
 const binary=join(root,"native-cas");
 const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
  "-Wall","-Wextra","-Werror","-O2",
- new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",binary],
+ fileURLToPath(new URL("./native-replace-cas.c",import.meta.url)),"-o",binary],
  {encoding:"utf8",timeout:10000});
 assert.equal(cc.status,0,cc.stderr);chmodSync(binary,0o700);
 const pin=sha(readFileSync(binary));
@@ -150,7 +151,7 @@ try{
   const testBinary=join(root,"native-cas-f03-"+name);
   const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
    "-Wall","-Wextra","-Werror","-O2","-D"+macro,
-   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   fileURLToPath(new URL("./native-replace-cas.c",import.meta.url)),"-o",testBinary],
    {encoding:"utf8",timeout:10000});
   assert.equal(built.status,0,built.stderr);
   chmodSync(testBinary,0o700);
@@ -184,7 +185,7 @@ try{
   const testBinary=join(root,"native-cas-f03-"+name);
   const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
    "-Wall","-Wextra","-Werror","-O2","-D"+macro,
-   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   fileURLToPath(new URL("./native-replace-cas.c",import.meta.url)),"-o",testBinary],
    {encoding:"utf8",timeout:10000});
   assert.equal(built.status,0,built.stderr);chmodSync(testBinary,0o700);
   const raceTarget=join(work,"f03-window-"+name+".txt");
@@ -205,7 +206,7 @@ try{
   const testBinary=join(root,"native-cas-f03-postswap-race");
   const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
    "-Wall","-Wextra","-Werror","-O2","-DPERSONAL_TEST_CAS_POSTSWAP_PATH_RACE",
-   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   fileURLToPath(new URL("./native-replace-cas.c",import.meta.url)),"-o",testBinary],
    {encoding:"utf8",timeout:10000});
   assert.equal(built.status,0,built.stderr);chmodSync(testBinary,0o700);
   const raceTarget=join(work,"f03-postswap-race.txt");
@@ -225,7 +226,7 @@ try{
   const testBinary=join(root,"native-cas-f03-postswap-content-race");
   const built=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
    "-Wall","-Wextra","-Werror","-O2","-DPERSONAL_TEST_CAS_POSTSWAP_CONTENT_RACE",
-   new URL("./native-replace-cas.c",import.meta.url).pathname,"-o",testBinary],
+   fileURLToPath(new URL("./native-replace-cas.c",import.meta.url)),"-o",testBinary],
    {encoding:"utf8",timeout:10000});
   assert.equal(built.status,0,built.stderr);chmodSync(testBinary,0o700);
   const raceTarget=join(work,"f03-postswap-content-race.txt");

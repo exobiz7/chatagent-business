@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,chmodSync,readdirSync,
@@ -21,7 +22,7 @@ const build=(src,name)=>{
  const binary=join(root,name);
  const cc=spawnSync("/usr/bin/clang",["-std=c11","-D_DARWIN_C_SOURCE",
   "-Wno-deprecated-declarations","-Wall","-Wextra","-Werror","-O2",
-  new URL(src,import.meta.url).pathname,"-o",binary],{encoding:"utf8",timeout:10000});
+  fileURLToPath(new URL(src,import.meta.url)),"-o",binary],{encoding:"utf8",timeout:10000});
  assert.equal(cc.status,0,cc.stderr);chmodSync(binary,0o700);
  return {binary,hash:sha(readFileSync(binary))};
 };
@@ -48,7 +49,7 @@ const wait=async(child,port)=>{
 try{
  const agentPort=await freePort(),mcpPort=await freePort();
  assert.notEqual(agentPort,mcpPort);
- l1=spawn(process.execPath,[new URL("./broker-server.mjs",import.meta.url).pathname],{
+ l1=spawn(process.execPath,[fileURLToPath(new URL("./broker-server.mjs",import.meta.url))],{
   env:{...process.env,L1_STATE_DIR:state,L1_AGENT_KEY_FILE:key,L1_AGENT_PORT:String(agentPort),
    L1_FILE_OPS_ENABLED:"1",L1_STRICT_MUTATIONS:"1",L1_NATIVE_CREATE_ENABLED:"1",
    L1_NATIVE_CREATE_BIN:create.binary,L1_NATIVE_CREATE_SHA256:create.hash,
@@ -62,7 +63,7 @@ try{
   stdio:"ignore"
  });
  await wait(l1,agentPort);
- l0=spawn(process.execPath,[new URL("../l0-ui-probe.mjs",import.meta.url).pathname],{
+ l0=spawn(process.execPath,[fileURLToPath(new URL("../l0-ui-probe.mjs",import.meta.url))],{
   env:{...process.env,L0_AUTH_FILE:mcpKey,L0_PORT:String(mcpPort),
    L1_AGENT_KEY_FILE:key,L1_BROKER_URL:"http://127.0.0.1:"+agentPort,
    L1_POWERUSER_TOOLS:"1",L1_SEMANTIC_WRITE_TOOLS:"1",L1_STRICT_MUTATIONS:"1",
