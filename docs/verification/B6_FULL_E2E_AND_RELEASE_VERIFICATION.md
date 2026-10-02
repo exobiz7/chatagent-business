@@ -13,11 +13,11 @@
 | G1 Contract | PASS | exact 17-tool candidate surface; strict profile/project contract |
 | G2 Security | PASS | path/profile/stale-write/delete/SAFE-exec denials; B1-B5 security suites |
 | G3 Recovery | PASS | restart, continuity, concurrent CAS, process cleanup, backup/restore, previous-B5 rollback rehearsal |
-| G4 Business E2E | LOCAL PASS | E1-E6 actual local MCP canary; real ChatGPT Business Draft app not configured |
-| G5 Production | LOCAL RC PASS / EXTERNAL BLOCKED | RC Doctor/Start/Stop/read-only smoke/backup PASS; private workspace publish not configured |
+| G4 Business E2E | PASS | local E1-E6 plus actual ChatGPT Business Draft fresh-chat canary PASS |
+| G5 Production | PRODUCTION ROOT READY / PUBLISH PENDING | production root + tunnel Doctor/Start/Status/backup PASS; private workspace publish/post-publish smoke pending |
 
-The product is **not declared RELEASED** because the external publication requirements in
-the accepted release plan are not currently satisfiable from this repository/environment.
+The product is **not yet declared RELEASED** because private workspace publish and the
+post-publish production smoke have not yet been completed.
 
 ## 2. Actual B6 E1-E6
 
@@ -112,24 +112,41 @@ Result: PASS.
 The runtime was then stopped and verified backup
 `pre-publish-rc1` was created.
 
-## 6. External release blockers
+## 6. External Draft canary and production promotion
 
-Current environment evidence:
-- Business Git remote count: 0
-- no Business app/workspace identifier environment setting
-- no Business-specific tunnel profile
-- RC operator config has `tunnelHealthUrl = null`
+Configured external resources:
+- GitHub: `exobiz7/chatagent-business` (Private)
+- ChatGPT Business workspace: AIspace / `d4b71d66-372a-4cff-ad5f-07a3cdbaa55c`
+- OpenAI organization: `org-7Hn67wnw1fS6FxQ79Rr4zLN4`
+- Secure MCP tunnel: `chatagent-business` / `tunnel_6abe54973cb48191a1c54c50ede05748`
+- production root: `~/ChatAgentBusiness/production`
+- tunnel health: `http://127.0.0.1:51950/healthz`
 
-Therefore these accepted release gates remain **NOT RUN / EXTERNAL_RELEASE_BLOCKED**:
+Actual ChatGPT Business Draft fresh-chat canary: **PASS**.
 
-- actual ChatGPT Business Draft app scan
-- actual ChatGPT Business fresh-chat canary through the published app
+Observed and independently verified evidence:
+- `business_status`: version `1.0.0-rc.1`; docs=READ_ONLY, ops=SAFE, dev=STANDARD
+- READ: `docs/README.txt` = `RELEASE_RC_READ_ONLY\n`
+- SAFE create initial SHA: `de95c45356f26efff88bc924572e46bd7679188efc57a57cd3b33743053ab7e4`
+- SAFE replace final SHA: `9e1588e0fa194093398239fc620ff73e81172a939fe163aead08a5f7d237378d`
+- continuity task: `2d054085-cfab-4ceb-b20e-cfbfe8b4d82c`
+- continuity digest: `sha256:b54d83ba629d5491d94c0b7c9fd4fd3e4e07b32c62700602afa54fc4d166e3a4`
+- continuity result: `FRESH / CONTEXT_DIGEST_MATCH`
+- STANDARD exec: completed with exit 0 and marker `CHATGPT_BUSINESS_DRAFT_EXEC_OK`
+- SAFE exec denial: `BUSINESS_PROFILE_DENIED`
+- audit independently records create/replace/continuity/exec success and SAFE exec denial
+
+After the canary, the verified state was backed up and restored into a separate production
+root. Production project roots were rebound to `~/ChatAgentBusiness/production/projects/*`,
+a fresh production deployment credential was provisioned, and the same tunnel ID was moved
+to the production credential. Production Doctor reports runtime healthy, exec READY_B5, and
+tunnel HTTP_200. Backup `pre-private-publish` is verified.
+
+Remaining release gates:
 - private workspace publish
-- post-publish production smoke
-- final `v1.0.0` release declaration/tag
-- GitHub push/PR/merge
-
-No remote, workspace app or tunnel resource was invented or created.
+- post-publish effect-minimized production smoke
+- final PR merge to `main`
+- final `v1.0.0` tag/release declaration
 
 ## 7. Severity closure
 
@@ -146,5 +163,4 @@ External publication gates are release prerequisites, not implementation defects
 Do **not** relabel this RC as `v1.0.0 RELEASED` until the external gates above pass.
 The appropriate local tag is `v1.0.0-rc.1`.
 
-Once the user supplies/confirms the Business GitHub destination and ChatGPT Business
-workspace/app/tunnel target, resume from this RC rather than reopening B0-B5.
+Resume from this production-promoted RC. Do not reopen B0-B5 without new evidence.

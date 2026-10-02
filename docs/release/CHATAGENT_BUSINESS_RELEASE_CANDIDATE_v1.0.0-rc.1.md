@@ -97,8 +97,11 @@ State at manifest time:
 - Doctor: PASS
 - pre-publish backup: `pre-publish-rc1`
 - deployment credential: separately provisioned and excluded from backup
-- tunnel: not configured
-- Git remote: not configured
+- tunnel: `chatagent-business` / `tunnel_6abe54973cb48191a1c54c50ede05748`
+- Git remote: `https://github.com/exobiz7/chatagent-business.git`
+- ChatGPT Business workspace: AIspace / `d4b71d66-372a-4cff-ad5f-07a3cdbaa55c`
+- production root: `~/ChatAgentBusiness/production`
+- production pre-publish backup: `pre-private-publish`
 
 ## Release gates
 
@@ -106,9 +109,10 @@ State at manifest time:
 - G2 Security: PASS
 - G3 Recovery: PASS
 - G4 local E1-E6 equivalent: PASS
-- G4 actual ChatGPT Business Draft app: EXTERNAL_RELEASE_BLOCKED
+- G4 actual ChatGPT Business Draft app fresh-chat canary: PASS
 - G5 local RC Doctor/Start/Smoke/Backup/Rollback: PASS
-- G5 private workspace publish/post-publish smoke: EXTERNAL_RELEASE_BLOCKED
+- G5 production root/tunnel promotion: PASS
+- G5 private workspace publish/post-publish smoke: PENDING
 
 ## Severity at local RC boundary
 
@@ -118,13 +122,10 @@ State at manifest time:
 
 ## External prerequisites before final v1.0.0
 
-1. Confirm/create Business GitHub repository destination and visibility.
-2. Configure Business-specific tunnel/profile.
-3. Configure/identify ChatGPT Business Draft/private app/workspace target.
-4. Run actual Draft app 17-tool scan and E1-E5 canary.
-5. Publish private workspace app.
-6. Run effect-minimized production smoke.
-7. Confirm backup/rollback once more at published boundary.
-8. Merge approved RC to Business `main`, push, and create final `v1.0.0` tag.
+1. Publish the verified ChatAgent Business Draft app to the AIspace private workspace.
+2. Run effect-minimized post-publish production smoke.
+3. Confirm production backup/rollback boundary once more.
+4. Merge approved RC to Business `main`.
+5. Create/push final `v1.0.0` tag and mark RELEASED.
 
 Until those pass, this manifest authorizes only `v1.0.0-rc.1`, not final `v1.0.0 RELEASED`.

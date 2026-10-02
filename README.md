@@ -1,7 +1,7 @@
 # ChatAgent Business — SMB Edition
 
-> Current stage: B6 local release candidate implemented and locally verified.
-> External ChatGPT Business Draft/private publish is not yet configured, so final RELEASED status is intentionally withheld.
+> Current stage: B6 release candidate verified through an actual ChatGPT Business Draft app canary and promoted to the production runtime root.
+> Final RELEASED status is intentionally withheld until private workspace publish and post-publish smoke pass.
 
 Canonical repo: `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business`
 
@@ -182,10 +182,11 @@ B6 local release-candidate hardening is complete: E1–E6, backup/restore, previ
 rollback rehearsal, exact 17-tool contract, release-candidate runtime Doctor/Start/Stop,
 and effect-minimized local smoke all pass.
 
-Final RELEASED status still requires the external gates that are not configured in this
-repository/environment: ChatGPT Business Draft/private app publication, a Business tunnel
-target/profile, private workspace publish, and post-publish production smoke. The repository
-also intentionally has no Git remote until the user confirms the Business repo destination.
+External Draft validation is complete. `exobiz7/chatagent-business` is the private GitHub
+repository, tunnel `tunnel_6abe54973cb48191a1c54c50ede05748` is live for AIspace workspace
+`d4b71d66-372a-4cff-ad5f-07a3cdbaa55c`, and a fresh ChatGPT Business Draft chat passed
+the READ / SAFE / continuity / STANDARD exec / SAFE-exec-denial canary. The remaining
+release gates are private workspace publish, post-publish smoke, PR merge, and final `v1.0.0`.
 
 Normative baseline:
 `docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md`
