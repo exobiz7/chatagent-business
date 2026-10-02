@@ -124,6 +124,11 @@ Configured external resources:
 
 Actual ChatGPT Business Draft fresh-chat canary: **PASS**.
 
+The Draft app was subsequently recreated to attach the final ChatAgent Business icon while
+keeping the same verified tunnel/backend. The recreated app then passed a read-only fresh-chat
+canary: `business_status`, `docs/README.txt` read, and continuity digest validation all passed.
+Tunnel evidence shows three forwarded MCP commands at 13:38 KST for that recreated app.
+
 Observed and independently verified evidence:
 - `business_status`: version `1.0.0-rc.1`; docs=READ_ONLY, ops=SAFE, dev=STANDARD
 - READ: `docs/README.txt` = `RELEASE_RC_READ_ONLY\n`

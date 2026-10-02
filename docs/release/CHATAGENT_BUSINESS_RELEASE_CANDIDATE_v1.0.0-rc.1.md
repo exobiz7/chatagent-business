@@ -110,6 +110,7 @@ State at manifest time:
 - G3 Recovery: PASS
 - G4 local E1-E6 equivalent: PASS
 - G4 actual ChatGPT Business Draft app fresh-chat canary: PASS
+- G4 recreated final-icon Draft app read-only canary: PASS
 - G5 local RC Doctor/Start/Smoke/Backup/Rollback: PASS
 - G5 production root/tunnel promotion: PASS
 - G5 private workspace publish/post-publish smoke: PENDING
