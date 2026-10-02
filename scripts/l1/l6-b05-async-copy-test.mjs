@@ -199,6 +199,12 @@ try{
   argv:["-e","process.stdout.write('OTHER')"],timeoutMs:10000,idempotencyKey:randomUUID()});
  assert.throws(()=>r.status({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
  assert.throws(()=>r.stop({processId:unrelated.processId}),/ASYNC_COPY_NOT_OWNED/);
+ // This unrelated ownership fixture must be terminal before later F04 cases intentionally
+ // consume three RECOVERY_REQUIRED capacity slots. Fast local runners usually settle
+ // immediately, while hosted macOS CI can otherwise transiently hit PROCESS_LIMIT.
+ await wait(()=>["EXITED","FAILED","TERMINATED"].includes(
+  r.processes.status({processId:unrelated.processId}).state));
+ assert.equal(r.processes.status({processId:unrelated.processId}).state,"EXITED");
  // F04: no action ever reserved: the original key remains sealed, no replay.
  const beforeActionKey=randomUUID(),beforeActionDest=join(work,"before-action.bin");
  const realStart=r.processes.start.bind(r.processes);
