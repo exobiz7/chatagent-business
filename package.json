@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node scripts/business/b5-isolated-standard-exec-test.mjs && node scripts/business/b6-release-e2e-test.mjs",
+    "test:ci": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node --check scripts/business/business-exec.mjs && node --check scripts/business/b5-isolated-standard-exec-test.mjs && node --check scripts/business/b6-release-e2e-test.mjs",
     "test:business:b1": "node scripts/business/b1-project-boundary-test.mjs",
     "test:business:b2": "node scripts/business/b2-safe-files-test.mjs",
     "test:business:b3": "node scripts/business/b3-shared-continuity-test.mjs",

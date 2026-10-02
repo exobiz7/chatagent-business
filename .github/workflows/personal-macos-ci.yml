@@ -1,7 +1,7 @@
-name: Personal macOS isolated tests
+name: ChatAgent Business macOS hosted CI
 on:
   push:
-    branches: [main, 'feature/**']
+    branches: [main, 'feature/**', 'feat/**']
   pull_request:
 permissions:
   contents: read
@@ -16,5 +16,9 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Run independently installed personal tests (no P8 secrets or services)
-        run: npm test
+      - name: Run hosted macOS tests
+        run: npm run test:ci
+      - name: Document Docker release-host gate
+        run: |
+          echo "B5/B6 Docker E2E remains in npm test and is required on the release host."
+          echo "GitHub macos-latest does not provide the Docker Desktop daemon used by the production exec plane."

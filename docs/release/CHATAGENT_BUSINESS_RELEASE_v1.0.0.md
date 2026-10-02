@@ -87,6 +87,17 @@ Production credentials are separately provisioned, mode 0600, excluded from Git 
 - Exec image: `node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6`
 - Exec platform: `linux/arm64`
 
+## CI / release-host test split
+
+- `npm test`: full release-host suite including real Docker B5/B6 E2E.
+- `npm run test:ci`: GitHub hosted macOS suite for Personal+B1–B4 plus B5/B6 syntax gates.
+- Reason: GitHub `macos-latest` does not provide the Docker Desktop daemon used by the production exec plane.
+- Real Docker B5/B6 remains mandatory release evidence and passed on the production-class Mac release host.
+
+The inherited async-copy fixture was also stabilized to wait for its unrelated short-lived
+process to become terminal before intentionally consuming three recovery-capacity slots.
+This removes a hosted-runner timing race without changing product behavior.
+
 ## Severity closure
 
 - P0 open: 0
