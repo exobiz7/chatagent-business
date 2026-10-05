@@ -2,8 +2,8 @@
 
 > Product: **ChatAgent Business — SMB Edition**
 > Target release: **v1.1.0**
-> Design status: **ACCEPTED DESIGN**
-> Design revision: **R2 — use-case-driven tool contract / reuse-first refinement**
+> Design status: **ACCEPTED DESIGN — R3 SELF-AUDITED**
+> Design revision: **R3 — architecture consistency audit before B-S0 validation**
 > Date: **2026-10-05 KST**
 > Baseline production: **v1.0.0 / PRODUCTION_ACTIVE_V1.0.0**
 > Baseline release tag: `v1.0.0`
@@ -70,7 +70,7 @@ Security is provided primarily by explicit trust boundaries, truthful tool seman
 | Generic host exec | Retained as a power-tool / escape hatch |
 | Common operations | Exposed through semantic tools with accurate risk annotations |
 | Public MCP tool contract | Use-case-driven focused semantic tools; **no minimum or maximum tool-count constraint** |
-| Search | `continuity_search` added |
+| Search | `continuity_search_history` added |
 | OpenAI safety | Tool annotations/descriptions must match real effects; no attempt to bypass platform safety |
 | Safety fallback | If the semantic design still causes platform safety blocking, reuse the already validated Personal tool/annotation structure as the next implementation path |
 
@@ -665,6 +665,7 @@ git_create_branch
 git_switch_branch
 git_stage_files
 git_create_commit
+git_clone_repository
 git_fetch_remote
 git_pull_ff_only
 git_push_branch
@@ -694,6 +695,7 @@ Representative expectations:
 | Create feature branch | `git_create_branch` |
 | Stage selected files | `git_stage_files` |
 | Commit staged changes | `git_create_commit` |
+| Clone an approved repository into an approved workspace | `git_clone_repository` |
 | Fetch remote state | `git_fetch_remote` |
 | Fast-forward pull | `git_pull_ff_only` |
 | Push branch | `git_push_branch` |
@@ -738,7 +740,7 @@ Representative intended classes:
 | `process_terminate` | false | true | false |
 | Git read tools | true | false | false unless the implementation actually needs open-world access |
 | local Git mutation tools | false | false | false |
-| `git_fetch_remote` / `git_pull_ff_only` | false | false | true |
+| `git_clone_repository` / `git_fetch_remote` / `git_pull_ff_only` | false | false | true |
 | `git_push_branch` / `github_create_pull_request` | false | false | true |
 
 If implementation behavior differs from the table, annotations change to match reality. Risk hints must never be lowered solely to reduce confirmation friction.
@@ -778,6 +780,7 @@ The default for an overlapping Personal capability is `REUSE_AS_IS` or `ADAPT_TH
 | Personal async hash implementation/tests | future Business async-hash tools if required | **REUSE_AS_IS/ADAPT** |
 | `DurableHostProcesses` | `process_start_host`, `process_get_status`, `process_read_output`, `process_terminate` | **REUSE core implementation**; add member/node/project/risk adapters |
 | Personal `local_exec_start` metadata/annotation lessons | `process_start_host` | **REUSE behavioral/safety baseline**, improve Business public naming |
+| Personal host-process + Git CLI execution primitives | `git_clone_repository` and focused Git/GitHub tools | **ADAPT_THINLY** — reuse execution/process primitives; add focused argument validation and Business node/project policy rather than building a second process engine |
 | Personal memory auth/session/Keychain runtime | Business Supabase auth/runtime | **REUSE_AS_IS where semantics match** |
 | `SupabasePersonalMemoryStore` RPC/retry/error pattern | Business continuity store | **ADAPT_THINLY** for organization/member/project schemas |
 | Personal task start/checkpoint/complete | Business continuity task mutations | **ADAPT_THINLY**; retain transaction/idempotency/CAS structure |
@@ -874,11 +877,14 @@ git_create_commit
 Remote synchronization/publication:
 
 ```text
+git_clone_repository
 git_fetch_remote
 git_pull_ff_only
 git_push_branch
 github_create_pull_request
 ```
+
+`git_clone_repository` may create a new working copy only inside an approved local workspace root. It must not choose an arbitrary destination outside the node's approved workspace mapping. Authentication and repository authorization remain those of the logged-in user/external Git provider.
 
 Normal semantic tools do not provide:
 
@@ -1111,11 +1117,25 @@ member/node authorization
 
 Exactly one writer must win a same-revision race.
 
+### 21.4 Shared-context sensitive-text guard
+
+TEAM sharing is broad by default, but broad sharing must not turn credentials into organizational memory. Reuse the Personal sensitive-text/input-validation guard for all continuity mutations before cloud persistence.
+
+At minimum, reject or explicitly sanitize content that appears to contain:
+
+- access/refresh tokens;
+- API keys or deployment credentials;
+- private-key material;
+- Keychain secret values;
+- other configured credential patterns.
+
+This guard applies to TEAM and PRIVATE continuity writes. It is a data-hygiene boundary, not a substitute for normal user authorization. Rejected secret-like content must not be copied into audit logs as part of the error.
+
 ---
 
 ## 22. Continuity search
 
-`continuity_search` is a required v1.1 Business feature.
+`continuity_search_history` is a required v1.1 Business feature.
 
 Initial implementation should remain simple and maintainable:
 
@@ -1142,7 +1162,7 @@ PRIVATE projects respect explicit member visibility.
 
 ---
 
-## 23. `continuity_open` and handoff
+## 23. `continuity_get_context` and handoff
 
 When no taskId is supplied, bounded project context may include:
 
@@ -1159,7 +1179,7 @@ ordinary target ~= 8 KiB
 hard cap         = 24 KiB
 ```
 
-Older context should be retrieved through `continuity_search` rather than expanding the handoff indefinitely.
+Older context should be retrieved through `continuity_search_history` rather than expanding the handoff indefinitely.
 
 Freshness semantics remain:
 
@@ -1176,6 +1196,26 @@ Business contextDigest
 != Supabase event hash
 != logical backup digest
 ```
+
+### 23.1 Explicit local project mapping
+
+A cloud `organizationId + projectId` identifies the logical team project, but it never grants filesystem or execution access by itself. Each runtime node must maintain an explicit local mapping:
+
+```text
+organizationId + projectId
+-> node-local approved path/workspace root
+-> local profile/execution policy
+```
+
+Rules:
+
+- no automatic host path is derived from a cloud project row;
+- the same logical project may map to different absolute paths on different nodes;
+- an unmapped project on a node is not executable there;
+- changing a local mapping is an administrative/local-authority operation and must be audited;
+- when a Git remote is present, a remote/repository fingerprint may be recorded as advisory mismatch detection, but Git metadata does not itself grant host authority.
+
+This prevents an identical `projectId` string from accidentally routing a team request into an unrelated local repository.
 
 ---
 
@@ -1273,9 +1313,11 @@ Audit must avoid capturing secrets, arbitrary file contents, command output, or 
 
 ## 27. Outage/degraded behavior
 
-Supabase outage must not unnecessarily disable local work.
+Supabase outage must not unnecessarily disable local work, but cloud-control outage must not create an indefinite authorization bypass.
 
-If the node/Gateway path remains healthy:
+A previously authenticated member/node route may continue only while its already-issued access token and bounded cached node-approval/session lease remain valid. No new enrollment, approval, role change, or lease refresh is accepted while the control plane is unavailable. Once the token/lease expires, new remotely routed effects fail closed until authoritative control state can be checked again.
+
+Within an unexpired previously validated session/lease, if the node/Gateway path remains healthy:
 
 ```text
 local file operations   AVAILABLE
@@ -1287,6 +1329,8 @@ continuity writes       FAIL CLOSED
 continuity search       UNAVAILABLE
 continuity read         UNVERIFIED / bounded unavailable
 ```
+
+A revoked node must be rejected immediately whenever authoritative control state is reachable; cached authorization is bounded by the lease/token lifetime and is never indefinite.
 
 No automatic SQLite write fallback.
 
@@ -1438,12 +1482,15 @@ Required work:
 7. validate the fixed naming rule `<domain>_<verb>_<object>` and positive/negative description boundaries;
 8. build and run the tool-selection golden prompt set, including semantic-tool versus power-tool selection;
 9. validate current tool names, schemas, descriptions and annotations with ChatGPT Developer Mode discovery;
-10. run semantic-vs-generic-exec safety probes;
-11. verify whether OpenAI-native identity/session context can support trustworthy member-to-node binding;
-12. prototype native routing or Gateway/Node Relay as necessary;
-13. freeze Supabase schema/RPC naming;
-14. freeze the parity/safety/E2E test matrix;
-15. decide whether Safety Compatibility Fallback is needed before B-S1/B-S3 tool implementation proceeds.
+10. verify shared-context sensitive-text rejection using the reused Personal guard;
+11. verify explicit logical-project-to-local-path mapping and wrong-repository mismatch denial;
+12. verify bounded authorization-lease behavior for Supabase/control-plane outage and expiry;
+13. run semantic-vs-generic-exec safety probes;
+14. verify whether OpenAI-native identity/session context can support trustworthy member-to-node binding;
+15. prototype native routing or Gateway/Node Relay as necessary;
+16. freeze Supabase schema/RPC naming;
+17. freeze the parity/safety/E2E test matrix;
+18. decide whether Safety Compatibility Fallback is needed before B-S1/B-S3 tool implementation proceeds.
 
 Gate:
 
@@ -1454,6 +1501,9 @@ OPENAI_TOOL_ANNOTATION_SCAN=PASS
 TOOL_NAMING_CONTRACT=PASS
 TOOL_SELECTION_GOLDEN_SET=PASS
 PERSONAL_REUSE_MATRIX=PASS
+SHARED_CONTEXT_SECRET_GUARD=PASS
+LOCAL_PROJECT_MAPPING_CONTRACT=PASS
+AUTH_LEASE_DEGRADED_MODE=PASS
 NODE_BINDING_ARCHITECTURE=PASS
 SAFETY_STRATEGY_DECIDED=PASS
 ```
@@ -1827,6 +1877,27 @@ Complexity retained because it is necessary:
 - minimal authenticated runtime routing;
 - local/cloud audit separation.
 
+### 40.1 R3 self-audit findings and closure
+
+The pre-B-S0 self-audit found no architectural contradiction requiring a redesign. Five concrete consistency gaps were corrected in R3:
+
+1. stale public names (`continuity_open` / `continuity_search`) were aligned to the fixed naming contract;
+2. `git_clone_repository` was added because remote/BYOD development requires repository acquisition as a normal focused workflow;
+3. Personal's sensitive-text guard was promoted into the Business continuity-write contract so TEAM-wide sharing cannot silently persist credentials;
+4. explicit per-node logical-project-to-local-path mapping was added so a cloud `projectId` can never grant or accidentally select host filesystem authority;
+5. degraded-mode authorization now uses bounded existing token/session/approval leases, eliminating the contradiction between Supabase outage tolerance and node revocation authority.
+
+Audit checks also confirmed:
+
+- no fixed MCP tool-count target remains;
+- the current initial semantic inventory has unique names and is allowed to grow/shrink with use cases;
+- no stale umbrella Git/process public names remain;
+- Personal reuse is the default for overlapping capabilities;
+- TEAM/PRIVATE, HOST_USER/ISOLATED, local/cloud audit, and control/continuity separation have distinct responsibilities rather than duplicate policy ownership;
+- no custom NetworkPolicy, Git policy engine, custom CI, or custom source-sync subsystem has been reintroduced.
+
+R3 architecture audit result: **PASS — READY FOR B-S0 VALIDATION**.
+
 ---
 
 ## 41. Definition of Done
@@ -1842,6 +1913,9 @@ ChatAgent Business v1.1.0 may be declared complete only when all of the followin
 - PRIVATE isolation works;
 - continuity canonical state is Supabase;
 - continuity search works;
+- continuity writes reject configured secret/credential patterns before persistence;
+- each node requires explicit logical-project-to-local-path mapping before host effects;
+- degraded authorization never outlives the bounded authenticated token/session/approval lease;
 - operation UUID idempotency and revision CAS pass under concurrency;
 - completed-task immutability passes;
 - multiple approved runtime nodes work;
