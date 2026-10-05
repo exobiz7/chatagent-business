@@ -7,6 +7,7 @@ const tests=[
  'bs0-tool-catalog-test.mjs',
  'bs0-mcp-descriptor-scan.mjs',
  'bs0-openai-security-scheme-adapter-probe.mjs',
+ 'bs0-live-fixture-smoke-test.mjs',
  'bs0-supabase-contract-test.mjs',
  'bs0-test-matrix-test.mjs'
 ];

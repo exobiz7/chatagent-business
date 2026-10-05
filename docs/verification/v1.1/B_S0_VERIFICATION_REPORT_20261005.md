@@ -155,7 +155,7 @@ A separate non-production validation environment is required:
 
 On the exact B-S0 branch after the R5/tool-contract validation changes:
 
-- `BUSINESS_V11_BS0_LOCAL_SUITE=PASS count=8`;
+- `BUSINESS_V11_BS0_LOCAL_SUITE=PASS count=9`;
 - `npm run test:ci` completed with exit 0;
 - `PERSONAL_STANDALONE_SUITE=PASS count=34`;
 - `BUSINESS_B1_PROJECT_BOUNDARY=PASS`;
