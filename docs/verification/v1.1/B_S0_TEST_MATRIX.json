@@ -1,0 +1,46 @@
+{
+  "status": "B-S0_TEST_MATRIX_FROZEN",
+  "rule": "Reuse Personal evidence/tests for overlapping behavior; add Business tests only for changed semantics or new distributed-team capabilities.",
+  "tests": [
+    {"id":"S0-BASELINE","phase":"B-S0","class":"release","source":"Business v1.0","target":"repo/tag/production/tunnel/Doctor unchanged","required":true},
+    {"id":"S0-DONOR","phase":"B-S0","class":"reuse","source":"Personal v1.1.1","target":"tag/blob/test donor manifest frozen","required":true},
+    {"id":"S0-NAMING","phase":"B-S0","class":"openai","source":"Business new","target":"focused names/descriptions/schemas/annotations","required":true},
+    {"id":"S0-SELECTION","phase":"B-S0","class":"openai-live","source":"Business new","target":"Developer Mode golden-set tool selection","required":true},
+    {"id":"S0-OAUTH","phase":"B-S0","class":"openai-live","source":"Business new + Supabase","target":"OAuth discovery/link/profile/tool auth","required":true},
+    {"id":"S0-NODE-ROUTING","phase":"B-S0","class":"distributed","source":"Business new","target":"member->node binding / PERSONAL deny / SHARED allow","required":true},
+    {"id":"S0-PROJECT-MAP","phase":"B-S0","class":"authority","source":"Business new","target":"explicit local mapping; wrong-repo denial; clone != map","required":true},
+    {"id":"S0-LEASE","phase":"B-S0","class":"authority","source":"Business new","target":"bounded cached authorization lease and expiry fail-closed","required":true},
+    {"id":"S0-SHARED-HOST","phase":"B-S0","class":"authority","source":"Business new","target":"SHARED_NODE host power denied unless node opt-in","required":true},
+
+    {"id":"S1-AUTH-SESSION","phase":"B-S1","class":"reuse","source":"Personal auth/keychain","target":"OAuth token verify/refresh/Keychain custody","required":true},
+    {"id":"S1-RLS","phase":"B-S1","class":"security","source":"Business new","target":"org/member/private-project isolation + direct-table denial","required":true},
+    {"id":"S1-NODE-LIFECYCLE","phase":"B-S1","class":"distributed","source":"Personal device + Business adapt","target":"enroll/approve/status/revoke/session","required":true},
+
+    {"id":"S2-CONTINUITY-PARITY","phase":"B-S2","class":"parity","source":"Business v1 + Personal memory","target":"task/checkpoint/handoff/freshness parity","required":true},
+    {"id":"S2-IDEMPOTENCY","phase":"B-S2","class":"reuse","source":"Personal Supabase","target":"same op same input receipt; changed input conflict","required":true},
+    {"id":"S2-CAS","phase":"B-S2","class":"concurrency","source":"Personal Supabase","target":"same revision exactly one writer wins","required":true},
+    {"id":"S2-SECRET-GUARD","phase":"B-S2","class":"reuse","source":"Personal memory input contract","target":"credential/control-text rejected before cloud persistence","required":true},
+    {"id":"S2-SEARCH","phase":"B-S2","class":"team","source":"Business new","target":"TEAM history search / PRIVATE visibility","required":true},
+
+    {"id":"S3-CREATE-REPLACE","phase":"B-S3","class":"reuse","source":"Personal semantic write","target":"create-only + CAS replace + UNCERTAIN fail-closed","required":true},
+    {"id":"S3-HOST-PROCESS","phase":"B-S3","class":"reuse","source":"Personal DurableHostProcesses","target":"start/status/read/terminate/idempotency/reconciliation","required":true},
+    {"id":"S3-SEMANTIC-FS","phase":"B-S3","class":"business-adapt","source":"Personal primitives","target":"move/delete bounds and node/project authority","required":true},
+    {"id":"S3-GIT","phase":"B-S3","class":"business-new","source":"Git CLI via reused process layer","target":"status/diff/branch/stage/commit/clone/fetch/pull/push/PR focused semantics","required":true},
+    {"id":"S3-ISOLATED","phase":"B-S3","class":"regression","source":"Business v1 Docker","target":"network-off/read-only-root/no-socket isolation preserved","required":true},
+    {"id":"S3-POWER-TOOL","phase":"B-S3","class":"openai-live","source":"Personal annotation baseline","target":"semantic tool preferred; host power only escape hatch","required":true},
+
+    {"id":"S4-MIGRATION","phase":"B-S4","class":"migration","source":"Business v1 continuity","target":"SQLite export/import/readback IDs/revisions/counts","required":true},
+    {"id":"S4-DIGEST","phase":"B-S4","class":"parity","source":"Business v1","target":"contextDigest preserved or explicitly versioned","required":true},
+    {"id":"S4-BACKUP","phase":"B-S4","class":"reuse","source":"Personal encrypted logical backup","target":"AES-GCM export verify/decrypt; secrets excluded","required":true},
+    {"id":"S4-DEGRADED","phase":"B-S4","class":"failure","source":"Business new","target":"continuity outage does not kill valid local work; lease expiry closes authority","required":true},
+
+    {"id":"S5-MULTI-NODE","phase":"B-S5","class":"e2e","source":"Business new","target":"SHARED + two PERSONAL nodes real team flow","required":true},
+    {"id":"S5-REMOTE-GIT","phase":"B-S5","class":"e2e","source":"Business new","target":"remote worker clone/map/edit/commit/push/PR/checkpoint","required":true},
+    {"id":"S5-REVOKE","phase":"B-S5","class":"e2e","source":"Business new","target":"node/member revoke denies new operations","required":true},
+    {"id":"S5-OPENAI","phase":"B-S5","class":"openai-live","source":"Business new","target":"published descriptor selection/confirmation/safety behavior","required":true},
+
+    {"id":"S6-CUTOVER","phase":"B-S6","class":"release","source":"Business new","target":"single-writer final migration + canaries + rollback proof","required":true},
+    {"id":"S6-FULL-REGRESSION","phase":"B-S6","class":"release","source":"Business/Personal reused suites","target":"release-host regression + hosted CI","required":true},
+    {"id":"S6-POST-PUBLISH","phase":"B-S6","class":"release","source":"Business new","target":"private publish + post-publish smoke + restart persistence","required":true}
+  ]
+}

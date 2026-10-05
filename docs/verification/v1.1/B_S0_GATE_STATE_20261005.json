@@ -1,0 +1,37 @@
+{
+  "phase": "B-S0",
+  "status": "LOCAL_VALIDATION_PASS_LIVE_CANARY_PENDING",
+  "designRevision": "R5",
+  "productionMutation": false,
+  "safetyFallbackActivated": false,
+  "safetyStrategy": "PRIMARY_SEMANTIC_TOOLS_WITH_POWER_TOOL_ESCAPE_HATCH; PERSONAL_FALLBACK_ARMED",
+  "gates": {
+    "BUSINESS_V11_S0_ACCEPTED": "PENDING_LIVE_CANARY",
+    "BUSINESS_V10_PRODUCTION_UNCHANGED": "PASS",
+    "OPENAI_TOOL_ANNOTATION_SCAN": "PENDING_LIVE_DEVELOPER_MODE_SCAN",
+    "TOOL_NAMING_CONTRACT": "PASS",
+    "TOOL_SELECTION_GOLDEN_SET": "PENDING_LIVE_MODEL_SELECTION",
+    "PERSONAL_REUSE_MATRIX": "PASS",
+    "SHARED_CONTEXT_SECRET_GUARD": "PASS",
+    "LOCAL_PROJECT_MAPPING_CONTRACT": "PASS",
+    "AUTH_LEASE_DEGRADED_MODE": "PASS",
+    "SHARED_NODE_HOST_POWER_BOUNDARY": "PASS",
+    "OAUTH_MEMBER_IDENTITY_PATH": "PENDING_LIVE_CHATGPT_OAUTH",
+    "NODE_ROUTING_LOGIC_PROBE": "PASS",
+    "NODE_BINDING_ARCHITECTURE": "PASS",
+    "SUPABASE_SCHEMA_RPC_NAMING": "PASS",
+    "PARITY_SAFETY_E2E_MATRIX": "PASS",
+    "OPENAI_SECURITY_SCHEME_WIRE_ADAPTER": "PASS",
+    "SAFETY_STRATEGY_DECIDED": "PASS",
+    "B_S0_LOCAL_VALIDATION_SUITE": "PASS",
+    "BUSINESS_HOSTED_CI_EQUIVALENT": "PASS"
+  },
+  "livePrerequisites": [
+    "dedicated non-Personal Business Supabase OAuth test project",
+    "OAuth 2.1 server + authorization/consent flow enabled on that project",
+    "dedicated B-S0 OpenAI tunnel/app draft separate from production v1.0",
+    "Developer Mode Scan Tools",
+    "linked OAuth profile and member_get_profile call",
+    "golden prompt selection/confirmation run"
+  ]
+}
