@@ -1,0 +1,20 @@
+config_version: 1
+control_plane:
+  base_url: "https://api.openai.com"
+  tunnel_id: "__TUNNEL_ID__"
+  api_key: "file:/Users/macstudio/Library/Application Support/chatagent/business/tunnel/runtime-api-key"
+health:
+  listen_addr: "127.0.0.1:51961"
+  url_file: "/Users/macstudio/Library/Application Support/chatagent/business-v11-bs0/health-url"
+admin_ui:
+  allow_remote: false
+  open_browser: false
+log:
+  level: info
+  format: json
+  http_raw_unsafe: false
+  file: "/Users/macstudio/Library/Application Support/chatagent/business-v11-bs0/tunnel.jsonl"
+mcp:
+  server_urls:
+    - channel: main
+      url: "http://127.0.0.1:31861/mcp"

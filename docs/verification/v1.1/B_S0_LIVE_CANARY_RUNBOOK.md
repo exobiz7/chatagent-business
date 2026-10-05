@@ -82,3 +82,11 @@ Until then Draft PR #6 remains unmerged and Business v1.0 remains the production
 - requested identity scopes: `openid email profile` only
 
 Do not configure custom `business.*` OAuth scopes; Supabase OAuth Server currently supports only standard OIDC scopes. Business authorization remains RLS/server/local-policy based.
+
+## OpenAI tunnel staging values
+
+Create a separate Platform tunnel for this canary; do not repoint the production `chatagent-business` tunnel.
+
+Recommended tunnel name: `chatagent-business-v11-bs0`
+
+Associate it with the target ChatGPT Business workspace and grant/use the existing organization tunnel permissions. After creation, replace `__TUNNEL_ID__` in `B_S0_TUNNEL_PROFILE_TEMPLATE.yaml`. The template uses dedicated local ports `31861` (fixture MCP) and `51961` (tunnel health), so it does not collide with production ports `31850/51950`. It references the existing runtime API key file by path without copying or exposing the key value.
