@@ -70,3 +70,15 @@ B-S0 may close only after:
 - `BUSINESS_V11_S0_ACCEPTED=PASS`
 
 Until then Draft PR #6 remains unmerged and Business v1.0 remains the production baseline.
+
+## Supabase staging values
+
+- project ref: `dxofyjarkzizdzumfyul`
+- project region: `ap-northeast-2`
+- Site URL: `https://dxofyjarkzizdzumfyul.supabase.co`
+- OAuth Authorization Path: `/functions/v1/bs0-oauth-consent`
+- consent URL: `https://dxofyjarkzizdzumfyul.supabase.co/functions/v1/bs0-oauth-consent`
+- Dynamic Client Registration: enable for this isolated B-S0 staging project
+- requested identity scopes: `openid email profile` only
+
+Do not configure custom `business.*` OAuth scopes; Supabase OAuth Server currently supports only standard OIDC scopes. Business authorization remains RLS/server/local-policy based.

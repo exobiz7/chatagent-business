@@ -173,3 +173,33 @@ B-S0 status is:
 `LOCAL_VALIDATION_PASS_LIVE_CANARY_PENDING`.
 
 B-S1 implementation must not treat the live canary as implicitly passed. Production v1.0 remains the frozen active baseline until a later accepted cutover.
+
+### Live staging Supabase project created
+
+- project: `chatagent-business-v1.1-bs0`
+- ref: `dxofyjarkzizdzumfyul`
+- region: `ap-northeast-2`
+- status at creation: `ACTIVE_HEALTHY`
+- incremental project cost reported by connector: `$0/month`
+- Personal project remains untouched.
+
+Public endpoint preflight on 2026-10-05 KST:
+
+- OAuth authorization-server discovery: `404 feature_disabled` (expected before OAuth Server enablement)
+- JWKS: one active `ES256` EC signing key; asymmetric signing prerequisite for OIDC is already satisfied
+
+This narrows the remaining external setup to enabling OAuth 2.1 Server / consent UI and creating a dedicated B-S0 OpenAI tunnel/app.
+
+### Staging consent fixture deployment
+
+Supabase Edge Function `bs0-oauth-consent` is deployed and ACTIVE on staging project `dxofyjarkzizdzumfyul`. The function is intentionally public (`verify_jwt=false`) because it is the pre-authentication consent/sign-in surface; authorization decisions are executed only through the browser's authenticated Supabase Auth session using the OAuth SDK. No secret/service-role key is embedded.
+
+Preflight evidence:
+
+- GET body contains staging sign-up/sign-in and approve/deny flow
+- security advisor: 0 findings
+- performance advisor: 0 findings
+- OAuth discovery remains `404 feature_disabled` until Dashboard OAuth Server enablement
+- JWKS already exposes an ES256 asymmetric signing key
+
+Dashboard-only prerequisite values are frozen in `B_S0_LIVE_CANARY_RUNBOOK.md`.
