@@ -1,0 +1,160 @@
+{
+  "capturedAt": "2026-10-06T00:32:49+09:00",
+  "product": "ChatAgent Business — SMB Edition",
+  "targetRelease": "v1.1.0",
+  "canonicalRepo": "/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business",
+  "git": {
+    "branch": "feat/business-v1.1-bs0-validation",
+    "sourceHeadBeforeHandoffDocs": "f6f81999fbd69337b520883fc3c2e00da9668e0f",
+    "originMain": "0f03ee039a0ff7926377f86b140cc8bf7c9792ed",
+    "worktreeBeforeHandoffDocs": "CLEAN",
+    "draftPullRequest": {
+      "number": 6,
+      "state": "OPEN",
+      "draft": true,
+      "mergeState": "CLEAN",
+      "hostedCi": ["SUCCESS", "SUCCESS"]
+    }
+  },
+  "productionBaseline": {
+    "version": "1.0.0",
+    "status": "PRODUCTION_ACTIVE_V1.0.0",
+    "tag": "v1.0.0",
+    "commit": "d6373f8ffef4b3739134f4d14cc300918417553e",
+    "root": "/Users/macstudio/ChatAgentBusiness/production",
+    "mcp": {
+      "pid": 8871,
+      "listen": "127.0.0.1:31850",
+      "observed": "LISTENING"
+    },
+    "tunnel": {
+      "id": "tunnel_6abe54973cb48191a1c54c50ede05748",
+      "health": "live",
+      "ready": "ready",
+      "healthListen": "127.0.0.1:51950"
+    },
+    "launchAgentNote": "com.chatagent.business.server is a one-shot launcher and may report not running after exit 0 while the child MCP process remains alive/listening",
+    "continuity": {
+      "backend": "local SQLite v1",
+      "eventCount": 3,
+      "finalMigrationAllowedInBS0": false
+    }
+  },
+  "acceptedDesign": {
+    "path": "docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md",
+    "revision": "R5",
+    "status": "ACCEPTED DESIGN — R5 B-S0 LOCALLY VALIDATED / LIVE CANARY PENDING",
+    "northStar": "Personal-grade work freedom + Shared team memory + Distributed runtime + Existing organizational governance",
+    "collaborationDefault": "TEAM",
+    "collaborationException": "PRIVATE",
+    "executionDefault": "HOST_USER",
+    "executionOptional": "ISOLATED",
+    "toolCountConstrained": false,
+    "toolNamingPattern": "<domain>_<verb>_<object>",
+    "powerTool": "process_start_host",
+    "personalReuseFirst": true
+  },
+  "bs0": {
+    "phase": "B-S0",
+    "status": "LOCAL_VALIDATION_PASS_LIVE_CANARY_PENDING",
+    "localSuite": {
+      "status": "PASS",
+      "count": 9
+    },
+    "candidateToolCount": 39,
+    "candidateToolCountIsConstraint": false,
+    "goldenSelectionCaseCount": 28,
+    "testMatrixRecordCount": 34,
+    "personalDonor": {
+      "repo": "/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent-personal",
+      "tag": "v1.1.1",
+      "commit": "da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
+      "policy": "read-only primary donor for overlapping implementation/tests"
+    },
+    "safetyFallback": {
+      "armed": true,
+      "activated": false,
+      "trigger": "reproducible live ChatGPT safety/confirmation failure on legitimate workflows despite truthful focused semantic tools"
+    },
+    "pendingGates": [
+      "OPENAI_TOOL_ANNOTATION_SCAN",
+      "TOOL_SELECTION_GOLDEN_SET",
+      "OAUTH_MEMBER_IDENTITY_PATH",
+      "BUSINESS_V11_S0_ACCEPTED"
+    ],
+    "localFixture": {
+      "script": "scripts/business/v1.1/bs0-live-fixture-server.mjs",
+      "pid": 15273,
+      "listen": "127.0.0.1:31861",
+      "status": "RUNNING",
+      "effectModel": "NO_EFFECT"
+    },
+    "stagingTunnel": {
+      "created": false,
+      "recommendedName": "chatagent-business-v11-bs0",
+      "healthListen": "127.0.0.1:51961",
+      "healthListenerObserved": false,
+      "template": "docs/verification/v1.1/B_S0_TUNNEL_PROFILE_TEMPLATE.yaml"
+    }
+  },
+  "supabaseBs0Staging": {
+    "name": "chatagent-business-v1.1-bs0",
+    "projectRef": "dxofyjarkzizdzumfyul",
+    "region": "ap-northeast-2",
+    "status": "ACTIVE_HEALTHY",
+    "projectUrl": "https://dxofyjarkzizdzumfyul.supabase.co",
+    "consentEdgeFunction": {
+      "name": "bs0-oauth-consent",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "url": "https://dxofyjarkzizdzumfyul.supabase.co/functions/v1/bs0-oauth-consent"
+    },
+    "oauth": {
+      "serverEnabled": false,
+      "discoveryObserved": "HTTP 404 feature_disabled",
+      "siteUrlRequired": "https://dxofyjarkzizdzumfyul.supabase.co",
+      "authorizationPathRequired": "/functions/v1/bs0-oauth-consent",
+      "dynamicClientRegistrationRequiredForBs0": true,
+      "identityScopes": ["openid", "email", "profile"],
+      "customBusinessScopesAllowed": false
+    },
+    "jwks": {
+      "asymmetricSigningAvailable": true,
+      "algorithmObserved": "ES256"
+    },
+    "advisorsAtLastCheck": {
+      "securityFindings": 0,
+      "performanceFindings": 0
+    },
+    "personalSupabaseMustRemainUntouched": true
+  },
+  "nextActions": [
+    "Read-only reality check against actual repo and newer evidence",
+    "Enable OAuth 2.1 Server on the dedicated B-S0 Supabase project if still disabled",
+    "Enable Dynamic Client Registration for isolated B-S0 staging",
+    "Recheck OAuth discovery until feature_disabled is gone",
+    "Create a separate OpenAI Secure MCP tunnel named chatagent-business-v11-bs0",
+    "Instantiate isolated tunnel profile without exposing API key values",
+    "Verify staging tunnel health/ready on 51961",
+    "Create ChatGPT Draft/Developer Mode app against the staging tunnel",
+    "Scan and audit candidate tool descriptors/security metadata",
+    "Complete Supabase OAuth and call member_get_profile",
+    "Run all 28 golden selection cases and capture tool/args/confirmation/block/no-effect results",
+    "Activate Personal safety fallback only if live evidence satisfies the documented trigger",
+    "Close B-S0 only when all pending live gates pass"
+  ],
+  "hardInvariants": [
+    "Do not modify Business v1.0 production during B-S0",
+    "Do not repoint or reuse the production tunnel for B-S0",
+    "Do not move the v1.0.0 tag",
+    "Do not modify Personal/P8 without explicit authorization",
+    "Do not expose service-role/secret/runtime/admin key values in Git/chat/logs",
+    "Continuity is context, never host authority",
+    "Cloud logical project rows never grant arbitrary local paths or host execution",
+    "No tool-count target or cap",
+    "No broad destructive Git cleanup/reset",
+    "No production continuity migration in B-S0",
+    "Do not start B-S1 as accepted until the B-S0 live gates are PASS"
+  ]
+}

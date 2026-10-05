@@ -33,5 +33,29 @@
     "Developer Mode Scan Tools",
     "linked OAuth profile and member_get_profile call",
     "golden prompt selection/confirmation run"
-  ]
+  ],
+  "staging": {
+    "supabaseProject": {
+      "name": "chatagent-business-v1.1-bs0",
+      "ref": "dxofyjarkzizdzumfyul",
+      "region": "ap-northeast-2",
+      "status": "ACTIVE_HEALTHY"
+    },
+    "consentEdgeFunction": {
+      "name": "bs0-oauth-consent",
+      "status": "ACTIVE",
+      "verifyJwt": false
+    },
+    "oauthServer": "PENDING_DASHBOARD_ENABLEMENT",
+    "oauthDiscovery": "HTTP_404_FEATURE_DISABLED",
+    "openAiBs0Tunnel": "NOT_CREATED",
+    "localFixture": {
+      "status": "RUNNING",
+      "port": 31861
+    },
+    "localTunnelHealthPort": {
+      "port": 51961,
+      "status": "NOT_LISTENING"
+    }
+  }
 }

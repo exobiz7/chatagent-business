@@ -1,0 +1,186 @@
+You are taking over the ChatAgent Business — SMB Edition v1.1 project from a previous session.
+
+Do NOT trust this prompt as the final source of truth. First inspect the actual repository and current runtime state read-only. If a newer accepted/current-state/verification artifact exists than the paths below, use the newer evidence and do not redo already accepted work.
+
+CANONICAL BUSINESS REPO
+/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+
+EXPECTED HANDOFF STATE
+- branch: feat/business-v1.1-bs0-validation
+- source HEAD before handoff-document commits: f6f81999fbd69337b520883fc3c2e00da9668e0f
+- expect the actual branch HEAD to be newer because the handoff package itself is committed; verify it read-only
+- origin/main at handoff: 0f03ee039a0ff7926377f86b140cc8bf7c9792ed
+- Draft PR #6: OPEN / DRAFT / CLEAN / hosted CI SUCCESS
+- v1.0.0 tag: d6373f8ffef4b3739134f4d14cc300918417553e
+- production status: PRODUCTION_ACTIVE_V1.0.0
+- B-S0 status: LOCAL_VALIDATION_PASS_LIVE_CANARY_PENDING
+
+FIRST: READ THESE IN ORDER
+1. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md
+2. docs/verification/v1.1/B_S0_VERIFICATION_REPORT_20261005.md
+3. docs/verification/v1.1/B_S0_GATE_STATE_20261005.json
+4. docs/verification/v1.1/B_S0_LIVE_CANARY_RUNBOOK.md
+5. docs/verification/v1.1/B_S0_TOOL_CONTRACT_CANDIDATE.json
+6. docs/verification/v1.1/B_S0_TOOL_SELECTION_GOLDEN_SET.json
+7. docs/verification/v1.1/B_S0_SUPABASE_SCHEMA_RPC_CONTRACT.json
+8. docs/verification/v1.1/B_S0_TEST_MATRIX.json
+9. docs/verification/v1.1/B_S0_PERSONAL_DONOR_MANIFEST.json
+10. docs/verification/v1.1/B_S0_TUNNEL_PROFILE_TEMPLATE.yaml
+11. docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_SESSION_CONTINUITY_HANDOFF_20261006.md
+12. docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CURRENT_STATE_20261006.json
+13. docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_PACKAGE_INDEX_20261006.md
+
+THEN READ THE V1.0 BASELINE/PRODUCT DOCS AS NEEDED
+- docs/product/CHATAGENT_BUSINESS_PRODUCT_SPECIFICATION_v1.0.0.md
+- docs/manual/CHATAGENT_BUSINESS_USER_MANUAL_v1.0.0.md
+- docs/release/CHATAGENT_BUSINESS_RELEASE_v1.0.0.md
+- docs/approved/CHATAGENT_BUSINESS_ACCEPTED_BASELINE_v0.1.md
+
+BEFORE MUTATING ANYTHING, VERIFY READ-ONLY
+- git branch --show-current
+- git rev-parse HEAD
+- git rev-parse origin/main
+- git status --porcelain
+- git rev-parse v1.0.0^{commit}
+- gh pr view 6 and hosted CI status
+- production PID/listener on 127.0.0.1:31850
+- production tunnel health 127.0.0.1:51950/healthz and readyz
+- B-S0 local fixture on 127.0.0.1:31861
+- B-S0 tunnel health port 51961 should still be absent until the new staging tunnel is created
+- Supabase B-S0 OAuth discovery state
+
+PRODUCT NORTH STAR — DO NOT REGRESS
+ChatAgent Business v1.1 is not a more restricted Personal.
+
+Target:
+Personal-grade work freedom + shared team memory + distributed runtime + existing organizational governance.
+
+Default collaboration mode is TEAM, with the broad sharing level previously called TEAM_EXTENDED. PRIVATE is only an explicit sensitive-project exception.
+
+Approved PERSONAL_NODEs are first-class BYOD/remote-work nodes. HOST_USER is the normal mode for the node owner. SHARED_NODE supports team workflows, but generic process_start_host is default-off there unless ADMIN explicitly approves broad shared host authority for the underlying OS account.
+
+TOOL DESIGN
+There is NO minimum or maximum tool count. Tool count is an output of use-case decomposition, never an input constraint.
+
+Use focused tools with names:
+<domain>_<verb>_<object>
+
+Current B-S0 candidate contains 39 tools only as the current decomposition result. Do not preserve 39 for its own sake.
+
+process_start_host is a power-tool / escape hatch. When a focused semantic tool covers the user intent, prefer it.
+
+Do not recombine focused Git actions into ambiguous umbrella tools just to reduce count.
+
+REUSE-FIRST MANDATE
+Personal v1.1.1 tag da391bf9c38697d706049b3b5d7bd2c2ba4ba28e is the primary donor for overlapping functionality.
+
+Before coding classify each capability:
+REUSE_AS_IS / ADAPT_THINLY / BUSINESS_NEW / DO_NOT_EXPOSE.
+
+Default overlapping capability to REUSE_AS_IS or ADAPT_THINLY.
+Do not build a second implementation first and compare afterward.
+Reuse tests/evidence together with code.
+
+Important Personal donors include semantic create/replace, HostFileOps, DurableHostProcesses, Keychain/Auth session, Supabase store retry/CAS/idempotency, sensitive-text guard, task/context/search patterns, encrypted logical backup, and safety annotation lessons.
+
+OPENAI SAFETY STRATEGY
+Primary: focused semantic tools + truthful metadata + generic host exec as escape hatch.
+Do not bypass platform safety.
+
+Fallback is armed but NOT activated. Activate only if live ChatGPT canary shows reproducible legitimate-workflow blocking despite truthful focused tools. If triggered, reuse the already validated Personal public tool/description/schema/annotation pattern for the affected capability rather than inventing another abstraction.
+
+B-S0 ALREADY COMPLETED LOCALLY
+- local validation suite: PASS count=9
+- candidate focused tools: 39
+- golden selection cases: 28
+- B-S0..B-S6 test matrix records: 34
+- Personal donor freeze: PASS
+- naming/schema/annotation probe: PASS
+- node routing/mapping/lease/shared-node-host boundaries: PASS
+- OpenAI securitySchemes wire adapter probe: PASS
+- hosted Business CI: PASS
+- Draft PR #6 hosted CI: PASS
+
+Do NOT restart B-S0 local architecture work without new evidence.
+
+IMPORTANT B-S0 FINDINGS ALREADY ACCEPTED
+- clone != local project map; use git_clone_repository separately from runtime_map_project/runtime_unmap_project
+- TEAM cloud continuity must use Personal sensitive-text rejection before persistence
+- cloud project rows never grant host authority
+- degraded operation uses bounded authorization lease; expiry/revocation fails closed
+- SHARED_NODE generic host power default-off unless explicit ADMIN opt-in
+- Supabase OAuth custom business.* scopes are NOT supported; use standard openid email profile and enforce Business authority with RLS/server/local policy
+- Secure MCP Tunnel is transport, not N-node routing; Gateway + outbound Node Relay remains the distributed routing direction
+- current SDK does not naturally emit OpenAI top-level securitySchemes, so the minimal tools/list descriptor adapter is the accepted B-S0 direction pending live scan
+
+CURRENT SUPABASE B-S0 STAGING
+- name: chatagent-business-v1.1-bs0
+- ref: dxofyjarkzizdzumfyul
+- region: ap-northeast-2
+- status: ACTIVE_HEALTHY
+- URL: https://dxofyjarkzizdzumfyul.supabase.co
+- consent Edge Function: bs0-oauth-consent ACTIVE
+- consent URL: https://dxofyjarkzizdzumfyul.supabase.co/functions/v1/bs0-oauth-consent
+- ES256 JWKS key is available
+- security advisor: 0 findings at last check
+- performance advisor: 0 findings at last check
+- OAuth Server at handoff: DISABLED; discovery returned HTTP 404 feature_disabled
+
+DO NOT TOUCH THE PERSONAL SUPABASE PROJECT.
+
+NEXT WORK STARTS HERE — LIVE B-S0 CANARY
+1. Enable Supabase OAuth Server in the B-S0 staging project if still disabled.
+   - Site URL: https://dxofyjarkzizdzumfyul.supabase.co
+   - Authorization Path: /functions/v1/bs0-oauth-consent
+   - Dynamic Client Registration: ON for this isolated B-S0 staging project
+   - scopes: openid email profile only
+2. Verify OAuth discovery is now live.
+3. Create a separate OpenAI Secure MCP tunnel named chatagent-business-v11-bs0.
+4. Never repoint/reuse production tunnel tunnel_6abe54973cb48191a1c54c50ede05748.
+5. Use docs/verification/v1.1/B_S0_TUNNEL_PROFILE_TEMPLATE.yaml.
+6. Do not print/copy runtime/admin API keys into chat/logs.
+7. Start isolated staging tunnel and verify health/ready on 51961.
+8. Create ChatGPT Draft/Developer Mode app against the B-S0 tunnel.
+9. Scan Tools and verify descriptors/security metadata.
+10. Complete Supabase OAuth sign-in/consent.
+11. Call member_get_profile and verify stable opaque identity from validated OAuth credentials.
+12. Execute all 28 golden selection cases and record selected tool, args, confirmation/block behavior, no-effect result.
+13. Treat unnecessary process_start_host selection as failure when a semantic tool exists unless evidence supports an exception.
+14. Trigger Personal safety fallback only on reproducible live evidence.
+15. Close B-S0 only when all are PASS:
+    OPENAI_TOOL_ANNOTATION_SCAN
+    TOOL_SELECTION_GOLDEN_SET
+    OAUTH_MEMBER_IDENTITY_PATH
+    BUSINESS_V11_S0_ACCEPTED
+
+CURRENT LOCAL LIVE FIXTURE
+- effect-free fixture is running at handoff
+- PID 15273
+- 127.0.0.1:31861 LISTENING
+- 127.0.0.1:51961 NOT LISTENING because B-S0 tunnel is not created/running yet
+
+PRODUCTION V1.0 — DO NOT DISTURB
+- root: /Users/macstudio/ChatAgentBusiness/production
+- actual MCP PID at handoff: 8871
+- 127.0.0.1:31850 LISTENING
+- production tunnel health: live
+- production tunnel ready: ready
+- production tunnel ID: tunnel_6abe54973cb48191a1c54c50ede05748
+- note: com.chatagent.business.server LaunchAgent is a one-shot launcher and may show not running even while child MCP PID 8871 is healthy/listening; do not diagnose downtime from LaunchAgent state alone.
+
+HARD RULES
+- keep v1.0 production frozen through B-S0
+- keep PR #6 Draft until B-S0 live acceptance
+- do not move v1.0.0 tag
+- do not modify Personal/P8 unless explicitly requested
+- no service_role/secret keys in runtime, Git, chat, or logs
+- no broad destructive git cleanup/reset
+- no production SQLite migration in B-S0
+- no dual-master/offline replay design unless separately accepted
+- continuity is context, never host authority
+- tool count is never a constraint
+
+AFTER B-S0 ONLY
+Proceed through B-S1 Cloud Foundation/Identity/Nodes -> B-S2 TEAM Continuity/Search -> B-S3 Distributed Runtime/Semantic Effects -> B-S4 Migration/Backup/Ops rehearsal -> B-S5 real multi-node/safety/failure E2E -> B-S6 single-cutover production release.
+
+When you start, first report the read-only reality check and any drift from this handoff. Then continue from the latest actual accepted state. Do not ask me to repeat information that is already in these files.

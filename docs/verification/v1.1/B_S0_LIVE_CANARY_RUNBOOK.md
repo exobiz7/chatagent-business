@@ -1,15 +1,15 @@
 # ChatAgent Business v1.1 — B-S0 Live Canary Runbook
 
-Status: PREPARED / external resources not yet provisioned.
+Status: STAGING SUPABASE PROVISIONED / OAUTH SERVER + OPENAI TUNNEL LIVE CANARY PENDING.
 
 This canary is deliberately separate from Business v1.0 production and ChatAgent Personal.
 
 ## Required external resources
 
-1. A dedicated Business B-S0 Supabase project in a user-confirmed Supabase organization.
-2. Supabase OAuth 2.1 enabled with an authorization/consent flow and dynamic client registration as required by the ChatGPT MCP client.
-3. A dedicated OpenAI Secure MCP tunnel ID, separate from `chatagent-business` production.
-4. A Draft/Developer Mode ChatGPT app pointed at the B-S0 tunnel.
+1. **PROVISIONED** — dedicated Business B-S0 Supabase project `dxofyjarkzizdzumfyul` in `ap-northeast-2`.
+2. **PARTIAL** — consent Edge Function is ACTIVE, but Supabase OAuth 2.1 Server and Dynamic Client Registration still need Dashboard enablement.
+3. **PENDING** — a dedicated OpenAI Secure MCP tunnel ID, separate from `chatagent-business` production.
+4. **PENDING** — a Draft/Developer Mode ChatGPT app pointed at the B-S0 tunnel.
 
 Do not repoint or reuse the production v1.0 tunnel for this validation.
 Do not modify or branch the Personal Supabase project for this validation.

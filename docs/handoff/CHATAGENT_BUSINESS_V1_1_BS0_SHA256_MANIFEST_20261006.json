@@ -1,0 +1,82 @@
+{
+  "package": "CHATAGENT_BUSINESS_V1_1_BS0_SESSION_HANDOFF_20261006",
+  "generatedAt": "2026-10-06T00:32:49+09:00",
+  "authority": "Repository current state wins over this snapshot if newer accepted evidence exists.",
+  "files": [
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_SESSION_CONTINUITY_HANDOFF_20261006.md",
+      "sha256": "5fb659a423b8c1ad16ac2e513d858dfbf4dcf1d794c5a05ad432b1b8afeec8f7",
+      "bytes": 22676
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_SESSION_BOOTSTRAP_PROMPT_20261006.txt",
+      "sha256": "6a81daf4d5159ecc21ce2ca154108380c3df4cfb6f8c0ec3c42c19e8aeb6025b",
+      "bytes": 10040
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CURRENT_STATE_20261006.json",
+      "sha256": "bf464a36cb48621b37746fe4c6ceffc9ab9b8a1dbf127599e3cef7ddcdb8d284",
+      "bytes": 6274
+    },
+    {
+      "path": "docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md",
+      "sha256": "05db058c75c9b6bab33c0f40fffb933940379242f9b65b9b09e9a0ca90e21246",
+      "bytes": 72692
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_VERIFICATION_REPORT_20261005.md",
+      "sha256": "6d25c91abefdc2f5eb8f658f43c5854a3a0541fae019e648b1cc7fb482060b2e",
+      "bytes": 9698
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_GATE_STATE_20261005.json",
+      "sha256": "a39957c2802b4a49a704bedd6e7779ea7af74091615c3854f69e38c2c82542f1",
+      "bytes": 2198
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_LIVE_CANARY_RUNBOOK.md",
+      "sha256": "57046608938971862af41c47fb5d69022309ef9cfddd46ae6fbd9f3d352705e5",
+      "bytes": 4178
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TOOL_CONTRACT_CANDIDATE.json",
+      "sha256": "dafec447362045078184e216323f461f56b8b0d88754d479d4e0b41982279869",
+      "bytes": 10152
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TOOL_SELECTION_GOLDEN_SET.json",
+      "sha256": "c0059596e38d51538059f39e665f559f3c437a46ed5dbb0ba1f63991f5da1cf4",
+      "bytes": 6394
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_SUPABASE_SCHEMA_RPC_CONTRACT.json",
+      "sha256": "4b4dd04a78cef6295428d8999aa9dd28de4bc660fba0262baa4b3bcadc6357fd",
+      "bytes": 2050
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TEST_MATRIX.json",
+      "sha256": "419a0d35e776c77e4e16e5a86606fd15f4d52e8da835d30bccb4ec0ce9082866",
+      "bytes": 5932
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_PERSONAL_DONOR_MANIFEST.json",
+      "sha256": "4273b84f1ef42db8a3d700df4fa570a8a00c4ad2ba71a3c027892445b74a7daa",
+      "bytes": 2416
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TUNNEL_PROFILE_TEMPLATE.yaml",
+      "sha256": "9be27100166855a6ebacaddec1d0def5cc96f627655528bfd85faad79495914e",
+      "bytes": 630
+    },
+    {
+      "path": "scripts/business/v1.1/bs0-live-fixture-server.mjs",
+      "sha256": "f25aa4a2c0306f154eb4d2285e29413e022921240be33c9b172af4060532bc2f",
+      "bytes": 4987
+    },
+    {
+      "path": "scripts/business/v1.1/bs0-local-validation-suite.mjs",
+      "sha256": "726172c0fe07b1bb15af71805796ba9634444a01a7ec9bef856dfe3dc046b5d5",
+      "bytes": 656
+    }
+  ]
+}
