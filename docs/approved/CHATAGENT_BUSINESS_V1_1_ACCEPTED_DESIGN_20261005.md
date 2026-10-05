@@ -3,6 +3,7 @@
 > Product: **ChatAgent Business — SMB Edition**
 > Target release: **v1.1.0**
 > Design status: **ACCEPTED DESIGN**
+> Design revision: **R2 — use-case-driven tool contract / reuse-first refinement**
 > Date: **2026-10-05 KST**
 > Baseline production: **v1.0.0 / PRODUCTION_ACTIVE_V1.0.0**
 > Baseline release tag: `v1.0.0`
@@ -68,7 +69,7 @@ Security is provided primarily by explicit trust boundaries, truthful tool seman
 | Default development network | Normal host network under `HOST_USER` |
 | Generic host exec | Retained as a power-tool / escape hatch |
 | Common operations | Exposed through semantic tools with accurate risk annotations |
-| Public MCP primary contract | 25-tool candidate contract defined below |
+| Public MCP tool contract | Use-case-driven focused semantic tools; **no minimum or maximum tool-count constraint** |
 | Search | `continuity_search` added |
 | OpenAI safety | Tool annotations/descriptions must match real effects; no attempt to bypass platform safety |
 | Safety fallback | If the semantic design still causes platform safety blocking, reuse the already validated Personal tool/annotation structure as the next implementation path |
@@ -84,7 +85,7 @@ Security is provided primarily by explicit trust boundaries, truthful tool seman
                               |
                               v
                     Business MCP Gateway
-                    25-tool semantic surface
+                    Focused semantic MCP surface
                               |
              +----------------+----------------+
              |                                 |
@@ -475,196 +476,430 @@ It is a **source/behavior reuse strategy** for already validated safety-compatib
 
 ---
 
-## 14. Primary 25-tool MCP contract
+## 14. Tool contract design rules — naming, scope and count
 
-The following 25-tool contract is the accepted primary contract for implementation and safety validation.
+The public MCP tool surface is **not constrained by a target tool count**.
 
-It may only change under documented evidence from the Safety Compatibility Fallback or a later accepted design amendment.
+There is no architectural requirement to have 17, 18, 25, 30, 40, 100, or any other fixed number of tools.
 
-### 14.1 Status — 1
+> **Tool count is an output of use-case decomposition, never an input constraint.**
 
-1. `business_status`
+The governing rule is:
 
-### 14.2 Filesystem — 10
+> Implement the capabilities required by the product goals and real user workflows. Split distinct actions into focused tools when doing so improves model selection, permission clarity, safety classification, confirmation behavior, or recoverability. Add or remove tools whenever the use-case design requires it.
 
-2. `list_directory`
-3. `stat_path`
-4. `read_file`
-5. `hash_file`
-6. `make_directory`
-7. `create_file`
-8. `replace_file`
-9. `apply_patch`
-10. `move_path`
-11. `delete_path`
+This follows the OpenAI tool-design principle that distinct operations should be separated when they have different permissions, safety risks, or confirmation requirements.
 
-### 14.3 Team Continuity — 6
+### 14.1 Naming convention — fixed
 
-12. `continuity_open`
-13. `continuity_start_task`
-14. `continuity_checkpoint`
-15. `continuity_prepare_handoff`
-16. `continuity_complete_task`
-17. `continuity_search`
+Public Business MCP tool names use:
 
-### 14.4 Execution — 4
+```text
+<domain>_<verb>_<object>
+```
 
-18. `exec_host_start`
-19. `exec_isolated_start`
-20. `read_process`
-21. `terminate_process`
+Examples:
 
-### 14.5 Git — 4
+```text
+fs_read_file
+git_create_commit
+continuity_search_history
+process_start_host
+github_create_pull_request
+```
 
-22. `git_inspect`
-23. `git_prepare`
-24. `git_sync`
-25. `git_publish`
+Names must be:
+
+- stable;
+- action-oriented;
+- specific;
+- plain-language;
+- unique within the server;
+- descriptive of exactly one coherent action;
+- free of unexplained internal jargon.
+
+Avoid ambiguous umbrella verbs such as:
+
+```text
+inspect
+prepare
+sync
+publish
+open
+manage
+handle
+operate
+```
+
+when the actual action can be named explicitly.
+
+### 14.2 Preferred verb vocabulary
+
+Prefer a small consistent vocabulary where it accurately fits:
+
+```text
+get
+list
+read
+search
+create
+replace
+patch
+move
+copy
+delete
+start
+add
+complete
+prepare
+terminate
+stage
+commit
+fetch
+pull
+push
+```
+
+A different verb is allowed when it is materially more precise.
+
+### 14.3 Descriptions must define positive and negative boundaries
+
+A tool description must state:
+
+1. what user goal it serves;
+2. when to use it;
+3. important preconditions;
+4. relevant side effects;
+5. how it differs from similar tools;
+6. when **not** to use it and which tool to use instead.
+
+Example:
+
+```text
+fs_replace_file
+
+Use when the user wants to replace the contents of one existing regular file
+and the current SHA-256 is known.
+
+Do not use to create a missing file; use fs_create_file.
+Do not use to move or delete a path.
+```
+
+### 14.4 Input schemas must expose the semantic action
+
+Do not hide materially different operations behind one `mode` field merely to reduce tool count.
+
+Bad pattern:
+
+```text
+git_action(mode = status | commit | fetch | push | reset | ...)
+```
+
+Preferred pattern:
+
+```text
+git_get_status
+git_create_commit
+git_fetch_remote
+git_push_branch
+```
+
+The same rule applies when permissions, safety risk, confirmation requirements, or external side effects differ.
+
+### 14.5 Initial semantic capability inventory — not a fixed-count contract
+
+The following names are the current **initial implementation inventory**. It is explicitly not a fixed-size contract. B-S0 use-case/evaluation work may add, remove, split, or consolidate tools when evidence supports the change.
+
+#### Business/status
+
+```text
+business_get_status
+```
+
+#### Filesystem
+
+```text
+fs_list_directory
+fs_get_path_info
+fs_read_file
+fs_get_file_hash
+fs_create_directory
+fs_create_file
+fs_replace_file
+fs_patch_file
+fs_move_path
+fs_delete_path
+```
+
+Additional focused file operations such as safe copy or large async hash/copy jobs should be added when the supported use cases require them; they must not be forced through generic host execution merely to keep the surface small.
+
+#### Team Continuity
+
+```text
+continuity_get_context
+continuity_start_task
+continuity_add_checkpoint
+continuity_prepare_handoff
+continuity_complete_task
+continuity_search_history
+```
+
+#### Process / execution
+
+```text
+process_start_host
+process_start_isolated
+process_get_status
+process_read_output
+process_terminate
+```
+
+#### Git / GitHub
+
+```text
+git_get_status
+git_get_diff
+git_get_history
+git_list_branches
+git_create_branch
+git_switch_branch
+git_stage_files
+git_create_commit
+git_fetch_remote
+git_pull_ff_only
+git_push_branch
+github_create_pull_request
+```
+
+Further focused Git/GitHub tools may be added if a real supported workflow requires them, for example PR lookup/update or remote-branch operations. They should be added because of a user goal, not because a target tool count has room available.
+
+### 14.6 Tool-selection evaluation is part of the contract
+
+B-S0 must maintain a golden prompt set covering:
+
+- direct requests;
+- indirect requests;
+- ambiguous requests;
+- negative/counterfactual requests;
+- similar-tool boundaries;
+- semantic-tool versus power-tool selection.
+
+Representative expectations:
+
+| User intent | Expected semantic tool/path |
+| --- | --- |
+| Read README | `fs_read_file` |
+| Show working-tree state | `git_get_status` |
+| Show exact changes | `git_get_diff` |
+| Create feature branch | `git_create_branch` |
+| Stage selected files | `git_stage_files` |
+| Commit staged changes | `git_create_commit` |
+| Fetch remote state | `git_fetch_remote` |
+| Fast-forward pull | `git_pull_ff_only` |
+| Push branch | `git_push_branch` |
+| Create PR | `github_create_pull_request` |
+| Show recent project context | `continuity_get_context` |
+| Search old project decisions/history | `continuity_search_history` |
+| Run `npm test` | `process_start_host` |
+| Delete one approved project file | `fs_delete_path` |
+
+A semantic tool existing for an operation but the model unnecessarily choosing `process_start_host` is normally a selection failure.
+
+No numeric target for tool count is used as an evaluation metric.
 
 ---
 
-## 15. Tool annotation matrix
+## 15. Tool annotations — behavior first
 
-The actual implementation must test the exact MCP annotations returned by `tools/list`.
+Every published MCP tool must return explicit, truthful annotations matching its real behavior.
 
-Primary intended classification:
+The exact matrix is derived per focused tool from these rules:
 
-| Tool class | readOnlyHint | destructiveHint | openWorldHint |
+- `readOnlyHint=true` only if the tool cannot modify state;
+- `destructiveHint=true` if it can delete, overwrite, revoke, irreversibly mutate, or otherwise cause difficult-to-reverse effects;
+- `openWorldHint=true` when the tool accesses public/open-ended external entities or performs outward actions such as code push/public submission;
+- `idempotentHint` may be used only where repeated identical calls have no additional effect.
+
+Representative intended classes:
+
+| Tool/example | readOnly | destructive | openWorld |
 | --- | ---: | ---: | ---: |
-| `business_status` | true | false | false |
-| list/stat/read/hash | true | false | false |
-| make_directory/create_file | false | false | false |
-| move_path | false | false | false |
-| replace_file/apply_patch/delete_path | false | true | false |
-| continuity_open/search/prepare_handoff | true | false | false |
-| continuity_start_task/checkpoint | false | false | false |
-| continuity_complete_task | false | true | false |
-| exec_host_start | false | true | true |
-| exec_isolated_start | false | true | false |
-| read_process | true | false | false |
-| terminate_process | false | true | false |
-| git_inspect | true | false | false |
-| git_prepare | false | false | false |
-| git_sync | false | false | true |
-| git_publish | false | false | true |
+| `business_get_status` | true | false | false |
+| `fs_read_file` / `fs_get_file_hash` | true | false | false |
+| `fs_create_file` / `fs_create_directory` | false | false | false |
+| `fs_move_path` | false | false | false |
+| `fs_replace_file` / `fs_patch_file` / `fs_delete_path` | false | true | false |
+| `continuity_get_context` / `continuity_search_history` / `continuity_prepare_handoff` | true | false | false |
+| `continuity_start_task` / `continuity_add_checkpoint` | false | false | false |
+| `continuity_complete_task` | false | true | false |
+| `process_start_host` | false | true | true |
+| `process_start_isolated` | false | true | false |
+| `process_get_status` / `process_read_output` | true | false | false |
+| `process_terminate` | false | true | false |
+| Git read tools | true | false | false unless the implementation actually needs open-world access |
+| local Git mutation tools | false | false | false |
+| `git_fetch_remote` / `git_pull_ff_only` | false | false | true |
+| `git_push_branch` / `github_create_pull_request` | false | false | true |
 
-Annotations are not a substitute for server-side authorization.
-
-If real implementation semantics differ, annotations must change to match reality rather than being lowered to reduce confirmation friction.
+If implementation behavior differs from the table, annotations change to match reality. Risk hints must never be lowered solely to reduce confirmation friction.
 
 ---
 
-## 16. Filesystem semantic tools
+## 16. Reuse-first implementation contract — Personal is the primary donor
 
-Semantic file tools exist to keep common effects explicit and lower-friction.
+ChatAgent Personal v1.1.1 is not merely a conceptual reference. For overlapping capabilities it is the **primary source donor and behavioral baseline**.
 
-### 16.1 `move_path`
+Personal v1.1.1 release profile has already validated a 33-tool operational surface, including semantic create/replace, durable host process behavior, process lifecycle operations, async copy/hash paths, and seven Supabase Personal Memory tools.
 
-Accepted contract:
+Business must not reimplement equivalent behavior from scratch unless there is a documented Business-specific reason.
 
-- one source path;
-- one destination path;
+### 16.1 Reuse rule
+
+For every Business capability, implementation must classify it before coding:
+
+```text
+REUSE_AS_IS
+ADAPT_THINLY
+BUSINESS_NEW
+DO_NOT_EXPOSE
+```
+
+The default for an overlapping Personal capability is `REUSE_AS_IS` or `ADAPT_THINLY`, not `BUSINESS_NEW`.
+
+### 16.2 Primary reuse matrix
+
+| Personal v1.1.1 donor | Business semantic surface | Reuse decision |
+| --- | --- | --- |
+| `HostFileOps` list/read/stat/hash | `fs_list_directory`, `fs_get_path_info`, `fs_read_file`, `fs_get_file_hash` | **ADAPT_THINLY** — preserve file behavior; add Business node/project authority |
+| `local_create_file` + native create boundary | `fs_create_file` | **REUSE_AS_IS internally / rename publicly** |
+| `local_replace_file` + native CAS replace | `fs_replace_file` | **REUSE_AS_IS internally / rename publicly** |
+| Personal exact mutation/audit semantics | `fs_patch_file` and other semantic file mutation | **REUSE primitives**, Business-specific wrapper as needed |
+| Personal async copy implementation/tests | future Business safe-copy tools if required | **REUSE_AS_IS/ADAPT**, do not rebuild large-copy engine |
+| Personal async hash implementation/tests | future Business async-hash tools if required | **REUSE_AS_IS/ADAPT** |
+| `DurableHostProcesses` | `process_start_host`, `process_get_status`, `process_read_output`, `process_terminate` | **REUSE core implementation**; add member/node/project/risk adapters |
+| Personal `local_exec_start` metadata/annotation lessons | `process_start_host` | **REUSE behavioral/safety baseline**, improve Business public naming |
+| Personal memory auth/session/Keychain runtime | Business Supabase auth/runtime | **REUSE_AS_IS where semantics match** |
+| `SupabasePersonalMemoryStore` RPC/retry/error pattern | Business continuity store | **ADAPT_THINLY** for organization/member/project schemas |
+| Personal task start/checkpoint/complete | Business continuity task mutations | **ADAPT_THINLY**; retain transaction/idempotency/CAS structure |
+| Personal task/context/search reads | `continuity_get_context`, `continuity_search_history` | **ADAPT_THINLY** for TEAM/PRIVATE and Business fields |
+| Personal encrypted logical backup/Keychain patterns | Business continuity backup | **REUSE_AS_IS/ADAPT** |
+| Personal access request/check model | node enrollment/admin flows where useful | **REUSE concepts/components**, not automatically the same public tools |
+| Personal scratch/test-only tools | Business production public surface | **DO_NOT_EXPOSE by default** unless a Business use case requires them |
+| Personal legacy umbrella write/copy variants hidden from release profile | Business public surface | **DO_NOT_REINTRODUCE** merely for compatibility |
+
+### 16.3 What must remain Business-specific
+
+The following are `BUSINESS_NEW` or substantial adaptations because Personal does not provide the same product semantics:
+
+- organization/member roles;
+- `PERSONAL_NODE` / `SHARED_NODE` ownership and routing;
+- TEAM / PRIVATE collaboration;
+- N-node distributed runtime routing;
+- logical project identity across different local paths;
+- Business decisions/facts/artifacts continuity fields;
+- Business context digest and handoff semantics;
+- local Business audit + cloud continuity event separation;
+- member-to-node binding;
+- Gateway/Relay when required;
+- Business-specific Git/GitHub semantic tools where Personal has only generic host execution.
+
+### 16.4 Reuse must include tests, not only code
+
+When a Personal component is reused:
+
+1. port/copy the proven implementation into the Business repository;
+2. port the relevant Personal unit/integration/safety tests first;
+3. prove equivalent behavior before adding Business wrappers;
+4. add Business-specific authorization/routing tests;
+5. keep Personal as a read-only donor/reference, not a runtime dependency.
+
+Do not write a second implementation and then compare it to Personal afterward.
+
+### 16.5 Public renaming versus proven safety metadata
+
+Business may expose clearer public names such as `fs_replace_file` or `process_start_host` while preserving the Personal implementation and semantic boundaries.
+
+Because names/descriptions also affect model selection, renamed Business tools require golden selection and real ChatGPT safety canaries.
+
+If the renamed semantic surface still causes reproducible OpenAI host blocking or unusable confirmation behavior, the Safety Compatibility Fallback may restore the already validated Personal public name/description/schema/annotation pattern for the affected capability rather than inventing another new abstraction.
+
+---
+
+## 17. Focused semantic operations
+
+### 17.1 Filesystem
+
+Common file actions are exposed directly rather than hidden inside host execution.
+
+`fs_move_path`:
+
+- one source and one destination;
 - same approved node/workspace boundary;
-- destination must not already exist unless a future explicit replace contract is added;
-- no hidden delete/overwrite;
-- source identity/precondition should be validated where practical;
+- destination overwrite forbidden unless a separate explicit replace contract exists;
 - symlink/root escape denied;
 - operation audited.
 
-Because ordinary move/rename does not destroy data when destination overwrite is forbidden, its primary classification is non-destructive.
+`fs_delete_path`:
 
-### 16.2 `delete_path`
+- approved project/workspace path only;
+- destructive annotation;
+- bounded impact checks;
+- no ordinary silent recursive mass deletion;
+- workspace/repository-scale deletion is HIGH_IMPACT.
 
-Accepted contract:
+`fs_replace_file` and `fs_patch_file` retain exact precondition/fail-closed semantics. `UNCERTAIN` is never converted into optimistic success or blind retry.
 
-- only an approved project/workspace path;
-- no arbitrary host-root target from a shared node;
-- bounded target type/impact checks;
-- destructive annotation required;
-- high-impact bulk/workspace deletion requires explicit confirmation/policy handling;
-- no silent recursive mass deletion as an ordinary path operation.
+### 17.2 Git / GitHub
 
-Deleting an ordinary tracked project file is a normal development capability, but it must still be semantically visible as destructive.
+Git/GitHub actions are split by real user intent rather than umbrella modes.
 
-### 16.3 Safe Replace remains
+Read operations:
 
-`replace_file` and `apply_patch` retain exact precondition/fail-closed semantics.
+```text
+git_get_status
+git_get_diff
+git_get_history
+git_list_branches
+```
 
-`UNCERTAIN` must never be converted into optimistic success or blind retry.
+Local mutation operations:
 
----
+```text
+git_create_branch
+git_switch_branch
+git_stage_files
+git_create_commit
+```
 
-## 17. Git semantic tools
+Remote synchronization/publication:
 
-Git should be a first-class Business workflow rather than a forbidden side effect.
+```text
+git_fetch_remote
+git_pull_ff_only
+git_push_branch
+github_create_pull_request
+```
 
-The design intentionally relies on Git/GitHub for code history, review and integration governance instead of recreating those systems inside ChatAgent.
+Normal semantic tools do not provide:
 
-### 17.1 `git_inspect`
-
-Read-only operations such as:
-
-- status;
-- diff;
-- log;
-- branch state;
-- remote metadata;
-- commit/object inspection.
-
-No mutation.
-
-### 17.2 `git_prepare`
-
-Normal local preparation operations such as:
-
-- create/switch branch;
-- stage paths;
-- commit;
-- normal local branch preparation.
-
-Excluded from ordinary semantic behavior:
-
-- `reset --hard`;
-- `clean -fdx`;
-- force branch deletion where work may be lost;
-- history rewrite.
-
-### 17.3 `git_sync`
-
-Normal synchronization such as:
-
-- fetch;
-- safe pull / fast-forward synchronization;
-- remote state refresh.
-
-No force/reset semantics.
-
-### 17.4 `git_publish`
-
-Normal outward publication such as:
-
-- push current/selected branch;
-- create/update PR through approved GitHub tooling when supported.
-
-Excluded:
-
+- `git reset --hard`;
+- `git clean -fdx`;
 - force push;
-- remote branch deletion;
-- tag deletion;
-- remote rewrite;
-- bypass of protected branch / required review / CI.
+- remote branch destructive deletion;
+- shared-history rewrite;
+- branch-protection bypass.
 
-If GitHub rejects an operation, ChatAgent does not bypass the rejection.
+Those are either HIGH_IMPACT power-tool operations requiring explicit intent/approval or HARD_DENY when they would bypass external authorization.
 
 ---
 
-## 18. Generic host exec as power tool
+## 18. Generic host exec as power tool / escape hatch
 
-`exec_host_start` is retained because semantic tools cannot and should not model every developer CLI operation.
+`process_start_host` is retained because semantic tools cannot and should not model every developer CLI operation.
 
-It is deliberately the broad power tool.
+It is deliberately the broad power tool rather than the preferred route for operations already represented semantically.
 
-Preferred input shape should follow the proven Personal model:
+Preferred input shape follows the proven Personal model:
 
 ```text
 executable
@@ -676,34 +911,36 @@ idempotencyKey
 
 rather than an opaque raw shell string whenever practical.
 
-This enables clearer server-side reasoning about:
+This preserves the Personal durable-process implementation while allowing Business to add member/node/project/risk checks around it.
 
-- executable identity;
-- cwd;
-- Git subcommands;
-- known semantic equivalents;
-- high-impact command patterns.
-
-Shell interpreters such as `/bin/zsh -c ...` may remain available as an escape hatch, but they inherit the broad destructive/open-world risk class.
+Shell interpreters such as `/bin/zsh -c ...` may remain available as an escape hatch, but inherit the broad destructive/open-world risk class.
 
 ### 18.1 Semantic-tool preference
 
-If a requested operation is directly represented by a semantic tool, the normal routing preference is the semantic tool.
+When a focused semantic tool directly represents the requested action, the normal model/tool-routing preference is that semantic tool.
 
 Examples:
 
 ```text
-git status           -> git_inspect
-git commit           -> git_prepare
-git fetch            -> git_sync
-git push             -> git_publish
-simple file rename   -> move_path
-simple file deletion -> delete_path
+git status              -> git_get_status
+git diff                -> git_get_diff
+git commit              -> git_create_commit
+git fetch               -> git_fetch_remote
+git pull --ff-only      -> git_pull_ff_only
+git push <branch>       -> git_push_branch
+GitHub PR create        -> github_create_pull_request
+simple file rename      -> fs_move_path
+simple file deletion    -> fs_delete_path
+recent team context     -> continuity_get_context
+historical team search  -> continuity_search_history
 ```
 
-The system should not aggressively parse and block every shell command. The goal is preference and truthful risk separation, not creation of a fragile shell-policy language.
+The system should not build a brittle shell parser that tries to understand every possible command. The goals are:
 
----
+- prefer clearer semantic tools;
+- keep power-tool access for unsupported operations;
+- preserve truthful risk separation;
+- evaluate tool selection empirically.
 
 ## 19. Risk model
 
@@ -1195,15 +1432,18 @@ Required work:
 1. freeze/verify Business v1.0 repo/tag/production baseline;
 2. adopt this document as the canonical v1.1 design;
 3. inventory current continuity counts/high-watermark only;
-4. freeze Personal v1.1.1 donor references;
-5. validate the primary 25-tool schemas/annotations;
-6. test tool discovery in ChatGPT Developer Mode;
-7. run semantic-vs-generic-exec safety probes;
-8. verify whether OpenAI-native identity/session context can support trustworthy member-to-node binding;
-9. prototype native routing or Gateway/Node Relay as necessary;
-10. freeze Supabase schema/RPC naming;
-11. freeze the parity/safety/E2E test matrix;
-12. decide whether Safety Compatibility Fallback is needed before B-S1/B-S3 tool implementation proceeds.
+4. freeze Personal v1.1.1 donor references and exact reusable test assets;
+5. classify every overlapping capability as `REUSE_AS_IS / ADAPT_THINLY / BUSINESS_NEW / DO_NOT_EXPOSE` before implementation;
+6. derive the current use-case-driven semantic tool inventory without any minimum/maximum count target;
+7. validate the fixed naming rule `<domain>_<verb>_<object>` and positive/negative description boundaries;
+8. build and run the tool-selection golden prompt set, including semantic-tool versus power-tool selection;
+9. validate current tool names, schemas, descriptions and annotations with ChatGPT Developer Mode discovery;
+10. run semantic-vs-generic-exec safety probes;
+11. verify whether OpenAI-native identity/session context can support trustworthy member-to-node binding;
+12. prototype native routing or Gateway/Node Relay as necessary;
+13. freeze Supabase schema/RPC naming;
+14. freeze the parity/safety/E2E test matrix;
+15. decide whether Safety Compatibility Fallback is needed before B-S1/B-S3 tool implementation proceeds.
 
 Gate:
 
@@ -1211,6 +1451,9 @@ Gate:
 BUSINESS_V11_S0_ACCEPTED=PASS
 BUSINESS_V10_PRODUCTION_UNCHANGED=PASS
 OPENAI_TOOL_ANNOTATION_SCAN=PASS
+TOOL_NAMING_CONTRACT=PASS
+TOOL_SELECTION_GOLDEN_SET=PASS
+PERSONAL_REUSE_MATRIX=PASS
 NODE_BINDING_ARCHITECTURE=PASS
 SAFETY_STRATEGY_DECIDED=PASS
 ```
@@ -1266,7 +1509,7 @@ Implement:
 - async BusinessContinuity adapter;
 - TEAM default;
 - PRIVATE visibility exception;
-- six continuity tools;
+- the current focused continuity semantic inventory required by supported use cases;
 - PostgreSQL full-text search;
 - revision CAS;
 - operation UUID idempotency;
@@ -1297,7 +1540,7 @@ same operationId + changed input
 Gate:
 
 ```text
-BUSINESS_S2_CONTINUITY_6_TOOL=PASS
+BUSINESS_S2_CONTINUITY_CONTRACT=PASS
 BUSINESS_S2_TEAM_SEARCH=PASS
 BUSINESS_S2_PRIVATE_ISOLATION=PASS
 BUSINESS_S2_CAS_IDEMPOTENCY=PASS
@@ -1319,9 +1562,9 @@ Implement:
 - member/node routing;
 - normal host network under HOST_USER;
 - semantic file move/delete;
-- semantic Git inspect/prepare/sync/publish;
-- generic `exec_host_start` power tool;
-- `exec_isolated_start`;
+- focused semantic Git/GitHub actions using the fixed naming rule;
+- generic `process_start_host` power tool;
+- `process_start_isolated`;
 - shared process read/terminate contract;
 - NORMAL/HIGH_IMPACT/HARD_DENY effect classification;
 - semantic-tool preference;
@@ -1411,20 +1654,26 @@ Validate end-to-end:
 Mandatory OpenAI canary matrix:
 
 ```text
-business_status
-read_file
-create_file
-replace_file
-move_path
-delete_path
-continuity_search
-git_inspect
-git_prepare
-git_sync
-git_publish
-exec_host_start (benign)
-exec_host_start (explicitly destructive test fixture)
-exec_isolated_start
+business_get_status
+fs_read_file
+fs_create_file
+fs_replace_file
+fs_move_path
+fs_delete_path
+continuity_get_context
+continuity_search_history
+git_get_status
+git_get_diff
+git_create_branch
+git_stage_files
+git_create_commit
+git_fetch_remote
+git_pull_ff_only
+git_push_branch
+github_create_pull_request
+process_start_host (benign unsupported-by-semantic-tools operation)
+process_start_host (explicitly destructive test fixture)
+process_start_isolated
 ```
 
 For each, record:
@@ -1469,10 +1718,10 @@ Required sequence:
 15. start Gateway/runtime nodes;
 16. verify exact published tool contract selected by the safety strategy;
 17. TEAM continuity canary;
-18. continuity_search canary;
-19. HOST_USER canary;
-20. semantic file canary;
-21. Git branch/commit/push/PR canary;
+18. continuity_search_history canary;
+19. HOST_USER / process_start_host canary;
+20. semantic filesystem canary using current focused names;
+21. Git/GitHub branch/stage/commit/fetch/pull/push/PR semantic canary;
 22. multi-node fresh-chat canary;
 23. restart persistence;
 24. node revoke canary;
@@ -1561,7 +1810,10 @@ Removed/simplified from earlier drafts:
 - separate internal approval-workflow engine for ordinary work;
 - Docker-only STANDARD execution;
 - one-company/one-runtime assumption;
-- generic-exec-only ordinary developer workflow.
+- generic-exec-only ordinary developer workflow;
+- any fixed MCP tool-count target or ceiling.
+
+Tool count is deliberately not optimized. Tool usefulness, semantic clarity, safety accuracy and model selection quality are optimized instead.
 
 Complexity retained because it is necessary:
 
@@ -1627,7 +1879,7 @@ The following require an explicit accepted-design amendment:
 - changing migration/dual-write policy;
 - changing hard invariants;
 - adding a new security bypass or credential authority;
-- materially changing the public MCP tool surface outside the documented Safety Compatibility Fallback.
+- materially changing supported use cases, authority semantics, or tool safety behavior without corresponding accepted evidence/design. Tool count itself is not a protected invariant.
 
 The Safety Compatibility Fallback itself is already accepted and does not require a new product-design debate when its trigger is satisfied; it requires evidence, documentation of the trigger, and re-baselining/retesting of the actual tool surface.
 
