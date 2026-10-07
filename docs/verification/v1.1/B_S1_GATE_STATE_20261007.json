@@ -1,0 +1,101 @@
+{
+  "phase": "B-S1",
+  "status": "B_S1A_CONTROL_SCHEMA_FOUNDATION_PASS_BS1B_PENDING",
+  "baseAcceptedHead": "2975be54502a89dd92949c57521bacb071d49bac",
+  "productionMutation": false,
+  "stagingProjectRef": "dxofyjarkzizdzumfyul",
+  "gates": {
+    "BUSINESS_S1A_CONTROL_SCHEMA_FOUNDATION": "PASS",
+    "BUSINESS_S1A_CONTROL_SCHEMA_CONTRACT": "PASS",
+    "BUSINESS_S1A_POSTGRES_INTEGRATION": "PASS",
+    "BUSINESS_V11_BS0_REGRESSION": "PASS",
+    "BUSINESS_S1_LOCAL": "IN_PROGRESS",
+    "BUSINESS_S1_SUPABASE_SCHEMA": "IN_PROGRESS_BS1A_FOUNDATION_APPLIED",
+    "BUSINESS_S1_MEMBER_AUTH": "PENDING_BS1B",
+    "BUSINESS_S1_NODE_ENROLLMENT": "PENDING_IMPLEMENTATION",
+    "BUSINESS_S1_NODE_REVOKE": "PENDING_IMPLEMENTATION",
+    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_IMPLEMENTATION"
+  },
+  "stagingMigrations": [
+    {
+      "version": "20261007071941",
+      "name": "business_v11_bs1_control_foundation"
+    },
+    {
+      "version": "20261007072117",
+      "name": "business_v11_bs1_control_fk_indexes"
+    }
+  ],
+  "liveVerification": {
+    "controlTableCount": 9,
+    "rlsEnabledCount": 9,
+    "anonAuthenticatedDirectTableGrantCount": 0,
+    "authenticatedPrivateSchemaUsage": false,
+    "anonPrivateSchemaUsage": false,
+    "authenticatedSchemaStatusExecute": true,
+    "anonSchemaStatusExecute": false,
+    "organizationInitialized": false,
+    "bcSchemaStatus": {
+      "schema": "private_business_control",
+      "schemaVersion": 1,
+      "contractVersion": 1,
+      "tableCount": 9
+    }
+  },
+  "implemented": {
+    "schema": "private_business_control",
+    "tables": [
+      "schema_meta",
+      "organizations",
+      "organization_members",
+      "control_state",
+      "runtime_nodes",
+      "runtime_sessions",
+      "logical_projects",
+      "private_project_members",
+      "operations"
+    ],
+    "rpc": [
+      "bc_schema_status"
+    ]
+  },
+  "security": {
+    "runtimeServiceRoleAllowed": false,
+    "directPrivateTableClientAccess": false,
+    "privateTablesRlsEnabled": true,
+    "oneOrganizationPerSupabaseProject": true,
+    "minimalRoles": [
+      "ADMIN",
+      "PM",
+      "MEMBER"
+    ],
+    "nodeTypes": [
+      "PERSONAL_NODE",
+      "SHARED_NODE"
+    ],
+    "collaborationModes": [
+      "TEAM",
+      "PRIVATE"
+    ]
+  },
+  "advisorState": {
+    "security": {
+      "rlsEnabledNoPolicyInfo": 9,
+      "authenticatedSecurityDefinerWarning": 1,
+      "leakedPasswordProtectionDisabledWarning": 1
+    },
+    "performance": {
+      "unusedIndexInfo": 12,
+      "unindexedForeignKeyFindings": 0
+    }
+  },
+  "reuse": {
+    "personalDonor": "v1.1.1@da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
+    "nextThinReuse": [
+      "Supabase auth/session bounded refresh pattern",
+      "macOS Keychain refresh-token custody",
+      "device identity / enrollment concepts adapted to Business runtime nodes"
+    ]
+  },
+  "nextUnit": "B-S1B: bootstrap the one organization/admin member in isolated staging, implement authenticated bc_member_profile using validated auth identity, and adapt Personal auth/session plus Keychain refresh-token custody before runtime-node lifecycle RPCs."
+}
