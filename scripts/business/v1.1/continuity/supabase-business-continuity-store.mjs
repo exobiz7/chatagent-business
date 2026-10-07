@@ -50,4 +50,18 @@ export class SupabaseBusinessContinuityStore{
   taskGet({projectId,taskId}={}){
     return this.rpc('bc_task_get',{p_project_id:uuid(projectId),p_task_id:uuid(taskId)});
   }
+  taskComplete({projectId,taskId,expectedTaskRevision,operationId}={}){
+    if(!Number.isSafeInteger(expectedTaskRevision)||expectedTaskRevision<0)fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+    return this.rpc('bc_task_complete',{p_project_id:uuid(projectId),p_task_id:uuid(taskId),
+      p_expected_task_revision:expectedTaskRevision,p_operation_id:uuid(operationId)});
+  }
+  projectContext({projectId,limit=10}={}){
+    if(!Number.isSafeInteger(limit)||limit<1||limit>20)fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+    return this.rpc('bc_project_context',{p_project_id:uuid(projectId),p_limit:limit});
+  }
+  historySearch({projectId,query,limit=10}={}){
+    if(!Number.isSafeInteger(limit)||limit<1||limit>20)fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+    const normalized=text(query,1,128);
+    return this.rpc('bc_history_search',{p_project_id:uuid(projectId),p_query:normalized,p_limit:limit});
+  }
 }

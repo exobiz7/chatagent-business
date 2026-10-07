@@ -1,6 +1,6 @@
 {
   "phase": "B-S2",
-  "status": "B_S2A_FOUNDATION_PASS_BS2B_PENDING",
+  "status": "B_S2B_SEARCH_PASS_BS2C_PENDING",
   "baseAcceptedHead": "63de5e25a6af5b2b4ea8846ef166e104cb305d0d",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
@@ -11,12 +11,15 @@
     "BUSINESS_S2A_CAS_IDEMPOTENCY": "PASS",
     "BUSINESS_S2A_SENSITIVE_TEXT_GUARD": "PASS",
     "BUSINESS_S2A_STAGING_APPLY": "PASS",
-    "BUSINESS_S2_CONTINUITY_CONTRACT": "IN_PROGRESS_BS2B",
-    "BUSINESS_S2_TEAM_SEARCH": "PENDING_BS2B",
-    "BUSINESS_S2_PRIVATE_ISOLATION": "IN_PROGRESS_SEARCH_PENDING",
+    "BUSINESS_S2_CONTINUITY_CONTRACT": "IN_PROGRESS_BS2C",
+    "BUSINESS_S2_TEAM_SEARCH": "PASS",
+    "BUSINESS_S2_PRIVATE_ISOLATION": "PASS",
     "BUSINESS_S2_CAS_IDEMPOTENCY": "PASS",
     "BUSINESS_S2_HANDOFF_FRESHNESS": "PENDING_BS2C",
-    "BUSINESS_S2_LOCAL": "IN_PROGRESS"
+    "BUSINESS_S2_LOCAL": "IN_PROGRESS",
+    "BUSINESS_S2B_TASK_COMPLETION": "PASS",
+    "BUSINESS_S2B_PROJECT_CONTEXT": "PASS",
+    "BUSINESS_S2B_STAGING_APPLY": "PASS"
   },
   "stagingMigrations": [
     {
@@ -30,6 +33,10 @@
     {
       "version": "20261007142954",
       "name": "business_v11_bs2_continuity_fk_indexes"
+    },
+    {
+      "version": "20261007145024",
+      "name": "business_v11_bs2_completion_context_search"
     }
   ],
   "implemented": {
@@ -51,15 +58,33 @@
     "continuityRpcs": [
       "bc_task_start",
       "bc_checkpoint_append",
-      "bc_task_get"
+      "bc_task_complete",
+      "bc_task_get",
+      "bc_project_context",
+      "bc_history_search"
     ],
     "deferredContinuityRpcs": [
-      "bc_task_complete",
-      "bc_project_context",
-      "bc_history_search",
       "bc_export_snapshot",
       "bc_import_snapshot"
-    ]
+    ],
+    "historySearch": {
+      "engine": "PostgreSQL FTS",
+      "configuration": "simple",
+      "queryFunction": "websearch_to_tsquery",
+      "materializedSearchText": true,
+      "ginIndexCount": 2,
+      "corpus": [
+        "objective",
+        "tags",
+        "summary",
+        "currentState",
+        "nextActions",
+        "verification",
+        "decisions",
+        "facts",
+        "artifacts"
+      ]
+    }
   },
   "authorization": {
     "teamDefault": true,
@@ -78,7 +103,12 @@
     "sameRevisionConcurrentWriters": "EXACTLY_ONE_COMMIT_ONE_BUSINESS_REVISION_CONFLICT",
     "clientSensitiveTextGuardBeforeRpc": true,
     "serverSensitiveTextRevalidation": true,
-    "eventHeadAndContextSequenceTransactional": true
+    "eventHeadAndContextSequenceTransactional": true,
+    "completedTaskImmutable": true,
+    "completionReceiptReplay": true,
+    "boundedProjectContext": "1..20 tasks",
+    "boundedHistorySearch": "1..20 matches",
+    "completedHistorySearchable": true
   },
   "stagingVerification": {
     "continuityTableCount": 6,
@@ -99,7 +129,14 @@
     "changedInputConflictPass": true,
     "staleRevisionConflictPass": true,
     "syntheticSensitiveTextRejected": true,
-    "sensitiveIdentifiersPersistedInEvidence": false
+    "sensitiveIdentifiersPersistedInEvidence": false,
+    "ftsGinIndexCount": 2,
+    "taskSearchTextBackfill": true,
+    "checkpointSearchTextBackfill": true,
+    "taskCompletedEventPresent": true,
+    "teamHistorySearchPass": true,
+    "privateMemberHistorySearchPass": true,
+    "projectContextBoundObserved": 2
   },
   "advisorState": {
     "security": {
@@ -120,7 +157,11 @@
     "BUSINESS_S2A_CONTINUITY_CLIENT": "PASS",
     "BUSINESS_S1C_REGRESSION": "PASS",
     "CI_LOCAL": "PASS",
-    "GIT_DIFF_CHECK": "PASS"
+    "GIT_DIFF_CHECK": "PASS",
+    "BUSINESS_S2B_SEARCH_CONTRACT": "PASS",
+    "BUSINESS_S2B_CONTINUITY_POSTGRES": "PASS",
+    "BUSINESS_S2B_CONTINUITY_CLIENT": "PASS",
+    "B_S2B_FULL_REGRESSION": "PASS"
   },
-  "nextUnit": "B-S2B: implement task completion, bounded project context, and PostgreSQL history search with TEAM broad search and PRIVATE search isolation. Keep handoff/contextDigest/FRESH-STALE-UNVERIFIED semantics for B-S2C."
+  "nextUnit": "B-S2C: implement Business contextDigest, FRESH/STALE/UNVERIFIED, continuity_prepare_handoff with ~8 KiB target / 24 KiB hard cap, export snapshot and final B-S2 closure. Do not start B-S3."
 }
