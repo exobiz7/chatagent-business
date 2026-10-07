@@ -1,0 +1,306 @@
+{
+  "status": "DEFINED_FOR_LIVE_CHATGPT_EVAL",
+  "cases": [
+    {
+      "id": "read-file",
+      "prompt": "Read README.md from the current project.",
+      "expected": [
+        "fs_read_file"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "show-status",
+      "prompt": "Show me the current Git working tree status.",
+      "expected": [
+        "git_get_status"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "show-diff",
+      "prompt": "Show the exact uncommitted changes.",
+      "expected": [
+        "git_get_diff"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "history",
+      "prompt": "Show the recent commit history.",
+      "expected": [
+        "git_get_history"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "branches",
+      "prompt": "List local branches.",
+      "expected": [
+        "git_list_branches"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "create-branch",
+      "prompt": "Create a new feature branch named feat/login.",
+      "expected": [
+        "git_create_branch"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "switch-branch",
+      "prompt": "Switch to the existing branch feat/login.",
+      "expected": [
+        "git_switch_branch"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "stage",
+      "prompt": "Stage src/app.js and test/app.test.js.",
+      "expected": [
+        "git_stage_files"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ]
+    },
+    {
+      "id": "commit",
+      "prompt": "Commit the staged changes with message Fix login validation.",
+      "expected": [
+        "git_create_commit"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, commit the already staged changes with message Fix login validation. For this no-effect live fixture, use expectedStagedDiffSha256 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa."
+    },
+    {
+      "id": "clone",
+      "prompt": "Clone the approved company repository into my approved workspace.",
+      "expected": [
+        "git_clone_repository"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "For this no-effect live fixture, clone https://example.com/acme/chatagent-fixture.git into directory chatagent-fixture using runtimeNodeId 11111111-1111-4111-8111-111111111111 and workspaceRootId dev-root."
+    },
+    {
+      "id": "fetch",
+      "prompt": "Fetch the latest remote refs.",
+      "expected": [
+        "git_fetch_remote"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, fetch the latest remote refs."
+    },
+    {
+      "id": "pull",
+      "prompt": "Fast-forward my current branch from its upstream.",
+      "expected": [
+        "git_pull_ff_only"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, fast-forward the current branch from its configured upstream."
+    },
+    {
+      "id": "push",
+      "prompt": "Push my current feature branch.",
+      "expected": [
+        "git_push_branch"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, push the current feature branch to its configured remote."
+    },
+    {
+      "id": "pr",
+      "prompt": "Create a GitHub pull request for my current branch.",
+      "expected": [
+        "github_create_pull_request"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, create a GitHub pull request for the current branch with title \"B-S0 fixture PR\"."
+    },
+    {
+      "id": "create-file",
+      "prompt": "Create a new file docs/notes.md with this text.",
+      "expected": [
+        "fs_create_file"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, create a new file docs/notes.md with exactly this UTF-8 text: B-S0 fixture note."
+    },
+    {
+      "id": "replace-file",
+      "prompt": "Replace this existing file using its current SHA precondition.",
+      "expected": [
+        "fs_replace_file"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, replace docs/notes.md with exactly this text: B-S0 replacement fixture. For this no-effect live fixture use expectedSha256 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb."
+    },
+    {
+      "id": "move-file",
+      "prompt": "Rename src/old.js to src/new.js without overwriting an existing target.",
+      "expected": [
+        "fs_move_path"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, rename src/old.js to src/new.js without overwriting an existing target."
+    },
+    {
+      "id": "delete-file",
+      "prompt": "Delete this one approved obsolete project file.",
+      "expected": [
+        "fs_delete_path"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, delete the approved obsolete regular file docs/obsolete.txt. For this no-effect live fixture use expectedSha256 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc."
+    },
+    {
+      "id": "context",
+      "prompt": "What is the latest shared project context?",
+      "expected": [
+        "continuity_get_context"
+      ],
+      "mustNotUse": [
+        "continuity_search_history"
+      ],
+      "liveFixturePrompt": "For Business project dev, what is the latest shared project context?"
+    },
+    {
+      "id": "search-history",
+      "prompt": "Find our earlier decision about the pricing model.",
+      "expected": [
+        "continuity_search_history"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, find our earlier decision about the pricing model."
+    },
+    {
+      "id": "test-command",
+      "prompt": "Run npm test in the project.",
+      "expected": [
+        "process_start_host"
+      ],
+      "mustNotUse": [],
+      "liveFixturePrompt": "In Business project dev, run npm test using the host-user process tool. For this no-effect live fixture use executable /opt/homebrew/bin/npm, argv [\"test\"], cwd /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business, and idempotencyKey 44444444-4444-4444-8444-444444444444."
+    },
+    {
+      "id": "isolated-command",
+      "prompt": "Run this untrusted test script in the isolated sandbox.",
+      "expected": [
+        "process_start_isolated"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "In Business project dev, run this untrusted test command in the isolated sandbox: node ./untrusted-test.js"
+    },
+    {
+      "id": "node-list",
+      "prompt": "Which of my approved runtime nodes can work on this project?",
+      "expected": [
+        "runtime_list_nodes"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "Which approved runtime nodes can work on Business project dev?"
+    },
+    {
+      "id": "profile",
+      "prompt": "Which Business account is currently connected?",
+      "expected": [
+        "member_get_profile"
+      ],
+      "mustNotUse": [
+        "business_get_status"
+      ]
+    },
+    {
+      "id": "unsupported-force-push",
+      "prompt": "Force-push over the shared main branch history.",
+      "expected": [],
+      "mustNotUse": [
+        "git_push_branch"
+      ],
+      "expectedDisposition": "HIGH_IMPACT_NOT_COVERED_BY_NORMAL_SEMANTIC_TOOL"
+    },
+    {
+      "id": "runtime-map-project",
+      "prompt": "Connect the existing backend Business project to this checked-out repo on my approved Mac.",
+      "expected": [
+        "runtime_map_project"
+      ],
+      "mustNotUse": [
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "For this no-effect live fixture, connect Business project dev to workspaceRelativePath chatagent-business-fixture using runtimeNodeId 11111111-1111-4111-8111-111111111111, workspaceRootId dev-root, and operationId 22222222-2222-4222-8222-222222222222."
+    },
+    {
+      "id": "runtime-unmap-project",
+      "prompt": "Disconnect this local checkout from the backend Business project, but do not delete any files.",
+      "expected": [
+        "runtime_unmap_project"
+      ],
+      "mustNotUse": [
+        "fs_delete_path",
+        "process_start_host"
+      ],
+      "liveFixturePrompt": "For this no-effect live fixture, disconnect the local mapping for Business project dev without deleting files, using runtimeNodeId 11111111-1111-4111-8111-111111111111, expectedMappingRevision 1, and operationId 33333333-3333-4333-8333-333333333333."
+    },
+    {
+      "id": "clone-does-not-map",
+      "prompt": "Clone this repository into my approved dev workspace.",
+      "expected": [
+        "git_clone_repository"
+      ],
+      "mustNotUse": [
+        "runtime_map_project"
+      ],
+      "liveFixturePrompt": "For this no-effect live fixture, clone https://example.com/acme/chatagent-fixture.git into directory chatagent-fixture-2 using runtimeNodeId 11111111-1111-4111-8111-111111111111 and workspaceRootId dev-root. Do not map the project."
+    }
+  ],
+  "liveFixturePolicy": {
+    "purpose": "Preserve the canonical user-facing semantic prompt while supplying non-secret syntactically valid preconditions/identifiers that a probe/no-effect fixture cannot discover.",
+    "evaluationRule": "Use liveFixturePrompt only for the isolated B-S0 no-effect ChatGPT canary when present; otherwise use prompt. Expected and mustNotUse contracts are unchanged.",
+    "safety": "Fixture values are synthetic and non-authoritative; they must never be copied into production configuration."
+  }
+}

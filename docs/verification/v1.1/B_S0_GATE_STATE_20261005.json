@@ -1,0 +1,95 @@
+{
+  "phase": "B-S0",
+  "status": "BUSINESS_V11_S0_ACCEPTED",
+  "designRevision": "R5",
+  "productionMutation": false,
+  "safetyFallbackActivated": false,
+  "safetyStrategy": "PRIMARY_SEMANTIC_TOOLS_WITH_POWER_TOOL_ESCAPE_HATCH; PERSONAL_FALLBACK_ARMED",
+  "gates": {
+    "BUSINESS_V11_S0_ACCEPTED": "PASS",
+    "BUSINESS_V10_PRODUCTION_UNCHANGED": "PASS",
+    "OPENAI_TOOL_ANNOTATION_SCAN": "PASS",
+    "TOOL_NAMING_CONTRACT": "PASS",
+    "TOOL_SELECTION_GOLDEN_SET": "PASS",
+    "PERSONAL_REUSE_MATRIX": "PASS",
+    "SHARED_CONTEXT_SECRET_GUARD": "PASS",
+    "LOCAL_PROJECT_MAPPING_CONTRACT": "PASS",
+    "AUTH_LEASE_DEGRADED_MODE": "PASS",
+    "SHARED_NODE_HOST_POWER_BOUNDARY": "PASS",
+    "OAUTH_MEMBER_IDENTITY_PATH": "PASS",
+    "NODE_ROUTING_LOGIC_PROBE": "PASS",
+    "NODE_BINDING_ARCHITECTURE": "PASS",
+    "SUPABASE_SCHEMA_RPC_NAMING": "PASS",
+    "PARITY_SAFETY_E2E_MATRIX": "PASS",
+    "OPENAI_SECURITY_SCHEME_WIRE_ADAPTER": "PASS",
+    "SAFETY_STRATEGY_DECIDED": "PASS",
+    "B_S0_LOCAL_VALIDATION_SUITE": "PASS",
+    "BUSINESS_HOSTED_CI_EQUIVALENT": "PASS"
+  },
+  "livePrerequisites": [
+    "dedicated non-Personal Business Supabase OAuth test project",
+    "OAuth 2.1 server + authorization/consent flow enabled on that project",
+    "dedicated B-S0 OpenAI tunnel/app draft separate from production v1.0",
+    "Developer Mode Scan Tools",
+    "linked OAuth profile and member_get_profile call",
+    "golden prompt selection/confirmation run"
+  ],
+  "staging": {
+    "supabaseProject": {
+      "name": "chatagent-business-v1.1-bs0",
+      "ref": "dxofyjarkzizdzumfyul",
+      "region": "ap-northeast-2",
+      "status": "ACTIVE_HEALTHY"
+    },
+    "consentEdgeFunction": {
+      "name": "bs0-oauth-consent",
+      "status": "ACTIVE",
+      "verifyJwt": false
+    },
+    "oauthServer": "ENABLED",
+    "oauthDiscovery": "HTTP_200_DISCOVERY_DCR_READY",
+    "openAiBs0Tunnel": {
+      "name": "chatagent-business-v11-bs0",
+      "id": "tunnel_6ac4981673e48191b1bea1b2cde679f1",
+      "status": "READY"
+    },
+    "localFixture": {
+      "status": "RUNNING",
+      "port": 31861
+    },
+    "localTunnelHealthPort": {
+      "port": 51961,
+      "status": "LISTENING_READY"
+    },
+    "localConsentUi": {
+      "url": "http://localhost:32171/functions/v1/bs0-oauth-consent",
+      "status": "RUNNING_STAGING_ONLY",
+      "reason": "Supabase Edge Functions rewrite text/html GET responses to text/plain"
+    },
+    "chatgptApp": {
+      "name": "ChatAgent Business v1.1 B-S0 SchemaFix",
+      "appId": "asdk_app_6ac512f2fe008191bec2aba975d78a68",
+      "reviewState": "DEVELOPMENT",
+      "oauthConnected": true,
+      "freshAppObservedWirePattern": "^/",
+      "finalPatternlessWireRetest": "PASS"
+    }
+  },
+  "liveEvidence": "B_S0_LIVE_CANARY_EVIDENCE_20261006.md",
+  "liveBlocker": {
+    "id": "HOST_PROCESS_CHATGPT_SCHEMA_BLOCK",
+    "status": "RESOLVED",
+    "tool": "process_start_host",
+    "selectedToolCorrect": true,
+    "historicalFailureLayer": "ChatGPT Business connector/workspace pre-dispatch schema validation",
+    "canonicalRuntimeValidationPreserved": true,
+    "resolution": "Removed only the incompatible executable.pattern from the OpenAI-facing tools/list schema; server/runtime still enforces absolute executable paths.",
+    "freshAppIdentityRetest": "PASS",
+    "freshAppHostProcessRetest": "PASS",
+    "connectorReachedAfterFix": true,
+    "fixtureResultAfterFix": "probe=true,noEffect=true",
+    "safetyFallbackActivated": false,
+    "resolvedAt": "2026-10-07T09:05:33+09:00"
+  },
+  "acceptedAt": "2026-10-07T09:05:33+09:00"
+}

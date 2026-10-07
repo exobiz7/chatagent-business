@@ -1,0 +1,77 @@
+{
+  "status": "B-S0_NAMING_FROZEN_FOR_B-S1_IMPLEMENTATION",
+  "version": 1,
+  "principles": {
+    "oneOrganizationPerSupabaseProject": true,
+    "runtimeServiceRoleAllowed": false,
+    "callerSuppliedMemberIdAuthoritative": false,
+    "customOAuthScopesUsed": false,
+    "oauthIdentityScopes": ["openid", "email", "profile"],
+    "cloudProjectGrantsHostAuthority": false,
+    "continuityDuplicatesLogicalProjectMaster": false
+  },
+  "schemas": {
+    "control": {
+      "name": "private_business_control",
+      "tables": [
+        "schema_meta",
+        "organizations",
+        "organization_members",
+        "control_state",
+        "runtime_nodes",
+        "runtime_sessions",
+        "logical_projects",
+        "private_project_members",
+        "operations"
+      ]
+    },
+    "continuity": {
+      "name": "private_business_continuity",
+      "tables": [
+        "schema_meta",
+        "continuity_state",
+        "tasks",
+        "checkpoints",
+        "operations",
+        "events"
+      ],
+      "logicalProjectForeignKey": "private_business_control.logical_projects"
+    }
+  },
+  "rpc": {
+    "control": [
+      "bc_schema_status",
+      "bc_member_profile",
+      "bc_runtime_enroll",
+      "bc_runtime_status",
+      "bc_runtime_list",
+      "bc_runtime_revoke",
+      "bc_project_register",
+      "bc_project_set_mode",
+      "bc_private_member_add",
+      "bc_private_member_remove"
+    ],
+    "continuity": [
+      "bc_task_start",
+      "bc_checkpoint_append",
+      "bc_task_complete",
+      "bc_task_get",
+      "bc_project_context",
+      "bc_history_search",
+      "bc_export_snapshot"
+    ],
+    "migrationTemporary": [
+      "bc_import_snapshot"
+    ]
+  },
+  "mutationRules": {
+    "operationUuidRequired": true,
+    "sameOperationSameInputReturnsPriorReceipt": true,
+    "sameOperationDifferentInput": "IDEMPOTENCY_CONFLICT",
+    "taskRevisionCas": true,
+    "completedTaskImmutable": true,
+    "controlPolicyRevision": true,
+    "privateTablesDirectClientGrant": false,
+    "temporaryImportRetiredAfterCutover": true
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "sourceProduct": "ChatAgent Personal",
+  "sourceTag": "v1.1.1",
+  "sourceCommit": "da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
+  "sourceTagObject": "fcc7ff4d27f2df7b429bdca6cebba7ab3bd7685c",
+  "policy": "reuse-first; Personal remains read-only donor, never a Business runtime dependency",
+  "core": {
+    "scripts/l0-ui-probe.mjs": "98c395a8fb0835ba4f65578d10ac4663d9997282",
+    "scripts/l1/durable-host-processes.mjs": "27a872de687df1f43fd1ab0c4783ac11a181ba94",
+    "scripts/l1/broker-server.mjs": "5ee4d6078207031c3b84bc7e238d5c8e3b27d331",
+    "scripts/l1/l1-semantic-write-test.mjs": "34509641a114d957e4d8ac4b83e3ea5cd987d31f",
+    "scripts/l1/personal-native-cas-mcp-test.mjs": "aafb3013c114a6c090cc29317f7cf768a18b81f9",
+    "scripts/l1/personal-36-tool-candidate-test.mjs": "a0af7dd28265f9d6805453ab292f63cea377ec74"
+  },
+  "memory": {
+    "scripts/l1/memory/keychain-refresh-token-store.mjs": "08d9ebb0aa30cce100d7028aa46d9ddccc40c3a9",
+    "scripts/l1/memory/personal-memory-logical-backup.mjs": "1684dec84aa2dcc974ee3a1f507ce51d87f0bddf",
+    "scripts/l1/memory/keychain-backup-key-store.mjs": "31035c0afc279141db57e16327303383d8139db8",
+    "scripts/l1/memory/personal-memory-input-contract.mjs": "3a6996c436b2469f4c2d402354be7e90d0bd7a9d",
+    "scripts/l1/memory/native-keychain-secret.c": "6e49e78d21bae1207c48d7b3b03d4e20876ef27d",
+    "scripts/l1/memory/personal-memory-store.mjs": "74d343b81653808549787b50e9ef511ae8d0f933",
+    "scripts/l1/memory/supabase-personal-memory-store.mjs": "77f953154be30d171e5600be84f88242349c45f0",
+    "scripts/l1/memory/supabase-auth-session.mjs": "7afd3cad843ecd1cc94293a1a14a5959778042d3",
+    "scripts/l1/memory/supabase-device-registry.mjs": "9694343aaa59482dd2ba1b6666328ff18d85f176",
+    "scripts/l1/memory/supabase-runtime-config.mjs": "9cdcc952d7501fcc6e0172a08c4364e27ec45af3",
+    "scripts/l1/memory/supabase-memory-runtime.mjs": "a655d48163b6fe0f7feda5385c8fab9de0a65f95",
+    "scripts/l1/memory/personal-memory-logical-contract.mjs": "abb4d077aab3d1c3e64bc2f7c535a0350a692e08",
+    "scripts/l1/memory/device-identity.mjs": "efaa7f6c5fb283d045fbcd4b6d56e70d8a7893f9"
+  },
+  "verifiedEvidence": [
+    "Personal release profile asserts 33 unique tools",
+    "Personal native CAS test verifies OpenAI write/destructive annotations",
+    "personal-memory-supabase-store-test passes sensitive-text, owner-pairing, retry and bounded-failure behavior"
+  ]
+}

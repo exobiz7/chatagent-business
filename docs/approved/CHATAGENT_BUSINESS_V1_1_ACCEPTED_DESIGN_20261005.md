@@ -2,8 +2,8 @@
 
 > Product: **ChatAgent Business — SMB Edition**
 > Target release: **v1.1.0**
-> Design status: **ACCEPTED DESIGN — R3 SELF-AUDITED**
-> Design revision: **R3 — architecture consistency audit before B-S0 validation**
+> Design status: **ACCEPTED DESIGN — R5 B-S0 LOCALLY VALIDATED / LIVE CANARY PENDING**
+> Design revision: **R5 — B-S0 local validation, focused project mapping, OAuth metadata adapter, Supabase contract freeze**
 > Date: **2026-10-05 KST**
 > Baseline production: **v1.0.0 / PRODUCTION_ACTIVE_V1.0.0**
 > Baseline release tag: `v1.0.0`
@@ -213,11 +213,13 @@ Default properties:
 
 ```text
 owner = organization
-execution = HOST_USER or ISOLATED
 hostScope = TRUSTED_ROOTS
+semantic file/Git = enabled according to project profile
+ISOLATED = available according to project profile
+generic HOST_USER power tool = disabled by default
 ```
 
-Shared nodes may expose configured workspace roots to approved team workflows.
+Shared nodes may expose configured workspace roots to approved team workflows. Because a generic host process cannot truthfully be confined to `TRUSTED_ROOTS` merely by setting its cwd, `process_start_host` on a SHARED_NODE requires an explicit node-level ADMIN opt-in that confirms the underlying macOS account itself is a dedicated/trusted team execution account. Without that opt-in, broad host processes use ISOLATED or a PERSONAL_NODE instead. Semantic file/Git tools remain root-bounded.
 
 ### 7.3 BYOD principle
 
@@ -345,6 +347,11 @@ It operates as the logged-in macOS user and does not claim:
 - macOS security bypass;
 - access to resources the user cannot access;
 - bypass of external service authorization.
+
+Node rule:
+
+- `PERSONAL_NODE`: the owning member may use `process_start_host` at that logged-in user's normal macOS authority.
+- `SHARED_NODE`: `process_start_host` is denied unless the node has explicit ADMIN-approved shared host-power enablement; cwd alone is never treated as a security sandbox.
 
 Expected normal developer capabilities include, when already available to the user:
 
@@ -610,11 +617,23 @@ The same rule applies when permissions, safety risk, confirmation requirements, 
 
 The following names are the current **initial implementation inventory**. It is explicitly not a fixed-size contract. B-S0 use-case/evaluation work may add, remove, split, or consolidate tools when evidence supports the change.
 
-#### Business/status
+#### Business/status and authenticated identity
 
 ```text
 business_get_status
+member_get_profile
+runtime_list_nodes
+runtime_map_project
+runtime_unmap_project
 ```
+
+`member_get_profile` is the authenticated read-only profile tool for the currently linked Business member. It must derive identity from validated OAuth credentials, accept no caller-supplied member identifier, return a stable opaque profile ID, and advertise `_meta["openai/profile"] = true` with the standard profile output schema.
+
+`runtime_list_nodes` returns only the caller-eligible runtime nodes, their bounded readiness/status metadata, and the logical projects mapped on each node. It must not expose another member's private node details beyond what the caller is authorized to use.
+
+`runtime_map_project` is the focused local-authority action that binds one existing Business logical project to one existing directory under an approved workspace root on one eligible node. It never clones a repository or derives a host path from cloud metadata. Mapping mutations use idempotency and return a mapping revision.
+
+`runtime_unmap_project` removes only that local binding after exact mapping-revision validation. It does not delete, move, reset or otherwise mutate repository files and it does not delete the cloud logical project.
 
 #### Filesystem
 
@@ -651,7 +670,7 @@ process_start_host
 process_start_isolated
 process_get_status
 process_read_output
-process_terminate
+process_terminate_job
 ```
 
 #### Git / GitHub
@@ -674,7 +693,21 @@ github_create_pull_request
 
 Further focused Git/GitHub tools may be added if a real supported workflow requires them, for example PR lookup/update or remote-branch operations. They should be added because of a user goal, not because a target tool count has room available.
 
-### 14.6 Tool-selection evaluation is part of the contract
+### 14.6 Runtime-node selection rule
+
+Focused local-effect tools (filesystem, process, Git/GitHub operations that act through a runtime node) use the following routing rule:
+
+```text
+0 eligible mapped nodes  -> RUNTIME_NODE_UNAVAILABLE
+1 eligible mapped node   -> server may resolve that sole node when runtimeNodeId is omitted
+2+ eligible mapped nodes -> runtimeNodeId is required; otherwise RUNTIME_NODE_REQUIRED
+```
+
+An explicitly supplied `runtimeNodeId` must still pass member/node ownership, node approval, project mapping and local policy checks.
+
+This rule minimizes friction for the common single-device user while preventing hidden routing to the wrong Mac when multiple nodes are available. `runtime_list_nodes` is the discovery tool when the caller/model needs to choose.
+
+### 14.7 Tool-selection evaluation is part of the contract
 
 B-S0 must maintain a golden prompt set covering:
 
@@ -696,6 +729,8 @@ Representative expectations:
 | Stage selected files | `git_stage_files` |
 | Commit staged changes | `git_create_commit` |
 | Clone an approved repository into an approved workspace | `git_clone_repository` |
+| Map an existing Business project to this local checkout | `runtime_map_project` |
+| Unmap a local checkout without deleting files | `runtime_unmap_project` |
 | Fetch remote state | `git_fetch_remote` |
 | Fast-forward pull | `git_pull_ff_only` |
 | Push branch | `git_push_branch` |
@@ -727,6 +762,7 @@ Representative intended classes:
 | Tool/example | readOnly | destructive | openWorld |
 | --- | ---: | ---: | ---: |
 | `business_get_status` | true | false | false |
+| `member_get_profile` / `runtime_list_nodes` | true | false | false |
 | `fs_read_file` / `fs_get_file_hash` | true | false | false |
 | `fs_create_file` / `fs_create_directory` | false | false | false |
 | `fs_move_path` | false | false | false |
@@ -737,7 +773,7 @@ Representative intended classes:
 | `process_start_host` | false | true | true |
 | `process_start_isolated` | false | true | false |
 | `process_get_status` / `process_read_output` | true | false | false |
-| `process_terminate` | false | true | false |
+| `process_terminate_job` | false | true | false |
 | Git read tools | true | false | false unless the implementation actually needs open-world access |
 | local Git mutation tools | false | false | false |
 | `git_clone_repository` / `git_fetch_remote` / `git_pull_ff_only` | false | false | true |
@@ -778,7 +814,7 @@ The default for an overlapping Personal capability is `REUSE_AS_IS` or `ADAPT_TH
 | Personal exact mutation/audit semantics | `fs_patch_file` and other semantic file mutation | **REUSE primitives**, Business-specific wrapper as needed |
 | Personal async copy implementation/tests | future Business safe-copy tools if required | **REUSE_AS_IS/ADAPT**, do not rebuild large-copy engine |
 | Personal async hash implementation/tests | future Business async-hash tools if required | **REUSE_AS_IS/ADAPT** |
-| `DurableHostProcesses` | `process_start_host`, `process_get_status`, `process_read_output`, `process_terminate` | **REUSE core implementation**; add member/node/project/risk adapters |
+| `DurableHostProcesses` | `process_start_host`, `process_get_status`, `process_read_output`, `process_terminate_job` | **REUSE core implementation**; add member/node/project/risk adapters |
 | Personal `local_exec_start` metadata/annotation lessons | `process_start_host` | **REUSE behavioral/safety baseline**, improve Business public naming |
 | Personal host-process + Git CLI execution primitives | `git_clone_repository` and focused Git/GitHub tools | **ADAPT_THINLY** — reuse execution/process primitives; add focused argument validation and Business node/project policy rather than building a second process engine |
 | Personal memory auth/session/Keychain runtime | Business Supabase auth/runtime | **REUSE_AS_IS where semantics match** |
@@ -795,6 +831,7 @@ The default for an overlapping Personal capability is `REUSE_AS_IS` or `ADAPT_TH
 The following are `BUSINESS_NEW` or substantial adaptations because Personal does not provide the same product semantics:
 
 - organization/member roles;
+- authenticated Business member profile wrapper and `runtime_list_nodes`;
 - `PERSONAL_NODE` / `SHARED_NODE` ownership and routing;
 - TEAM / PRIVATE collaboration;
 - N-node distributed runtime routing;
@@ -1212,7 +1249,10 @@ Rules:
 - no automatic host path is derived from a cloud project row;
 - the same logical project may map to different absolute paths on different nodes;
 - an unmapped project on a node is not executable there;
-- changing a local mapping is an administrative/local-authority operation and must be audited;
+- changing a local mapping is a local-authority mutation performed through `runtime_map_project` / `runtime_unmap_project` (or an equivalent operator action during bootstrap) and must be audited;
+- `runtime_map_project` requires an explicitly selected eligible node and approved workspace-root ID; it may optionally verify the Git remote before committing the mapping;
+- mapping writes are idempotent and revisioned so stale unmap/update operations fail closed;
+- `git_clone_repository` never creates the logical project mapping as a hidden side effect;
 - when a Git remote is present, a remote/repository fingerprint may be recorded as advisory mismatch detection, but Git metadata does not itself grant host authority.
 
 This prevents an identical `projectId` string from accidentally routing a team request into an unrelated local repository.
@@ -1231,33 +1271,67 @@ organization member
 -> approved runtime node
 ```
 
-### 24.1 Preferred option — native authenticated identity/routing
+### 24.1 B-S0 identity decision — OAuth 2.1 user identity
 
-If the OpenAI app/tunnel stack exposes a trustworthy user/session identity suitable for Business member-to-node binding, use it rather than building redundant infrastructure.
+B-S0 platform verification confirmed that ChatGPT MCP apps can authenticate end users with OAuth 2.1 and attach the resulting access token to MCP requests, while Secure MCP Tunnel preserves the OAuth discovery/authentication path. Supabase Auth can act as an OAuth 2.1/OIDC authorization server for MCP clients.
 
-### 24.2 Fallback option — Business Gateway + outbound Node Relay
+Therefore the accepted identity path is:
 
-If native identity/routing is insufficient:
+```text
+ChatGPT user
+-> Supabase Auth OAuth 2.1 / OIDC
+-> validated access token on MCP request
+-> stable Supabase auth user / Business member
+-> organization/member policy
+```
+
+The MCP server validates issuer, audience/resource, expiry and the supported OIDC identity scopes before resolving the Business member. A model-supplied user/member ID is never authoritative.
+
+Supabase Auth currently does not support arbitrary application-defined OAuth scopes. Therefore v1.1 does **not** use invented scopes such as `business.read`, `business.write`, or `business.execute`. The MCP descriptor requests the supported identity scopes `openid email profile`; actual Business authorization is enforced by organization/member state, RLS, project profile, node ownership/mapping and local OS/external-system policy. OAuth scope metadata is not used as a substitute for Business authorization.
+
+OpenAI request metadata such as `_meta["openai/subject"]`, `_meta["openai/session"]` or `_meta["openai/organization"]` may be used only as correlation/observability hints where appropriate; Business authorization is based on validated OAuth credentials and Business control state.
+
+`member_get_profile` is exposed as the standard authenticated profile tool so OpenAI can consistently recognize the connected Business profile.
+
+#### 24.1.1 OAuth descriptor compatibility decision
+
+OpenAI requires per-tool OAuth `securitySchemes` on the tool descriptor and documents `_meta.securitySchemes` as a compatibility mirror. B-S0 verified that the currently installed `@modelcontextprotocol/sdk` registration path preserves `_meta.securitySchemes` but does not emit the OpenAI top-level extension field.
+
+The accepted v1.1 approach is therefore a minimal descriptor adapter:
+
+- retain MCP SDK registration, input validation and `tools/call` handling;
+- maintain one canonical Business tool catalog;
+- replace only the SDK `tools/list` handler with a catalog-derived descriptor response;
+- emit identical OAuth schemes at top-level `securitySchemes` and `_meta.securitySchemes`;
+- retain `_meta["openai/profile"] = true` and the standard profile `outputSchema`;
+- do not fork the MCP SDK or lower/omit security metadata to avoid compatibility work.
+
+An isolated wire-level B-S0 probe proved that the adapter preserves top-level and compatibility-mirror schemes while normal SDK tool registration/call handling remains intact. Live ChatGPT Developer Mode discovery remains a required B-S0 canary before release implementation.
+
+### 24.2 B-S0 routing decision — Business Gateway + outbound Node Relay
+
+Secure MCP Tunnel provides a route to the configured private MCP server; it is not treated as the member-to-N-node runtime router. Multi-node execution therefore uses a Business routing layer:
 
 ```text
 Runtime Node
--> outbound authenticated relay
+-> outbound authenticated relay/poll channel
 -> Business Gateway
--> ChatGPT MCP request routing
+-> authenticated ChatGPT MCP request
 ```
 
-Nodes should not require arbitrary inbound Internet ports.
+Nodes should not require arbitrary inbound Internet ports. The exact production relay transport is an implementation decision for B-S1/B-S3, but B-S0 has validated the ownership/routing semantics with an executable outbound-queue prototype.
 
 The Gateway verifies:
 
+- validated OAuth member identity;
 - organization;
-- member;
 - node ownership/type;
-- node status;
-- session freshness;
-- project/node policy.
+- node approval/revocation state;
+- bounded session/authorization lease;
+- explicit project-to-local-path mapping;
+- local project/node policy.
 
-A PERSONAL_NODE may only accept its owning member's routed host work.
+A PERSONAL_NODE may only accept its owning member's routed host work. A SHARED_NODE may accept only members/projects allowed by organization and local-node policy. Generic `process_start_host` additionally requires the shared node's explicit host-power opt-in; semantic file/Git operations do not inherit that broad authority.
 
 This identity/routing property is non-negotiable before multi-node HOST_USER production release.
 
@@ -1265,7 +1339,9 @@ This identity/routing property is non-negotiable before multi-node HOST_USER pro
 
 ## 25. Supabase authentication and local secrets
 
-Reuse the Personal v1.1 pattern with Business-specific identity.
+Reuse the Personal v1.1 token-custody/session patterns, but use Business member OAuth identity rather than Personal single-owner pairing.
+
+B-S0 selected Supabase Auth OAuth 2.1/OIDC as the primary identity-provider path because it supports authorization-code + PKCE, MCP-compatible discovery/client registration, refresh tokens, UserInfo/OIDC identity and JWT verification. This avoids implementing a custom authorization server.
 
 Principles:
 
@@ -1277,7 +1353,9 @@ Principles:
 - bounded network/RPC timeout;
 - node-specific token/account binding;
 - separate Keychain key for backup encryption;
-- no token values in logs/backup/project files.
+- no token values in logs/backup/project files;
+- private/read-write tools declare OAuth `securitySchemes` explicitly and the server verifies the token on every invocation;
+- profile identity is stable across token refresh/reconnection and is not derived from mutable email/display-name fields.
 
 Personal source is a donor/reference, never a cross-repository runtime dependency.
 
@@ -1485,12 +1563,13 @@ Required work:
 10. verify shared-context sensitive-text rejection using the reused Personal guard;
 11. verify explicit logical-project-to-local-path mapping and wrong-repository mismatch denial;
 12. verify bounded authorization-lease behavior for Supabase/control-plane outage and expiry;
-13. run semantic-vs-generic-exec safety probes;
-14. verify whether OpenAI-native identity/session context can support trustworthy member-to-node binding;
-15. prototype native routing or Gateway/Node Relay as necessary;
-16. freeze Supabase schema/RPC naming;
-17. freeze the parity/safety/E2E test matrix;
-18. decide whether Safety Compatibility Fallback is needed before B-S1/B-S3 tool implementation proceeds.
+13. verify that SHARED_NODE trusted-root semantics cannot be bypassed through the generic host power tool unless explicit node-level host-power approval is present;
+14. run semantic-vs-generic-exec safety probes;
+15. verify OAuth 2.1 end-user identity through the OpenAI MCP path and bind validated Supabase Auth identity to Business member identity;
+16. prototype Business Gateway/outbound Node Relay ownership and routing semantics, including PERSONAL_NODE owner denial and SHARED_NODE allowance;
+17. freeze Supabase schema/RPC naming;
+18. freeze the parity/safety/E2E test matrix;
+19. decide whether Safety Compatibility Fallback is needed before B-S1/B-S3 tool implementation proceeds.
 
 Gate:
 
@@ -1504,11 +1583,37 @@ PERSONAL_REUSE_MATRIX=PASS
 SHARED_CONTEXT_SECRET_GUARD=PASS
 LOCAL_PROJECT_MAPPING_CONTRACT=PASS
 AUTH_LEASE_DEGRADED_MODE=PASS
+SHARED_NODE_HOST_POWER_BOUNDARY=PASS
+OAUTH_MEMBER_IDENTITY_PATH=PASS
+NODE_ROUTING_LOGIC_PROBE=PASS
 NODE_BINDING_ARCHITECTURE=PASS
 SAFETY_STRATEGY_DECIDED=PASS
 ```
 
 If safety compatibility fails on the primary semantic design, document the evidence and activate the Personal-structure fallback rather than weakening annotations.
+
+### 31.1 B-S0 local validation status
+
+Locally validated evidence at R5:
+
+- v1.0 production baseline healthy and unchanged;
+- Personal v1.1.1 donor source/test blob identities frozen;
+- focused semantic inventory/catalog/design parity passes;
+- current inventory includes explicit `runtime_map_project` / `runtime_unmap_project`; clone does not implicitly create a Business mapping;
+- sensitive-text guard donor test passes;
+- explicit project mapping, PERSONAL_NODE ownership, SHARED_NODE host-power boundary and authorization-lease prototypes pass;
+- outbound Gateway/Node Relay ownership/routing semantics pass;
+- exact descriptor schemas/descriptions/annotations serialize successfully;
+- OpenAI `securitySchemes` wire adapter passes;
+- Supabase schema/RPC naming and B-S0..B-S6 test matrix are frozen.
+
+Still requiring live ChatGPT evidence before `BUSINESS_V11_S0_ACCEPTED=PASS`:
+
+- Developer Mode tool scan of the exact candidate descriptor;
+- OAuth linking/profile call through the actual ChatGPT MCP path;
+- execution of the golden tool-selection set and confirmation/safety observations.
+
+Therefore R5 is **locally validated but B-S0 is not yet closed**. No B-S1 production/cloud implementation may treat the live canary as implicitly passed.
 
 ---
 
@@ -1534,6 +1639,23 @@ Implement:
 - anonymous/direct-table denial;
 - health/schema status;
 - Gateway/Relay authentication handshake if required by B-S0.
+
+B-S0 freezes the Supabase control schema as `private_business_control` with: `schema_meta`, `organizations`, `organization_members`, `control_state`, `runtime_nodes`, `runtime_sessions`, `logical_projects`, `private_project_members`, and `operations`.
+
+The frozen control RPC names are:
+
+```text
+bc_schema_status
+bc_member_profile
+bc_runtime_enroll
+bc_runtime_status
+bc_runtime_list
+bc_runtime_revoke
+bc_project_register
+bc_project_set_mode
+bc_private_member_add
+bc_private_member_remove
+```
 
 Do not implement full continuity CRUD yet.
 
@@ -1568,6 +1690,22 @@ Implement:
 - Business contextDigest;
 - FRESH/STALE/UNVERIFIED;
 - 8 KiB / 24 KiB handoff bounds.
+
+B-S0 freezes `private_business_continuity` tables as `schema_meta`, `continuity_state`, `tasks`, `checkpoints`, `operations`, and `events`. Logical project identity is referenced from `private_business_control.logical_projects`; continuity does not maintain a second project master.
+
+The frozen continuity RPC names are:
+
+```text
+bc_task_start
+bc_checkpoint_append
+bc_task_complete
+bc_task_get
+bc_project_context
+bc_history_search
+bc_export_snapshot
+```
+
+`bc_import_snapshot` is a temporary migration-only RPC and must be retired after accepted cutover.
 
 Required concurrency validation:
 

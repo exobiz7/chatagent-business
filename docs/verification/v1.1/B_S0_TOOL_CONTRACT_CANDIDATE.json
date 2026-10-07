@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "status": "B-S0_CANDIDATE_NOT_RELEASE_CONTRACT",
+  "principles": {
+    "toolCountConstrained": false,
+    "namingPattern": "<domain>_<verb>_<object>",
+    "semanticToolsPreferredOverPowerTool": true,
+    "powerTool": "process_start_host"
+  },
+  "tools": [
+    {
+      "name": "business_get_status",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "scope": "cloud/local status"
+    },
+    {
+      "name": "member_get_profile",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "BUSINESS_NEW",
+      "scope": "authenticated member profile",
+      "meta": {
+        "openai/profile": true
+      }
+    },
+    {
+      "name": "runtime_list_nodes",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "BUSINESS_NEW",
+      "scope": "caller-eligible runtime nodes and project mappings"
+    },
+    {
+      "name": "runtime_map_project",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "BUSINESS_NEW",
+      "scope": "local logical-project mapping",
+      "localEffect": true
+    },
+    {
+      "name": "runtime_unmap_project",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "BUSINESS_NEW",
+      "scope": "local logical-project mapping removal",
+      "localEffect": true
+    },
+    {
+      "name": "fs_list_directory",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_get_path_info",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_read_file",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_get_file_hash",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_create_directory",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_create_file",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true
+    },
+    {
+      "name": "fs_replace_file",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true
+    },
+    {
+      "name": "fs_patch_file",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_move_path",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "fs_delete_path",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "continuity_get_context",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY"
+    },
+    {
+      "name": "continuity_start_task",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY"
+    },
+    {
+      "name": "continuity_add_checkpoint",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY"
+    },
+    {
+      "name": "continuity_prepare_handoff",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY"
+    },
+    {
+      "name": "continuity_complete_task",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY"
+    },
+    {
+      "name": "continuity_search_history",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY"
+    },
+    {
+      "name": "process_start_host",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true,
+      "powerTool": true,
+      "nodePolicy": "PERSONAL_NODE owner allowed; SHARED_NODE requires explicit ADMIN hostPowerEnabled=true"
+    },
+    {
+      "name": "process_start_isolated",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true
+    },
+    {
+      "name": "process_get_status",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true
+    },
+    {
+      "name": "process_read_output",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true
+    },
+    {
+      "name": "process_terminate_job",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "reuse": "REUSE_AS_IS",
+      "localEffect": true
+    },
+    {
+      "name": "git_get_status",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_get_diff",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_get_history",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_list_branches",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_create_branch",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_switch_branch",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_stage_files",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_create_commit",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_clone_repository",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_fetch_remote",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_pull_ff_only",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "git_push_branch",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    },
+    {
+      "name": "github_create_pull_request",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "reuse": "ADAPT_THINLY",
+      "localEffect": true
+    }
+  ],
+  "nodeSelectionRule": {
+    "appliesTo": "tools where localEffect=true",
+    "ifExactlyOneEligibleMappedNode": "runtimeNodeId may be omitted and the server may resolve the sole eligible node",
+    "ifZeroEligibleMappedNodes": "fail RUNTIME_NODE_UNAVAILABLE",
+    "ifMultipleEligibleMappedNodes": "require explicit runtimeNodeId; fail RUNTIME_NODE_REQUIRED otherwise",
+    "personalNodeRule": "PERSONAL_NODE may only be selected by its owning member",
+    "sharedNodeRule": "SHARED_NODE selection requires member/project policy and an explicit local project mapping"
+  }
+}

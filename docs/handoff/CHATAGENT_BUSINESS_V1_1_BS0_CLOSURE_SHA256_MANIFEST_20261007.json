@@ -1,0 +1,63 @@
+{
+  "capturedAt": "2026-10-07T16:03:00+09:00",
+  "status": "BUSINESS_V11_S0_ACCEPTED",
+  "note": "Historical 2026-10-06 handoff remains immutable; this manifest covers final B-S0 closure sources after PR acceptance review metadata refresh.",
+  "files": [
+    {
+      "path": "docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md",
+      "sha256": "05db058c75c9b6bab33c0f40fffb933940379242f9b65b9b09e9a0ca90e21246"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_GATE_STATE_20261005.json",
+      "sha256": "1e1645f90252d216b7c760dbbb53404e781cbee2802fd8306d720784124c2ea5"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_VERIFICATION_REPORT_20261005.md",
+      "sha256": "be0c24ad2317c27c616833edbd79a7e80050a80d94be0a817ca93872ccbdcbb3"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_LIVE_CANARY_RUNBOOK.md",
+      "sha256": "57046608938971862af41c47fb5d69022309ef9cfddd46ae6fbd9f3d352705e5"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TOOL_CONTRACT_CANDIDATE.json",
+      "sha256": "dafec447362045078184e216323f461f56b8b0d88754d479d4e0b41982279869"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TOOL_SELECTION_GOLDEN_SET.json",
+      "sha256": "9dc377a309e38137f01af84d961ca91d7da1f8e2b1e5f5088699e85f1ace8765"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_TOOL_SELECTION_LIVE_RESULTS_20261006.json",
+      "sha256": "b6215a488fe1260ac1c8f813d8310057ea159a1f07962c53aead8bd86080fa24"
+    },
+    {
+      "path": "docs/verification/v1.1/B_S0_LIVE_CANARY_EVIDENCE_20261006.md",
+      "sha256": "addf54f1821824dea44dcb0f01bb8157955281e6b4bc247d73ce0bb4407d374c"
+    },
+    {
+      "path": "scripts/business/v1.1/bs0-tool-catalog.mjs",
+      "sha256": "83a71c6fc035e7e14badb642a6b1c84e4bc383490ac2487761a18ce1e8157051"
+    },
+    {
+      "path": "scripts/business/v1.1/bs0-tool-catalog-test.mjs",
+      "sha256": "06376913d651089c5d16a8578b49ba858f2e4a9d245d7a15468fcc2e979115d7"
+    },
+    {
+      "path": "scripts/business/v1.1/bs0-live-fixture-server.mjs",
+      "sha256": "a5fbba61999e52afe313be743373f25ca264cdcd7923f6516590acae2c4c7900"
+    },
+    {
+      "path": "scripts/business/v1.1/bs0-oauth-consent-server.mjs",
+      "sha256": "1476764e5e9e221e07c1a56b2cbebdc4e73de0ad52d1def6aad5c96559e69ade"
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CURRENT_STATE_20261007.json",
+      "sha256": "d1a79476842434723a6cd5395426871356202cae2f8762f37aa04b07cfd58131"
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_HANDOFF_20261007.md",
+      "sha256": "f22bf98532bede5abbcb2e6ed9a6b4de50bc28d35018d31a66f54561d4633a88"
+    }
+  ]
+}
