@@ -1,6 +1,6 @@
 {
   "phase": "B-S1",
-  "status": "B_S1B_MEMBER_AUTH_PASS_BS1C_PENDING",
+  "status": "B_S1C_FOUNDATION_PASS_CHATGPT_RUNTIME_LIST_PENDING",
   "baseAcceptedHead": "2975be54502a89dd92949c57521bacb071d49bac",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
@@ -23,9 +23,15 @@
     "BUSINESS_S1_LOCAL": "IN_PROGRESS",
     "BUSINESS_S1_SUPABASE_SCHEMA": "PASS",
     "BUSINESS_S1_MEMBER_AUTH": "PASS",
-    "BUSINESS_S1_NODE_ENROLLMENT": "PENDING_BS1C",
-    "BUSINESS_S1_NODE_REVOKE": "PENDING_BS1C",
-    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_BS1C"
+    "BUSINESS_S1_NODE_ENROLLMENT": "PASS",
+    "BUSINESS_S1_NODE_REVOKE": "PASS",
+    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_CHATGPT_RUNTIME_LIST_LIVE",
+    "BUSINESS_S1C_RUNTIME_NODE_CONTRACT": "PASS",
+    "BUSINESS_S1C_RUNTIME_NODE_POSTGRES": "PASS",
+    "BUSINESS_S1C_RUNTIME_CLIENT": "PASS",
+    "BUSINESS_S1C_STAGING_LIFECYCLE": "PASS",
+    "BUSINESS_S1C_LIVE_RUNTIME_LIST_ADAPTER": "PASS",
+    "BUSINESS_S1C_CHATGPT_RUNTIME_LIST": "PENDING_LIVE_USER_CALL"
   },
   "stagingMigrations": [
     {
@@ -44,6 +50,10 @@
       "version": "20261007080618",
       "name": "business_v11_bs1_member_identity",
       "note": "concurrent idempotent duplicate apply; retained as evidence"
+    },
+    {
+      "version": "20261007090934",
+      "name": "business_v11_bs1_runtime_node_lifecycle"
     }
   ],
   "liveVerification": {
@@ -71,7 +81,23 @@
     "chatgptReturnedProfileMatchesAcceptedBs0Identity": true,
     "chatgptReturnedNicknameMatchesCanonicalProduct": true,
     "chatgptReturnedEmailPresent": true,
-    "chatgptLiveEvidenceRecordedWithoutEmailLiteral": true
+    "chatgptLiveEvidenceRecordedWithoutEmailLiteral": true,
+    "runtimeNodeCount": 2,
+    "approvedPersistentRuntimeNodeCount": 1,
+    "revokedDisposableRuntimeNodeCount": 1,
+    "activeRuntimeSessionCount": 1,
+    "revokedRuntimeSessionCount": 1,
+    "persistentPersonalNodeLifecycle": "APPROVED",
+    "persistentPersonalNodeOwnedByAuthenticatedCaller": true,
+    "persistentPersonalNodeSharedHostPowerEnabled": false,
+    "boundedAuthorizationLeaseMinted": true,
+    "runtimeControlPolicyRevision": 4,
+    "runtimeRpcAuthenticatedExecuteAllFour": true,
+    "runtimeRpcAnonExecuteAllFour": false,
+    "authenticatedDirectRuntimeNodeSelect": false,
+    "authenticatedDirectRuntimeSessionSelect": false,
+    "runtimeNodeUuidPersistedInEvidence": false,
+    "chatgptBusinessRuntimeListLive": false
   },
   "implemented": {
     "schema": "private_business_control",
@@ -88,13 +114,25 @@
     ],
     "rpc": [
       "bc_schema_status",
-      "bc_member_profile"
+      "bc_member_profile",
+      "bc_runtime_enroll",
+      "bc_runtime_status",
+      "bc_runtime_list",
+      "bc_runtime_revoke"
     ],
     "runtimeAuth": [
       "publishable-only Supabase config",
       "bounded auth session refresh",
       "single-flight refresh-token rotation",
       "macOS Keychain refresh-token custody"
+    ],
+    "runtimeNodes": [
+      "PENDING -> APPROVED -> REVOKED lifecycle",
+      "PERSONAL_NODE authenticated-owner binding",
+      "ADMIN approval/revocation",
+      "SHARED_NODE ADMIN enrollment and explicit host-power opt-in",
+      "bounded runtime-session authorization lease",
+      "operation UUID idempotency receipts"
     ]
   },
   "security": {
@@ -112,7 +150,16 @@
       "openid",
       "email",
       "profile"
-    ]
+    ],
+    "personalNodeOwnerSource": "auth.uid() enrolling member",
+    "callerSuppliedNodeOwnerAuthoritative": false,
+    "nodeApprovalRole": "ADMIN",
+    "nodeRevocationRole": "ADMIN",
+    "sharedNodeEnrollmentRole": "ADMIN",
+    "sharedHostPowerDefault": false,
+    "cachedAuthorizationLeaseBounded": true,
+    "leaseExpiryFailsClosed": true,
+    "revocationInvalidatesRuntimeSessions": true
   },
   "personalReuse": {
     "source": "ChatAgent Personal v1.1.1@da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
@@ -122,25 +169,30 @@
     "runtimeDependencyOnPersonalRepo": false
   },
   "stagingFixture": {
-    "profileMode": "DB_BACKED_DEDICATED_BS1B_FIXTURE",
+    "mode": "DB_BACKED_BS1C_FIXTURE",
     "fixtureListen": "127.0.0.1:31861",
     "tunnelHealthListen": "127.0.0.1:51961",
+    "dbBackedTools": [
+      "member_get_profile",
+      "runtime_list_nodes"
+    ],
     "otherToolsRemainNoEffect": true,
     "productionMcpListen": "127.0.0.1:31850",
     "productionUnchanged": true,
-    "reproducibleSource": "scripts/business/v1.1/bs1b-live-fixture-server.mjs",
-    "acceptedBs0FixtureSourceModified": false
+    "reproducibleSource": "scripts/business/v1.1/bs1c-live-fixture-server.mjs",
+    "acceptedBs0FixtureSourceModified": false,
+    "bs1bFixtureSourceModified": false
   },
   "advisorState": {
     "security": {
       "rlsEnabledNoPolicyInfo": 9,
-      "authenticatedSecurityDefinerWarning": 2,
+      "authenticatedSecurityDefinerWarning": 6,
       "leakedPasswordProtectionDisabledWarning": 1,
       "leakedPasswordProtectionDisposition": "PLAN_DEPENDENT_HARDENING_NOT_FROZEN_BS1_GATE"
     },
     "performance": {
       "unindexedForeignKeyFindings": 0,
-      "unusedIndexInfo": 11
+      "unusedIndexInfo": 10
     }
   },
   "dependencyFindings": [
@@ -153,5 +205,5 @@
       "disposition": "SEPARATE_COMPATIBILITY_SECURITY_UNIT_BEFORE_RELEASE"
     }
   ],
-  "nextUnit": "B-S1C: implement and validate runtime-node lifecycle RPCs (bc_runtime_enroll/status/list/revoke), runtime-session/authorization-lease behavior, and PERSONAL_NODE owner binding on isolated staging. Keep PR #7 Draft and production v1.0 unchanged."
+  "nextUnit": "Run one ChatGPT Business runtime_list_nodes invocation against the B-S1C DB-backed staging fixture. If exactly the persistent APPROVED Mac Studio PERSONAL_NODE is returned as ownedByCaller=true and the revoked disposable node is absent, close BUSINESS_S1_PERSONAL_NODE_BINDING and BUSINESS_S1_LOCAL, accept B-S1, then begin B-S2 TEAM Shared Continuity / Search."
 }
