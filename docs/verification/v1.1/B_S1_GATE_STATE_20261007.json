@@ -1,22 +1,31 @@
 {
   "phase": "B-S1",
-  "status": "B_S1A_CONTROL_SCHEMA_FOUNDATION_PASS_BS1B_PENDING",
+  "status": "B_S1B_AUTH_FOUNDATION_PASS_CHATGPT_OAUTH_LIVE_PENDING",
   "baseAcceptedHead": "2975be54502a89dd92949c57521bacb071d49bac",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
   "gates": {
     "BUSINESS_S1A_CONTROL_SCHEMA_FOUNDATION": "PASS",
+    "BUSINESS_S1A_CONTROL_CONTRACT": "PASS",
     "BUSINESS_S1A_POSTGRES_INTEGRATION": "PASS",
+    "BUSINESS_S1A_STAGING_SCHEMA_APPLY": "PASS",
+    "BUSINESS_S1A_PRIVILEGE_BOUNDARY": "PASS",
+    "BUSINESS_S1B_MEMBER_IDENTITY_CONTRACT": "PASS",
+    "BUSINESS_S1B_MEMBER_IDENTITY_POSTGRES": "PASS",
+    "BUSINESS_S1B_AUTH_RUNTIME": "PASS",
+    "BUSINESS_S1B_KEYCHAIN_CONFIG": "PASS",
+    "BUSINESS_S1B_KEYCHAIN_LIVE_CUSTODY": "PASS",
+    "BUSINESS_S1B_LIVE_PROFILE_ADAPTER": "PASS",
+    "BUSINESS_S1B_STAGING_BOOTSTRAP": "PASS",
+    "BUSINESS_S1B_STAGING_DB_PROFILE": "PASS",
+    "BUSINESS_S1B_CHATGPT_OAUTH_PROFILE": "PENDING_LIVE_USER_CALL",
     "BUSINESS_V11_BS0_REGRESSION": "PASS",
     "BUSINESS_S1_LOCAL": "IN_PROGRESS",
     "BUSINESS_S1_SUPABASE_SCHEMA": "PASS",
-    "BUSINESS_S1_MEMBER_AUTH": "PENDING_BS1B",
-    "BUSINESS_S1_NODE_ENROLLMENT": "PENDING_IMPLEMENTATION",
-    "BUSINESS_S1_NODE_REVOKE": "PENDING_IMPLEMENTATION",
-    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_IMPLEMENTATION",
-    "BUSINESS_S1A_CONTROL_CONTRACT": "PASS",
-    "BUSINESS_S1A_STAGING_SCHEMA_APPLY": "PASS",
-    "BUSINESS_S1A_PRIVILEGE_BOUNDARY": "PASS"
+    "BUSINESS_S1_MEMBER_AUTH": "PENDING_CHATGPT_OAUTH_PROFILE_LIVE",
+    "BUSINESS_S1_NODE_ENROLLMENT": "PENDING_BS1C",
+    "BUSINESS_S1_NODE_REVOKE": "PENDING_BS1C",
+    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_BS1C"
   },
   "stagingMigrations": [
     {
@@ -26,23 +35,38 @@
     {
       "version": "20261007072117",
       "name": "business_v11_bs1_control_fk_indexes"
+    },
+    {
+      "version": "20261007080451",
+      "name": "business_v11_bs1_member_identity"
+    },
+    {
+      "version": "20261007080618",
+      "name": "business_v11_bs1_member_identity",
+      "note": "concurrent idempotent duplicate apply; retained as evidence"
     }
   ],
   "liveVerification": {
     "controlTableCount": 9,
     "rlsEnabledCount": 9,
-    "anonAuthenticatedDirectTableGrantCount": 0,
+    "organizationCount": 1,
+    "activeAdminCount": 1,
+    "organizationSlug": "chatagent-business-v11-bs0",
+    "deterministicProfileMatchesAcceptedBs0Identity": true,
+    "profileNickname": "ChatAgent Business",
+    "profileEmailPresent": true,
+    "authenticatedProfileExecute": true,
+    "anonProfileExecute": false,
     "authenticatedPrivateSchemaUsage": false,
-    "anonPrivateSchemaUsage": false,
-    "authenticatedSchemaStatusExecute": true,
-    "anonSchemaStatusExecute": false,
-    "organizationInitialized": false,
+    "authenticatedDirectMemberSelect": false,
+    "anonDirectMemberSelect": false,
     "bcSchemaStatus": {
-      "schema": "private_business_control",
       "schemaVersion": 1,
       "contractVersion": 1,
-      "tableCount": 9
-    }
+      "organizationInitialized": true,
+      "role": "ADMIN"
+    },
+    "sensitiveIdentifiersPersistedInEvidence": false
   },
   "implemented": {
     "schema": "private_business_control",
@@ -58,46 +82,71 @@
       "operations"
     ],
     "rpc": [
-      "bc_schema_status"
+      "bc_schema_status",
+      "bc_member_profile"
+    ],
+    "runtimeAuth": [
+      "publishable-only Supabase config",
+      "bounded auth session refresh",
+      "single-flight refresh-token rotation",
+      "macOS Keychain refresh-token custody"
     ]
   },
   "security": {
+    "identitySource": "auth.uid()",
+    "authorizationSource": "active private_business_control.organization_members row",
+    "callerSuppliedMemberIdAuthoritative": false,
+    "rawUserMetadataUsedForAuthorization": false,
     "runtimeServiceRoleAllowed": false,
     "directPrivateTableClientAccess": false,
     "privateTablesRlsEnabled": true,
     "oneOrganizationPerSupabaseProject": true,
-    "minimalRoles": [
-      "ADMIN",
-      "PM",
-      "MEMBER"
-    ],
-    "nodeTypes": [
-      "PERSONAL_NODE",
-      "SHARED_NODE"
-    ],
-    "collaborationModes": [
-      "TEAM",
-      "PRIVATE"
+    "publishableKeyOnlyRuntime": true,
+    "refreshTokenPersistentLocation": "macOS Keychain via pinned native helper",
+    "oauthIdentityScopes": [
+      "openid",
+      "email",
+      "profile"
     ]
+  },
+  "personalReuse": {
+    "source": "ChatAgent Personal v1.1.1@da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
+    "keychainWrapperBlobExact": true,
+    "nativeKeychainHelperBlobExact": true,
+    "supabaseJsVersion": "2.117.2",
+    "runtimeDependencyOnPersonalRepo": false
+  },
+  "stagingFixture": {
+    "profileMode": "DB_BACKED_DEDICATED_BS1B_FIXTURE",
+    "fixtureListen": "127.0.0.1:31861",
+    "tunnelHealthListen": "127.0.0.1:51961",
+    "otherToolsRemainNoEffect": true,
+    "productionMcpListen": "127.0.0.1:31850",
+    "productionUnchanged": true,
+    "reproducibleSource": "scripts/business/v1.1/bs1b-live-fixture-server.mjs",
+    "acceptedBs0FixtureSourceModified": false
   },
   "advisorState": {
     "security": {
       "rlsEnabledNoPolicyInfo": 9,
-      "authenticatedSecurityDefinerWarning": 1,
-      "leakedPasswordProtectionDisabledWarning": 1
+      "authenticatedSecurityDefinerWarning": 2,
+      "leakedPasswordProtectionDisabledWarning": 1,
+      "leakedPasswordProtectionDisposition": "PLAN_DEPENDENT_HARDENING_NOT_FROZEN_BS1_GATE"
     },
     "performance": {
-      "unusedIndexInfo": 12,
-      "unindexedForeignKeyFindings": 0
+      "unindexedForeignKeyFindings": 0,
+      "unusedIndexInfo": 11
     }
   },
-  "reuse": {
-    "personalDonor": "v1.1.1@da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
-    "nextThinReuse": [
-      "Supabase auth/session bounded refresh pattern",
-      "macOS Keychain refresh-token custody",
-      "device identity / enrollment concepts adapted to Business runtime nodes"
-    ]
-  },
-  "nextUnit": "B-S1B: bootstrap the one organization/admin member in isolated staging, implement authenticated bc_member_profile using validated auth identity, and adapt Personal auth/session plus Keychain refresh-token custody before runtime-node lifecycle RPCs."
+  "dependencyFindings": [
+    {
+      "id": "GHSA-6qxp-vccf-f47h",
+      "package": "@modelcontextprotocol/sdk",
+      "currentVersion": "1.30.0",
+      "severity": "HIGH",
+      "origin": "PRE_EXISTING_PIN",
+      "disposition": "SEPARATE_COMPATIBILITY_SECURITY_UNIT_BEFORE_RELEASE"
+    }
+  ],
+  "nextUnit": "Complete one ChatGPT Business app member_get_profile invocation against the DB-backed staging adapter. If the accepted deterministic profile is returned, close BUSINESS_S1_MEMBER_AUTH and proceed to B-S1C runtime-node lifecycle RPCs and PERSONAL_NODE owner binding."
 }
