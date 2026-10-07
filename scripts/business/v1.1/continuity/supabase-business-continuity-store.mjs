@@ -1,0 +1,53 @@
+import {assertContinuitySafe} from './sensitive-text-guard.mjs';
+
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const fail=code=>{throw Error(code);};
+const rpcCode=error=>{
+  const message=String(error?.message??'');
+  const match=message.match(/BUSINESS_[A-Z0-9_]{3,80}/);
+  return match?.[0]??'BUSINESS_BACKEND_UNAVAILABLE';
+};
+const text=(v,min,max)=>typeof v==='string'&&v.trim().length>=min&&v.length<=max?v.trim():fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+const arr=(v,max=32)=>{
+  if(v===undefined||v===null)return [];
+  if(!Array.isArray(v)||v.length>max||v.some(x=>typeof x!=='string'||!x.trim()||x.length>1024))fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+  return v.map(x=>x.trim());
+};
+const uuid=v=>UUID.test(v??'')?v:fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+
+export class SupabaseBusinessContinuityStore{
+  constructor({authSession}={}){
+    if(!authSession||typeof authSession.ensureSession!=='function'||typeof authSession.rpc!=='function')
+      fail('BUSINESS_CONTINUITY_CONFIG_INVALID');
+    this.authSession=authSession;
+  }
+  async rpc(name,args){
+    await this.authSession.ensureSession();
+    const {data,error}=await this.authSession.rpc(name,args);
+    if(error)fail(rpcCode(error));
+    return data;
+  }
+  taskStart({projectId,objective,operationId,assignedToUserId=null,tags=[]}={}){
+    const input={projectId:uuid(projectId),objective:text(objective,1,4096),operationId:uuid(operationId),
+      assignedToUserId:assignedToUserId===null?null:uuid(assignedToUserId),tags:arr(tags,32)};
+    assertContinuitySafe(input);
+    return this.rpc('bc_task_start',{p_project_id:input.projectId,p_objective:input.objective,p_operation_id:input.operationId,
+      p_assigned_to_user_id:input.assignedToUserId,p_tags:input.tags});
+  }
+  checkpointAppend({projectId,taskId,expectedTaskRevision,summary,currentState,operationId,nextActions=[],verification=null,
+    decisions=[],facts=[],artifacts=[],sourceRuntimeNodeId=null}={}){
+    if(!Number.isSafeInteger(expectedTaskRevision)||expectedTaskRevision<0)fail('BUSINESS_CONTINUITY_INPUT_INVALID');
+    const input={projectId:uuid(projectId),taskId:uuid(taskId),expectedTaskRevision,
+      summary:text(summary,1,4096),currentState:text(currentState,1,8192),operationId:uuid(operationId),
+      nextActions:arr(nextActions),verification:verification===null?null:text(verification,1,4096),decisions:arr(decisions),facts:arr(facts),artifacts:arr(artifacts),
+      sourceRuntimeNodeId:sourceRuntimeNodeId===null?null:uuid(sourceRuntimeNodeId)};
+    assertContinuitySafe(input);
+    return this.rpc('bc_checkpoint_append',{p_project_id:input.projectId,p_task_id:input.taskId,p_expected_task_revision:expectedTaskRevision,
+      p_summary:input.summary,p_current_state:input.currentState,p_operation_id:input.operationId,p_next_actions:input.nextActions,
+      p_verification:input.verification,p_decisions:input.decisions,p_facts:input.facts,p_artifacts:input.artifacts,
+      p_source_runtime_node_id:input.sourceRuntimeNodeId});
+  }
+  taskGet({projectId,taskId}={}){
+    return this.rpc('bc_task_get',{p_project_id:uuid(projectId),p_task_id:uuid(taskId)});
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "phase": "B-S2",
+  "status": "B_S2A_FOUNDATION_PASS_BS2B_PENDING",
+  "baseAcceptedHead": "63de5e25a6af5b2b4ea8846ef166e104cb305d0d",
+  "productionMutation": false,
+  "stagingProjectRef": "dxofyjarkzizdzumfyul",
+  "gates": {
+    "BUSINESS_S2A_SCHEMA_FOUNDATION": "PASS",
+    "BUSINESS_S2A_PROJECT_POLICY_PREREQ": "PASS",
+    "BUSINESS_S2A_TEAM_PRIVATE_BOUNDARY": "PASS",
+    "BUSINESS_S2A_CAS_IDEMPOTENCY": "PASS",
+    "BUSINESS_S2A_SENSITIVE_TEXT_GUARD": "PASS",
+    "BUSINESS_S2A_STAGING_APPLY": "PASS",
+    "BUSINESS_S2_CONTINUITY_CONTRACT": "IN_PROGRESS_BS2B",
+    "BUSINESS_S2_TEAM_SEARCH": "PENDING_BS2B",
+    "BUSINESS_S2_PRIVATE_ISOLATION": "IN_PROGRESS_SEARCH_PENDING",
+    "BUSINESS_S2_CAS_IDEMPOTENCY": "PASS",
+    "BUSINESS_S2_HANDOFF_FRESHNESS": "PENDING_BS2C",
+    "BUSINESS_S2_LOCAL": "IN_PROGRESS"
+  },
+  "stagingMigrations": [
+    {
+      "version": "20261007142542",
+      "name": "business_v11_bs2_project_policy_prereqs"
+    },
+    {
+      "version": "20261007142643",
+      "name": "business_v11_bs2_continuity_foundation"
+    },
+    {
+      "version": "20261007142954",
+      "name": "business_v11_bs2_continuity_fk_indexes"
+    }
+  ],
+  "implemented": {
+    "controlPrerequisiteRpcs": [
+      "bc_project_register",
+      "bc_project_set_mode",
+      "bc_private_member_add",
+      "bc_private_member_remove"
+    ],
+    "continuitySchema": "private_business_continuity",
+    "continuityTables": [
+      "schema_meta",
+      "continuity_state",
+      "tasks",
+      "checkpoints",
+      "operations",
+      "events"
+    ],
+    "continuityRpcs": [
+      "bc_task_start",
+      "bc_checkpoint_append",
+      "bc_task_get"
+    ],
+    "deferredContinuityRpcs": [
+      "bc_task_complete",
+      "bc_project_context",
+      "bc_history_search",
+      "bc_export_snapshot",
+      "bc_import_snapshot"
+    ]
+  },
+  "authorization": {
+    "teamDefault": true,
+    "teamBroadActiveOrganizationMemberVisibility": true,
+    "privateRequiresExplicitMembership": true,
+    "privateImplicitAdminContentBypass": false,
+    "continuityDirectClientTableAccess": false,
+    "anonContinuityRpcAccess": false,
+    "logicalProjectMaster": "private_business_control.logical_projects"
+  },
+  "correctness": {
+    "operationUuidRequired": true,
+    "sameOperationSameInputReturnsPriorReceipt": true,
+    "sameOperationChangedInputFails": "BUSINESS_IDEMPOTENCY_CONFLICT",
+    "taskRevisionCas": true,
+    "sameRevisionConcurrentWriters": "EXACTLY_ONE_COMMIT_ONE_BUSINESS_REVISION_CONFLICT",
+    "clientSensitiveTextGuardBeforeRpc": true,
+    "serverSensitiveTextRevalidation": true,
+    "eventHeadAndContextSequenceTransactional": true
+  },
+  "stagingVerification": {
+    "continuityTableCount": 6,
+    "continuityRlsEnabledCount": 6,
+    "continuityDirectClientGrantCount": 0,
+    "projectPolicyRpcCount": 4,
+    "continuityRpcImplementedCount": 3,
+    "teamProjectMode": "TEAM",
+    "privateProjectMode": "PRIVATE",
+    "privateExplicitMemberCount": 1,
+    "taskCount": 2,
+    "checkpointCount": 1,
+    "operationReceiptCount": 3,
+    "eventCount": 3,
+    "contextSeq": 3,
+    "headHashValid": true,
+    "sameInputReplayPass": true,
+    "changedInputConflictPass": true,
+    "staleRevisionConflictPass": true,
+    "syntheticSensitiveTextRejected": true,
+    "sensitiveIdentifiersPersistedInEvidence": false
+  },
+  "advisorState": {
+    "security": {
+      "rlsEnabledNoPolicyDisposition": "INTENTIONAL_RPC_ONLY_DENY_BY_DEFAULT",
+      "authenticatedSecurityDefinerDisposition": "INTENTIONAL_BOUNDED_AUTHENTICATED_RPC_BOUNDARY",
+      "leakedPasswordProtectionDisposition": "PRE_RELEASE_AUTH_HARDENING_ITEM"
+    },
+    "performance": {
+      "unindexedForeignKeyFindingsBeforeRemediation": 9,
+      "unindexedForeignKeyFindingsAfterRemediation": 0,
+      "remainingFindings": "UNUSED_INDEX_INFO_ONLY_ON_LOW_DATA_STAGING"
+    }
+  },
+  "validation": {
+    "nodeVersion": "v24.21.0",
+    "BUSINESS_S2A_CONTINUITY_CONTRACT": "PASS",
+    "BUSINESS_S2A_CONTINUITY_POSTGRES": "PASS",
+    "BUSINESS_S2A_CONTINUITY_CLIENT": "PASS",
+    "BUSINESS_S1C_REGRESSION": "PASS",
+    "CI_LOCAL": "PASS",
+    "GIT_DIFF_CHECK": "PASS"
+  },
+  "nextUnit": "B-S2B: implement task completion, bounded project context, and PostgreSQL history search with TEAM broad search and PRIVATE search isolation. Keep handoff/contextDigest/FRESH-STALE-UNVERIFIED semantics for B-S2C."
+}
