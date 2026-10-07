@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node scripts/business/b5-isolated-standard-exec-test.mjs && node scripts/business/b6-release-e2e-test.mjs",
-    "test:ci": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node --check scripts/business/business-exec.mjs && node --check scripts/business/b5-isolated-standard-exec-test.mjs && node --check scripts/business/b6-release-e2e-test.mjs",
+    "test:ci": "node scripts/run-personal-tests.mjs && node scripts/business/b1-project-boundary-test.mjs && node scripts/business/b2-safe-files-test.mjs && node scripts/business/b3-shared-continuity-test.mjs && node scripts/business/b4-audit-ops-safe-pilot-test.mjs && node --check scripts/business/business-exec.mjs && node --check scripts/business/b5-isolated-standard-exec-test.mjs && node --check scripts/business/b6-release-e2e-test.mjs && node scripts/business/v1.1/bs1-control-schema-contract-test.mjs && node scripts/business/v1.1/bs1b-member-identity-contract-test.mjs && node scripts/business/v1.1/bs1b-auth-runtime-test.mjs && node scripts/business/v1.1/bs1b-keychain-config-test.mjs && node scripts/business/v1.1/bs1b-live-profile-adapter-test.mjs && node --check scripts/business/v1.1/bs1b-live-fixture-server.mjs && node scripts/business/v1.1/bs1c-runtime-node-contract-test.mjs && node scripts/business/v1.1/bs1c-runtime-client-test.mjs && node scripts/business/v1.1/bs1c-live-runtime-list-adapter-test.mjs && node --check scripts/business/v1.1/bs1c-live-fixture-server.mjs",
     "test:business:b1": "node scripts/business/b1-project-boundary-test.mjs",
     "test:business:b2": "node scripts/business/b2-safe-files-test.mjs",
     "test:business:b3": "node scripts/business/b3-shared-continuity-test.mjs",
@@ -20,10 +20,27 @@
     "test:stage": "node scripts/l1/personal-copy-e2e-kill-test.mjs",
     "test:compat": "node test/compat/p8-read-adapter-test.mjs",
     "test:memory": "node scripts/l1/personal-memory-store-test.mjs && node scripts/l1/personal-memory-mcp-test.mjs && node scripts/l1/personal-memory-physical-restart-test.mjs && node scripts/l1/personal-memory-backup-test.mjs && node scripts/l1/personal-memory-encrypted-archive-test.mjs",
-    "test:ssd": "node scripts/l1/personal-ssd-copy-test.mjs"
+    "test:ssd": "node scripts/l1/personal-ssd-copy-test.mjs",
+    "test:business:bs1a:contract": "node scripts/business/v1.1/bs1-control-schema-contract-test.mjs",
+    "test:business:bs1a:integration": "node scripts/business/v1.1/bs1-control-postgres-integration-test.mjs",
+    "test:business:bs1a": "npm run test:business:bs1a:contract && npm run test:business:bs1a:integration",
+    "test:business:bs1b:contract": "node scripts/business/v1.1/bs1b-member-identity-contract-test.mjs",
+    "test:business:bs1b:integration": "node scripts/business/v1.1/bs1b-member-identity-postgres-test.mjs",
+    "test:business:bs1b:auth": "node scripts/business/v1.1/bs1b-auth-runtime-test.mjs",
+    "test:business:bs1b:keychain": "node scripts/business/v1.1/bs1b-keychain-config-test.mjs",
+    "test:business:bs1b": "npm run test:business:bs1b:contract && npm run test:business:bs1b:integration && npm run test:business:bs1b:auth && npm run test:business:bs1b:keychain && npm run test:business:bs1b:profile-adapter",
+    "test:business:bs1b:profile-adapter": "node scripts/business/v1.1/bs1b-live-profile-adapter-test.mjs",
+    "test:business:bs1b:fixture": "node --check scripts/business/v1.1/bs1b-live-fixture-server.mjs",
+    "test:business:bs1c:contract": "node scripts/business/v1.1/bs1c-runtime-node-contract-test.mjs",
+    "test:business:bs1c:integration": "node scripts/business/v1.1/bs1c-runtime-node-postgres-test.mjs",
+    "test:business:bs1c:client": "node scripts/business/v1.1/bs1c-runtime-client-test.mjs",
+    "test:business:bs1c": "npm run test:business:bs1c:contract && npm run test:business:bs1c:integration && npm run test:business:bs1c:client && npm run test:business:bs1c:runtime-list-adapter && npm run test:business:bs1c:fixture",
+    "test:business:bs1c:runtime-list-adapter": "node scripts/business/v1.1/bs1c-live-runtime-list-adapter-test.mjs",
+    "test:business:bs1c:fixture": "node --check scripts/business/v1.1/bs1c-live-fixture-server.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",
+    "@supabase/supabase-js": "2.117.2",
     "zod": "4.4.3"
   }
 }

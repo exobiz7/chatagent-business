@@ -1,0 +1,217 @@
+{
+  "phase": "B-S1",
+  "status": "B_S1_ACCEPTED",
+  "baseAcceptedHead": "2975be54502a89dd92949c57521bacb071d49bac",
+  "productionMutation": false,
+  "stagingProjectRef": "dxofyjarkzizdzumfyul",
+  "gates": {
+    "BUSINESS_S1A_CONTROL_SCHEMA_FOUNDATION": "PASS",
+    "BUSINESS_S1A_CONTROL_CONTRACT": "PASS",
+    "BUSINESS_S1A_POSTGRES_INTEGRATION": "PASS",
+    "BUSINESS_S1A_STAGING_SCHEMA_APPLY": "PASS",
+    "BUSINESS_S1A_PRIVILEGE_BOUNDARY": "PASS",
+    "BUSINESS_S1B_MEMBER_IDENTITY_CONTRACT": "PASS",
+    "BUSINESS_S1B_MEMBER_IDENTITY_POSTGRES": "PASS",
+    "BUSINESS_S1B_AUTH_RUNTIME": "PASS",
+    "BUSINESS_S1B_KEYCHAIN_CONFIG": "PASS",
+    "BUSINESS_S1B_KEYCHAIN_LIVE_CUSTODY": "PASS",
+    "BUSINESS_S1B_LIVE_PROFILE_ADAPTER": "PASS",
+    "BUSINESS_S1B_STAGING_BOOTSTRAP": "PASS",
+    "BUSINESS_S1B_STAGING_DB_PROFILE": "PASS",
+    "BUSINESS_S1B_CHATGPT_OAUTH_PROFILE": "PASS",
+    "BUSINESS_V11_BS0_REGRESSION": "PASS",
+    "BUSINESS_S1_LOCAL": "PASS",
+    "BUSINESS_S1_SUPABASE_SCHEMA": "PASS",
+    "BUSINESS_S1_MEMBER_AUTH": "PASS",
+    "BUSINESS_S1_NODE_ENROLLMENT": "PASS",
+    "BUSINESS_S1_NODE_REVOKE": "PASS",
+    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PASS",
+    "BUSINESS_S1C_RUNTIME_NODE_CONTRACT": "PASS",
+    "BUSINESS_S1C_RUNTIME_NODE_POSTGRES": "PASS",
+    "BUSINESS_S1C_RUNTIME_CLIENT": "PASS",
+    "BUSINESS_S1C_STAGING_LIFECYCLE": "PASS",
+    "BUSINESS_S1C_LIVE_RUNTIME_LIST_ADAPTER": "PASS",
+    "BUSINESS_S1C_CHATGPT_RUNTIME_LIST": "PASS"
+  },
+  "stagingMigrations": [
+    {
+      "version": "20261007071941",
+      "name": "business_v11_bs1_control_foundation"
+    },
+    {
+      "version": "20261007072117",
+      "name": "business_v11_bs1_control_fk_indexes"
+    },
+    {
+      "version": "20261007080451",
+      "name": "business_v11_bs1_member_identity"
+    },
+    {
+      "version": "20261007080618",
+      "name": "business_v11_bs1_member_identity",
+      "note": "concurrent idempotent duplicate apply; retained as evidence"
+    },
+    {
+      "version": "20261007090934",
+      "name": "business_v11_bs1_runtime_node_lifecycle"
+    }
+  ],
+  "liveVerification": {
+    "controlTableCount": 9,
+    "rlsEnabledCount": 9,
+    "organizationCount": 1,
+    "activeAdminCount": 1,
+    "organizationSlug": "chatagent-business-v11-bs0",
+    "deterministicProfileMatchesAcceptedBs0Identity": true,
+    "profileNickname": "ChatAgent Business",
+    "profileEmailPresent": true,
+    "authenticatedProfileExecute": true,
+    "anonProfileExecute": false,
+    "authenticatedPrivateSchemaUsage": false,
+    "authenticatedDirectMemberSelect": false,
+    "anonDirectMemberSelect": false,
+    "bcSchemaStatus": {
+      "schemaVersion": 1,
+      "contractVersion": 1,
+      "organizationInitialized": true,
+      "role": "ADMIN"
+    },
+    "sensitiveIdentifiersPersistedInEvidence": false,
+    "chatgptBusinessOauthProfileLive": true,
+    "chatgptReturnedProfileMatchesAcceptedBs0Identity": true,
+    "chatgptReturnedNicknameMatchesCanonicalProduct": true,
+    "chatgptReturnedEmailPresent": true,
+    "chatgptLiveEvidenceRecordedWithoutEmailLiteral": true,
+    "runtimeNodeCount": 2,
+    "approvedPersistentRuntimeNodeCount": 1,
+    "revokedDisposableRuntimeNodeCount": 1,
+    "activeRuntimeSessionCount": 1,
+    "revokedRuntimeSessionCount": 1,
+    "persistentPersonalNodeLifecycle": "APPROVED",
+    "persistentPersonalNodeOwnedByAuthenticatedCaller": true,
+    "persistentPersonalNodeSharedHostPowerEnabled": false,
+    "boundedAuthorizationLeaseMinted": true,
+    "runtimeControlPolicyRevision": 4,
+    "runtimeRpcAuthenticatedExecuteAllFour": true,
+    "runtimeRpcAnonExecuteAllFour": false,
+    "authenticatedDirectRuntimeNodeSelect": false,
+    "authenticatedDirectRuntimeSessionSelect": false,
+    "runtimeNodeUuidPersistedInEvidence": false,
+    "chatgptBusinessRuntimeListLive": false,
+    "chatgptRuntimeListLive": true,
+    "chatgptRuntimeListEligibleNodeCount": 1,
+    "chatgptRuntimeListPersistentPersonalNodeOnly": true,
+    "chatgptRuntimeListOwnedByCaller": true,
+    "chatgptRuntimeListLifecycle": "APPROVED",
+    "chatgptRuntimeListSharedHostPowerEnabled": false,
+    "chatgptRuntimeListRevokedDisposableNodeAbsent": true,
+    "chatgptRuntimeListSensitiveIdentifiersPersistedInEvidence": false
+  },
+  "implemented": {
+    "schema": "private_business_control",
+    "tables": [
+      "schema_meta",
+      "organizations",
+      "organization_members",
+      "control_state",
+      "runtime_nodes",
+      "runtime_sessions",
+      "logical_projects",
+      "private_project_members",
+      "operations"
+    ],
+    "rpc": [
+      "bc_schema_status",
+      "bc_member_profile",
+      "bc_runtime_enroll",
+      "bc_runtime_status",
+      "bc_runtime_list",
+      "bc_runtime_revoke"
+    ],
+    "runtimeAuth": [
+      "publishable-only Supabase config",
+      "bounded auth session refresh",
+      "single-flight refresh-token rotation",
+      "macOS Keychain refresh-token custody"
+    ],
+    "runtimeNodes": [
+      "PENDING -> APPROVED -> REVOKED lifecycle",
+      "PERSONAL_NODE authenticated-owner binding",
+      "ADMIN approval/revocation",
+      "SHARED_NODE ADMIN enrollment and explicit host-power opt-in",
+      "bounded runtime-session authorization lease",
+      "operation UUID idempotency receipts"
+    ]
+  },
+  "security": {
+    "identitySource": "auth.uid()",
+    "authorizationSource": "active private_business_control.organization_members row",
+    "callerSuppliedMemberIdAuthoritative": false,
+    "rawUserMetadataUsedForAuthorization": false,
+    "runtimeServiceRoleAllowed": false,
+    "directPrivateTableClientAccess": false,
+    "privateTablesRlsEnabled": true,
+    "oneOrganizationPerSupabaseProject": true,
+    "publishableKeyOnlyRuntime": true,
+    "refreshTokenPersistentLocation": "macOS Keychain via pinned native helper",
+    "oauthIdentityScopes": [
+      "openid",
+      "email",
+      "profile"
+    ],
+    "personalNodeOwnerSource": "auth.uid() enrolling member",
+    "callerSuppliedNodeOwnerAuthoritative": false,
+    "nodeApprovalRole": "ADMIN",
+    "nodeRevocationRole": "ADMIN",
+    "sharedNodeEnrollmentRole": "ADMIN",
+    "sharedHostPowerDefault": false,
+    "cachedAuthorizationLeaseBounded": true,
+    "leaseExpiryFailsClosed": true,
+    "revocationInvalidatesRuntimeSessions": true
+  },
+  "personalReuse": {
+    "source": "ChatAgent Personal v1.1.1@da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
+    "keychainWrapperBlobExact": true,
+    "nativeKeychainHelperBlobExact": true,
+    "supabaseJsVersion": "2.117.2",
+    "runtimeDependencyOnPersonalRepo": false
+  },
+  "stagingFixture": {
+    "mode": "DB_BACKED_BS1C_FIXTURE",
+    "fixtureListen": "127.0.0.1:31861",
+    "tunnelHealthListen": "127.0.0.1:51961",
+    "dbBackedTools": [
+      "member_get_profile",
+      "runtime_list_nodes"
+    ],
+    "otherToolsRemainNoEffect": true,
+    "productionMcpListen": "127.0.0.1:31850",
+    "productionUnchanged": true,
+    "reproducibleSource": "scripts/business/v1.1/bs1c-live-fixture-server.mjs",
+    "acceptedBs0FixtureSourceModified": false,
+    "bs1bFixtureSourceModified": false
+  },
+  "advisorState": {
+    "security": {
+      "rlsEnabledNoPolicyInfo": 9,
+      "authenticatedSecurityDefinerWarning": 6,
+      "leakedPasswordProtectionDisabledWarning": 1,
+      "leakedPasswordProtectionDisposition": "PLAN_DEPENDENT_HARDENING_NOT_FROZEN_BS1_GATE"
+    },
+    "performance": {
+      "unindexedForeignKeyFindings": 0,
+      "unusedIndexInfo": 10
+    }
+  },
+  "dependencyFindings": [
+    {
+      "id": "GHSA-6qxp-vccf-f47h",
+      "package": "@modelcontextprotocol/sdk",
+      "currentVersion": "1.30.0",
+      "severity": "HIGH",
+      "origin": "PRE_EXISTING_PIN",
+      "disposition": "SEPARATE_COMPATIBILITY_SECURITY_UNIT_BEFORE_RELEASE"
+    }
+  ],
+  "nextUnit": "B-S2: implement TEAM Shared Continuity / Search on private_business_continuity with TEAM default, PRIVATE visibility exception, Personal-derived transaction/idempotency/CAS/secret-guard patterns, PostgreSQL full-text history search, and bounded handoff semantics. Keep PR #7 Draft until B-S1 closure CI is green; production v1.0 remains unchanged."
+}
