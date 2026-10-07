@@ -208,3 +208,36 @@ BUSINESS_S1_LOCAL=IN_PROGRESS
 ```
 
 After the one live `runtime_list_nodes` canary proves the owner-bound eligible-node view through the real ChatGPT OAuth path, B-S1C and the overall B-S1 gate may close. The next phase is B-S2 TEAM Shared Continuity / Search.
+
+## 12. Final ChatGPT OAuth runtime-list canary — PASS
+
+The user-side ChatGPT Business canary invoked the DB-backed `runtime_list_nodes` path through the real connected OAuth session.
+
+Observed bounded result:
+
+- eligible node count: `1`;
+- node name: `Mac Studio B-S1C`;
+- node type: `PERSONAL_NODE`;
+- lifecycle: `APPROVED`;
+- `ownedByCaller=true`;
+- `sharedHostPowerEnabled=false`;
+- the revoked disposable proof node was absent from the eligible-node view;
+- no unrelated PERSONAL_NODE or SHARED_NODE was returned.
+
+The exact runtime-node UUID and user identifiers are intentionally not duplicated into this closure evidence. The live result proves that the authenticated Business member sees only the expected caller-owned approved PERSONAL_NODE through `ChatGPT OAuth -> B-S1C MCP fixture -> bc_runtime_list()`.
+
+Final B-S1 gate disposition:
+
+```text
+BUSINESS_S1_LOCAL=PASS
+BUSINESS_S1_SUPABASE_SCHEMA=PASS
+BUSINESS_S1_MEMBER_AUTH=PASS
+BUSINESS_S1_NODE_ENROLLMENT=PASS
+BUSINESS_S1_NODE_REVOKE=PASS
+BUSINESS_S1_PERSONAL_NODE_BINDING=PASS
+BUSINESS_S1C_CHATGPT_RUNTIME_LIST=PASS
+```
+
+**B-S1 — Cloud Foundation / Identity / Runtime Nodes is ACCEPTED.**
+
+B-S2 TEAM Shared Continuity / Search is the next bounded phase. Business v1.0 production remains unchanged, and PR #7 remains Draft until closure commit/hosted-CI reconciliation is complete.

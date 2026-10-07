@@ -1,6 +1,6 @@
 {
   "phase": "B-S1",
-  "status": "B_S1C_FOUNDATION_PASS_CHATGPT_RUNTIME_LIST_PENDING",
+  "status": "B_S1_ACCEPTED",
   "baseAcceptedHead": "2975be54502a89dd92949c57521bacb071d49bac",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
@@ -20,18 +20,18 @@
     "BUSINESS_S1B_STAGING_DB_PROFILE": "PASS",
     "BUSINESS_S1B_CHATGPT_OAUTH_PROFILE": "PASS",
     "BUSINESS_V11_BS0_REGRESSION": "PASS",
-    "BUSINESS_S1_LOCAL": "IN_PROGRESS",
+    "BUSINESS_S1_LOCAL": "PASS",
     "BUSINESS_S1_SUPABASE_SCHEMA": "PASS",
     "BUSINESS_S1_MEMBER_AUTH": "PASS",
     "BUSINESS_S1_NODE_ENROLLMENT": "PASS",
     "BUSINESS_S1_NODE_REVOKE": "PASS",
-    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_CHATGPT_RUNTIME_LIST_LIVE",
+    "BUSINESS_S1_PERSONAL_NODE_BINDING": "PASS",
     "BUSINESS_S1C_RUNTIME_NODE_CONTRACT": "PASS",
     "BUSINESS_S1C_RUNTIME_NODE_POSTGRES": "PASS",
     "BUSINESS_S1C_RUNTIME_CLIENT": "PASS",
     "BUSINESS_S1C_STAGING_LIFECYCLE": "PASS",
     "BUSINESS_S1C_LIVE_RUNTIME_LIST_ADAPTER": "PASS",
-    "BUSINESS_S1C_CHATGPT_RUNTIME_LIST": "PENDING_LIVE_USER_CALL"
+    "BUSINESS_S1C_CHATGPT_RUNTIME_LIST": "PASS"
   },
   "stagingMigrations": [
     {
@@ -97,7 +97,15 @@
     "authenticatedDirectRuntimeNodeSelect": false,
     "authenticatedDirectRuntimeSessionSelect": false,
     "runtimeNodeUuidPersistedInEvidence": false,
-    "chatgptBusinessRuntimeListLive": false
+    "chatgptBusinessRuntimeListLive": false,
+    "chatgptRuntimeListLive": true,
+    "chatgptRuntimeListEligibleNodeCount": 1,
+    "chatgptRuntimeListPersistentPersonalNodeOnly": true,
+    "chatgptRuntimeListOwnedByCaller": true,
+    "chatgptRuntimeListLifecycle": "APPROVED",
+    "chatgptRuntimeListSharedHostPowerEnabled": false,
+    "chatgptRuntimeListRevokedDisposableNodeAbsent": true,
+    "chatgptRuntimeListSensitiveIdentifiersPersistedInEvidence": false
   },
   "implemented": {
     "schema": "private_business_control",
@@ -205,5 +213,5 @@
       "disposition": "SEPARATE_COMPATIBILITY_SECURITY_UNIT_BEFORE_RELEASE"
     }
   ],
-  "nextUnit": "Run one ChatGPT Business runtime_list_nodes invocation against the B-S1C DB-backed staging fixture. If exactly the persistent APPROVED Mac Studio PERSONAL_NODE is returned as ownedByCaller=true and the revoked disposable node is absent, close BUSINESS_S1_PERSONAL_NODE_BINDING and BUSINESS_S1_LOCAL, accept B-S1, then begin B-S2 TEAM Shared Continuity / Search."
+  "nextUnit": "B-S2: implement TEAM Shared Continuity / Search on private_business_continuity with TEAM default, PRIVATE visibility exception, Personal-derived transaction/idempotency/CAS/secret-guard patterns, PostgreSQL full-text history search, and bounded handoff semantics. Keep PR #7 Draft until B-S1 closure CI is green; production v1.0 remains unchanged."
 }
