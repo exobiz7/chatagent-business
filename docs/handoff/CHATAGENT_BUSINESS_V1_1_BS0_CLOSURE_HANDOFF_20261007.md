@@ -50,8 +50,8 @@ A temporary staging restart used `BS0_ORGANIZATION_ID=bs0-test`, changing the de
 - staging tunnel: `chatagent-business-v11-bs0` / `tunnel_6ac4981673e48191b1bea1b2cde679f1`
 - final ChatGPT development app: `ChatAgent Business v1.1 B-S0 SchemaFix`
 - branch: `feat/business-v1.1-bs0-validation`
-- current HEAD before closure commit: `0b5071e56df7211b5847c900c1e52c60f11c42dc`
-- Draft PR #6: OPEN, DRAFT, merge state CLEAN, hosted checks SUCCESS/SUCCESS
+- accepted B-S0 closure commit: `945dd2824391ebad7ce9d3d8bb5771a8c20bfb5f`
+- PR #6: OPEN, **READY FOR REVIEW**, merge state CLEAN, hosted checks SUCCESS/SUCCESS
 
 ## Source-of-truth reading order for the next work unit
 
@@ -66,13 +66,10 @@ The earlier 2026-10-06 handoff package is a historical snapshot. Where it says l
 
 ## Next bounded work
 
-Before B-S1 implementation:
+The B-S0 closure diff has been reviewed, committed, pushed, and PR #6 is Ready for review.
 
-1. review the final B-S0 diff;
-2. exact-path stage and commit the closure evidence/code compatibility patch;
-3. push the branch;
-4. only with explicit user authorization, mark Draft PR #6 ready for review; **do not merge automatically**.
-
-Then B-S1 may begin as a separate bounded work unit: Cloud Foundation / Identity / Runtime Nodes.
+1. **Do not merge PR #6 without separate explicit user authorization.**
+2. Preserve the accepted B-S0 baseline and evidence.
+3. B-S1 may begin as a separate bounded work unit: Cloud Foundation / Identity / Runtime Nodes.
 
 Production v1.0 remains the active frozen baseline until the later accepted cutover.

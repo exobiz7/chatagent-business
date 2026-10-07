@@ -33,10 +33,10 @@ The `20261006` handoff package remains a valid historical snapshot and must not 
 
 ## Git state
 
-B-S0 closure changes are currently uncommitted on `feat/business-v1.1-bs0-validation`. Draft PR #6 remains OPEN/DRAFT and must not be merged without explicit user authorization. Exact-path staging is required.
+B-S0 closure commit `945dd2824391ebad7ce9d3d8bb5771a8c20bfb5f` is pushed on `feat/business-v1.1-bs0-validation`. PR #6 is OPEN / READY FOR REVIEW / CLEAN with hosted CI SUCCESS/SUCCESS. It must not be merged without separate explicit user authorization.
 
 ## Manifest digest
 
 `CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_SHA256_MANIFEST_20261007.json`
 
-SHA-256: `90d5889cac6e8a5654d90a0f81ad0a13b8cc5fe2eb757ed77dbe0d962c2be90e`
+SHA-256: `6f359483b62b5b2b90e03e1d5dc3566cffcfec0192243c513762892acf924281`

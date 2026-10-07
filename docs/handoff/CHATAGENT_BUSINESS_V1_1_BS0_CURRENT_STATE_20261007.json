@@ -1,37 +1,26 @@
 {
-  "capturedAt": "2026-10-07T15:56:11+09:00",
+  "capturedAt": "2026-10-07T16:03:00+09:00",
   "product": "ChatAgent Business",
   "targetRelease": "v1.1.0",
   "canonicalRepo": "/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business",
   "git": {
     "branch": "feat/business-v1.1-bs0-validation",
-    "head": "0b5071e56df7211b5847c900c1e52c60f11c42dc",
-    "worktree": "DIRTY_BS0_CLOSURE_READY_FOR_EXACT_PATH_COMMIT",
-    "modifiedOrUntracked": [
-      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_HANDOFF_20261007.md",
-      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_PACKAGE_INDEX_20261007.md",
-      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_SHA256_MANIFEST_20261007.json",
-      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CURRENT_STATE_20261007.json",
-      "M  docs/verification/v1.1/B_S0_GATE_STATE_20261005.json",
-      "A  docs/verification/v1.1/B_S0_LIVE_CANARY_EVIDENCE_20261006.md",
-      "M  docs/verification/v1.1/B_S0_TOOL_SELECTION_GOLDEN_SET.json",
-      "A  docs/verification/v1.1/B_S0_TOOL_SELECTION_LIVE_RESULTS_20261006.json",
-      "M  docs/verification/v1.1/B_S0_VERIFICATION_REPORT_20261005.md",
-      "M  scripts/business/v1.1/bs0-live-fixture-server.mjs",
-      "A  scripts/business/v1.1/bs0-oauth-consent-server.mjs",
-      "M  scripts/business/v1.1/bs0-tool-catalog-test.mjs",
-      "M  scripts/business/v1.1/bs0-tool-catalog.mjs"
-    ],
+    "worktree": "CLEAN_AFTER_BS0_CLOSURE_PUSH_BEFORE_DOCS_ONLY_ACCEPTANCE_METADATA_COMMIT",
+    "modifiedOrUntracked": [],
     "draftPullRequest": {
       "number": 6,
       "state": "OPEN",
-      "draft": true,
+      "draft": false,
       "mergeState": "CLEAN",
       "hostedCi": [
         "SUCCESS",
         "SUCCESS"
-      ]
-    }
+      ],
+      "reviewState": "READY_FOR_REVIEW",
+      "head": "945dd2824391ebad7ce9d3d8bb5771a8c20bfb5f",
+      "title": "test: close Business v1.1 B-S0 validation"
+    },
+    "closureCommit": "945dd2824391ebad7ce9d3d8bb5771a8c20bfb5f"
   },
   "productionBaseline": {
     "version": "1.0.0",
@@ -109,10 +98,9 @@
     }
   },
   "nextActions": [
-    "Review the bounded B-S0 closure diff and evidence files.",
-    "Commit and push the B-S0 closure changes on feat/business-v1.1-bs0-validation using exact-path staging.",
-    "Only with explicit user authorization, mark Draft PR #6 ready for review; do not merge automatically.",
-    "After closure evidence is committed, begin B-S1 Cloud Foundation / Identity / Runtime Nodes as a new bounded work unit.",
+    "Preserve B-S0 accepted baseline and PR #6 Ready-for-review state.",
+    "Do not merge PR #6 without separate explicit user authorization.",
+    "B-S1 Cloud Foundation / Identity / Runtime Nodes may begin as a separate bounded work unit while Business v1.0 remains active and unchanged.",
     "Keep Business v1.0 production active and unchanged until the later accepted production cutover."
   ],
   "hardInvariants": [

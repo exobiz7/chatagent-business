@@ -1,7 +1,7 @@
 {
-  "capturedAt": "2026-10-07T15:57:13+09:00",
+  "capturedAt": "2026-10-07T16:03:00+09:00",
   "status": "BUSINESS_V11_S0_ACCEPTED",
-  "note": "Historical 2026-10-06 handoff remains immutable as a point-in-time snapshot; this manifest covers final B-S0 closure sources.",
+  "note": "Historical 2026-10-06 handoff remains immutable; this manifest covers final B-S0 closure sources after PR acceptance review metadata refresh.",
   "files": [
     {
       "path": "docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md",
@@ -53,11 +53,11 @@
     },
     {
       "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CURRENT_STATE_20261007.json",
-      "sha256": "4c9ded1609795037bf264f5fbaf78fb84927781f0f366b5f255f62337b93cfb3"
+      "sha256": "d1a79476842434723a6cd5395426871356202cae2f8762f37aa04b07cfd58131"
     },
     {
       "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_HANDOFF_20261007.md",
-      "sha256": "a212b1da4c39b83eba39bb55ad015d7735c0395a595cce7d3101a1c66eaaedc0"
+      "sha256": "f22bf98532bede5abbcb2e6ed9a6b4de50bc28d35018d31a66f54561d4633a88"
     }
   ]
 }
