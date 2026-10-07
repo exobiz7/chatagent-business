@@ -1,6 +1,6 @@
 {
   "phase": "B-S1",
-  "status": "B_S1B_AUTH_FOUNDATION_PASS_CHATGPT_OAUTH_LIVE_PENDING",
+  "status": "B_S1B_MEMBER_AUTH_PASS_BS1C_PENDING",
   "baseAcceptedHead": "2975be54502a89dd92949c57521bacb071d49bac",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
@@ -18,11 +18,11 @@
     "BUSINESS_S1B_LIVE_PROFILE_ADAPTER": "PASS",
     "BUSINESS_S1B_STAGING_BOOTSTRAP": "PASS",
     "BUSINESS_S1B_STAGING_DB_PROFILE": "PASS",
-    "BUSINESS_S1B_CHATGPT_OAUTH_PROFILE": "PENDING_LIVE_USER_CALL",
+    "BUSINESS_S1B_CHATGPT_OAUTH_PROFILE": "PASS",
     "BUSINESS_V11_BS0_REGRESSION": "PASS",
     "BUSINESS_S1_LOCAL": "IN_PROGRESS",
     "BUSINESS_S1_SUPABASE_SCHEMA": "PASS",
-    "BUSINESS_S1_MEMBER_AUTH": "PENDING_CHATGPT_OAUTH_PROFILE_LIVE",
+    "BUSINESS_S1_MEMBER_AUTH": "PASS",
     "BUSINESS_S1_NODE_ENROLLMENT": "PENDING_BS1C",
     "BUSINESS_S1_NODE_REVOKE": "PENDING_BS1C",
     "BUSINESS_S1_PERSONAL_NODE_BINDING": "PENDING_BS1C"
@@ -66,7 +66,12 @@
       "organizationInitialized": true,
       "role": "ADMIN"
     },
-    "sensitiveIdentifiersPersistedInEvidence": false
+    "sensitiveIdentifiersPersistedInEvidence": false,
+    "chatgptBusinessOauthProfileLive": true,
+    "chatgptReturnedProfileMatchesAcceptedBs0Identity": true,
+    "chatgptReturnedNicknameMatchesCanonicalProduct": true,
+    "chatgptReturnedEmailPresent": true,
+    "chatgptLiveEvidenceRecordedWithoutEmailLiteral": true
   },
   "implemented": {
     "schema": "private_business_control",
@@ -148,5 +153,5 @@
       "disposition": "SEPARATE_COMPATIBILITY_SECURITY_UNIT_BEFORE_RELEASE"
     }
   ],
-  "nextUnit": "Complete one ChatGPT Business app member_get_profile invocation against the DB-backed staging adapter. If the accepted deterministic profile is returned, close BUSINESS_S1_MEMBER_AUTH and proceed to B-S1C runtime-node lifecycle RPCs and PERSONAL_NODE owner binding."
+  "nextUnit": "B-S1C: implement and validate runtime-node lifecycle RPCs (bc_runtime_enroll/status/list/revoke), runtime-session/authorization-lease behavior, and PERSONAL_NODE owner binding on isolated staging. Keep PR #7 Draft and production v1.0 unchanged."
 }

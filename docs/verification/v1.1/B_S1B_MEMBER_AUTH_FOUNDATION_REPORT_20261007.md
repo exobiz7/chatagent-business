@@ -152,7 +152,7 @@ Current listeners after restart:
 - staging tunnel health: `127.0.0.1:51961` — live;
 - production v1.0 MCP: `127.0.0.1:31850` — unchanged.
 
-One user-side ChatGPT app invocation is still required to prove the end-to-end OAuth bearer path against the DB-backed profile. Until that result is recorded, `BUSINESS_S1_MEMBER_AUTH` remains pending rather than being overstated as PASS.
+The user-side ChatGPT Business invocation completed successfully against the DB-backed staging profile path. The returned opaque profile identity matched the accepted B-S0 deterministic identity, the nickname matched `ChatAgent Business`, and an email field was present. The email literal is intentionally not persisted in this evidence document. Therefore the end-to-end ChatGPT OAuth bearer → B-S1B fixture → Supabase `bc_member_profile()` path is PASS.
 
 ## Advisor review
 
@@ -178,10 +178,11 @@ Therefore this unit does **not** silently upgrade the MCP SDK. Track the SDK sec
 
 ## Gate disposition
 
-B-S1B implementation and staging DB/auth/keychain foundation are accepted locally. The overall B-S1 member-auth gate is still:
+B-S1B implementation, staging DB/auth/keychain foundation, and the final ChatGPT Business OAuth profile canary are accepted. The member-auth gate is closed:
 
 ```text
-BUSINESS_S1_MEMBER_AUTH=PENDING_CHATGPT_OAUTH_PROFILE_LIVE
+BUSINESS_S1B_CHATGPT_OAUTH_PROFILE=PASS
+BUSINESS_S1_MEMBER_AUTH=PASS
 ```
 
-After the one live profile invocation passes, B-S1B can close and the next bounded unit is B-S1C runtime-node lifecycle (`bc_runtime_enroll/status/list/revoke` + PERSONAL_NODE owner binding).
+The next bounded unit is B-S1C runtime-node lifecycle (`bc_runtime_enroll/status/list/revoke` + PERSONAL_NODE owner binding). PR #7 remains Draft and Business v1.0 production remains unchanged.
