@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname,resolve} from 'node:path';
 import {z} from 'zod';
-import {candidateTools} from './bs0-tool-catalog.mjs';
+import {candidateTools,candidateToolByName,toOpenAiWireInputSchema} from './bs0-tool-catalog.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const root=resolve(here,'../../..');
@@ -92,4 +92,15 @@ console.log('PASS titles/descriptions/naming/annotations/OAuth metadata/schema s
 console.log('PASS catalog = manifest = Accepted Design tool inventory');
 console.log(`PASS golden-set references all resolve cases=${golden.cases.length}`);
 console.log('PASS local-effect routing schema rules including process-record and clone exceptions');
+
+const hostTool=candidateToolByName.get('process_start_host');
+const hostRaw=z.toJSONSchema(hostTool.inputSchema);
+const hostWire=toOpenAiWireInputSchema(hostTool);
+assert.equal(hostRaw.properties.executable.pattern,'^\\/','HOST_RUNTIME_ABSOLUTE_PATH_PATTERN_DRIFT');
+assert.equal(hostWire.properties.executable.pattern,undefined,'OPENAI_WIRE_EXECUTABLE_PATTERN_SHOULD_BE_OMITTED_FOR_CHATGPT_COMPATIBILITY');
+assert.match(hostWire.properties.executable.description,/Absolute POSIX executable path/);
+assert.equal(hostTool.inputSchema.safeParse({projectId:'dev',executable:'/usr/bin/true',argv:[],cwd:'/tmp',idempotencyKey:'55555555-5555-4555-8555-555555555555'}).success,true,'RUNTIME_ABSOLUTE_PATH_REJECTED');
+assert.equal(hostTool.inputSchema.safeParse({projectId:'dev',executable:'usr/bin/true',argv:[],cwd:'/tmp',idempotencyKey:'55555555-5555-4555-8555-555555555555'}).success,false,'RUNTIME_RELATIVE_PATH_ACCEPTED');
+console.log('PASS process_start_host keeps authoritative runtime absolute-path validation while OpenAI wire schema omits incompatible host-side pattern');
+
 console.log('B_S0_TOOL_CATALOG=PASS');

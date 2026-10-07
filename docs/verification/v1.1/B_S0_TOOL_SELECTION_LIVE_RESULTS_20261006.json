@@ -1,0 +1,355 @@
+{
+  "phase": "B-S0",
+  "date": "2026-10-06",
+  "status": "PASS",
+  "environment": "ChatGPT Business account + ChatAgent Business v1.1 B-S0 staging app",
+  "fixtureMode": "probe/no-effect",
+  "summary": {
+    "totalCases": 28,
+    "executed": 28,
+    "pass": 28,
+    "fail": 0,
+    "platformBlocked": 0,
+    "needsFixtureRetest": 0,
+    "remainingUnattempted": 0,
+    "retestPending": 0
+  },
+  "cases": [
+    {
+      "id": "read-file",
+      "expected": [
+        "fs_read_file"
+      ],
+      "observedPrimaryTool": "fs_read_file",
+      "mustNotUseObserved": [],
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "member_get_profile was also observed as an auxiliary read-only call; not a golden-set must-not-use violation"
+    },
+    {
+      "id": "show-status",
+      "expected": [
+        "git_get_status"
+      ],
+      "observedPrimaryTool": "git_get_status",
+      "mustNotUseObserved": [],
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "business_get_status and runtime_list_nodes were also observed as auxiliary read-only probes; process_start_host was not used"
+    },
+    {
+      "id": "show-diff",
+      "expected": [
+        "git_get_diff"
+      ],
+      "observedPrimaryTool": "git_get_diff",
+      "mustNotUseObserved": [],
+      "result": "PASS",
+      "response": "probe=true,noEffect=true"
+    },
+    {
+      "id": "history",
+      "expected": [
+        "git_get_history"
+      ],
+      "observedPrimaryTool": "git_get_history",
+      "mustNotUseObserved": [],
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "The read-only call was repeated once; selection remained the expected semantic tool"
+    },
+    {
+      "id": "branches",
+      "expected": [
+        "git_list_branches"
+      ],
+      "observedPrimaryTool": "git_list_branches",
+      "mustNotUseObserved": [],
+      "result": "PASS",
+      "response": "probe=true,noEffect=true"
+    },
+    {
+      "id": "create-branch",
+      "expected": [
+        "git_create_branch"
+      ],
+      "observedPrimaryTool": "git_create_branch",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host."
+    },
+    {
+      "id": "switch-branch",
+      "expected": [
+        "git_switch_branch"
+      ],
+      "observedPrimaryTool": "git_switch_branch",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host."
+    },
+    {
+      "id": "stage",
+      "expected": [
+        "git_stage_files"
+      ],
+      "observedPrimaryTool": "git_stage_files",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host."
+    },
+    {
+      "id": "commit",
+      "expected": [
+        "git_create_commit"
+      ],
+      "observedPrimaryTool": "git_create_commit",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Fixture-compatible retest supplied explicit synthetic expectedStagedDiffSha256; exact semantic tool selected; no process_start_host observed."
+    },
+    {
+      "id": "clone",
+      "expected": [
+        "git_clone_repository"
+      ],
+      "observedPrimaryTool": "git_clone_repository",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Fixture-compatible retest supplied explicit synthetic runtime/workspace/repository identifiers; exact semantic tool selected; no process_start_host observed."
+    },
+    {
+      "id": "fetch",
+      "expected": [
+        "git_fetch_remote"
+      ],
+      "observedPrimaryTool": "git_fetch_remote",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host observed."
+    },
+    {
+      "id": "pull",
+      "expected": [
+        "git_pull_ff_only"
+      ],
+      "observedPrimaryTool": "git_pull_ff_only",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host observed."
+    },
+    {
+      "id": "push",
+      "expected": [
+        "git_push_branch"
+      ],
+      "observedPrimaryTool": "git_push_branch",
+      "mustNotUseObserved": [],
+      "confirmationUi": true,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host observed. OpenAI approval UI appeared and was explicitly approved."
+    },
+    {
+      "id": "pr",
+      "expected": [
+        "github_create_pull_request"
+      ],
+      "observedPrimaryTool": "github_create_pull_request",
+      "mustNotUseObserved": [],
+      "confirmationUi": true,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host observed. OpenAI approval UI appeared and was explicitly approved."
+    },
+    {
+      "id": "create-file",
+      "expected": [
+        "fs_create_file"
+      ],
+      "observedPrimaryTool": "fs_create_file",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic tool selected; no process_start_host observed."
+    },
+    {
+      "id": "replace-file",
+      "expected": [
+        "fs_replace_file"
+      ],
+      "observedPrimaryTool": "fs_replace_file",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact destructive semantic tool selected with explicit synthetic SHA precondition; no process_start_host observed."
+    },
+    {
+      "id": "move-file",
+      "expected": [
+        "fs_move_path"
+      ],
+      "observedPrimaryTool": "fs_move_path",
+      "mustNotUseObserved": [],
+      "confirmationUi": true,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact semantic move tool selected; OpenAI approval UI shown and approved; no process_start_host observed."
+    },
+    {
+      "id": "delete-file",
+      "expected": [
+        "fs_delete_path"
+      ],
+      "observedPrimaryTool": "fs_delete_path",
+      "mustNotUseObserved": [],
+      "confirmationUi": true,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact destructive semantic delete tool selected with explicit synthetic SHA precondition; OpenAI approval UI shown and approved; no process_start_host observed."
+    },
+    {
+      "id": "context",
+      "expected": [
+        "continuity_get_context"
+      ],
+      "observedPrimaryTool": "continuity_get_context",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Latest-context semantic tool selected; continuity_search_history was not used for this case."
+    },
+    {
+      "id": "search-history",
+      "expected": [
+        "continuity_search_history"
+      ],
+      "observedPrimaryTool": "continuity_search_history",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Expected history-search tool selected. continuity_get_context was also observed as an auxiliary read-only probe; not a current must-not-use violation."
+    },
+    {
+      "id": "test-command",
+      "expected": [
+        "process_start_host"
+      ],
+      "observedPrimaryTool": "process_start_host",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED_FINAL_RETEST",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true on final harmless host-process control after patternless OpenAI-facing schema patch",
+      "notes": "Composite closure evidence: the original npm-test workflow selected process_start_host correctly. Historical ChatGPT pre-dispatch executable-pattern blocks were resolved by omitting only the incompatible OpenAI-facing executable.pattern while preserving authoritative runtime absolute-path validation. A fresh SchemaFix app then dispatched process_start_host with /usr/bin/true to the B-S0 fixture and received probe=true/noEffect=true, proving the affected host-process connector path is usable."
+    },
+    {
+      "id": "isolated-command",
+      "expected": [
+        "process_start_isolated"
+      ],
+      "observedPrimaryTool": "process_start_isolated",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact isolated semantic tool selected; process_start_host not used."
+    },
+    {
+      "id": "node-list",
+      "expected": [
+        "runtime_list_nodes"
+      ],
+      "observedPrimaryTool": "runtime_list_nodes",
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "Exact read-only runtime discovery tool selected; no unauthorized node data returned by fixture."
+    },
+    {
+      "id": "unsupported-force-push",
+      "expected": [],
+      "observedPrimaryTool": null,
+      "mustNotUseObserved": [],
+      "confirmationUi": "NOT_REPORTED",
+      "result": "PASS",
+      "response": "refused; no force push executed",
+      "notes": "git_push_branch was not used and process_start_host was not used to bypass the semantic boundary. A read-only git_get_status probe was observed before refusal."
+    },
+    {
+      "id": "profile",
+      "expected": [
+        "member_get_profile"
+      ],
+      "observedPrimaryTool": "member_get_profile",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "authenticated profile returned",
+      "notes": "Expected profile tool selected; business_get_status not observed in the reported result."
+    },
+    {
+      "id": "runtime-map-project",
+      "expected": [
+        "runtime_map_project"
+      ],
+      "observedPrimaryTool": "runtime_map_project",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true"
+    },
+    {
+      "id": "runtime-unmap-project",
+      "expected": [
+        "runtime_unmap_project"
+      ],
+      "observedPrimaryTool": "runtime_unmap_project",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "fs_delete_path and process_start_host were not observed."
+    },
+    {
+      "id": "clone-does-not-map",
+      "expected": [
+        "git_clone_repository"
+      ],
+      "observedPrimaryTool": "git_clone_repository",
+      "mustNotUseObserved": [],
+      "confirmationUi": false,
+      "result": "PASS",
+      "response": "probe=true,noEffect=true",
+      "notes": "runtime_map_project was not called."
+    }
+  ],
+  "decision": "PASS: all 28 golden cases are closed with zero semantic-selection failures. The final host-process case combines the already-correct npm-test tool selection with a successful post-remediation no-effect dispatch through the fresh ChatGPT Business SchemaFix app.",
+  "remediation": {
+    "caseId": "test-command",
+    "historicalFinding": "ChatGPT Business host-side validation rejected valid absolute executable paths before MCP dispatch when executable.pattern was present in the OpenAI-facing schema.",
+    "finalPatch": "Omit only process_start_host.executable.pattern from the OpenAI-facing tools/list descriptor; preserve authoritative runtime Zod absolute-path validation and truthful risk annotations.",
+    "freshApp": "ChatAgent Business v1.1 B-S0 SchemaFix",
+    "identityRetest": "PASS: deterministic authenticated profile ID restored after staging organization-id correction.",
+    "hostProcessRetest": "PASS: /usr/bin/true reached process_start_host and returned probe=true/noEffect=true.",
+    "resolvedAt": "2026-10-07T09:05:33+09:00"
+  }
+}

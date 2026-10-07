@@ -3,12 +3,12 @@
 > Phase: B-S0 — Accepted Design / Platform Capability
 > Date: 2026-10-05 KST
 > Design: R5
-> Status: **LOCAL VALIDATION PASS / LIVE CHATGPT CANARY PENDING**
+> Status: **B-S0 ACCEPTED / LIVE CHATGPT CANARY PASS (2026-10-07 KST)**
 > Production mutation: **NONE**
 
 ## 1. Executive result
 
-B-S0 local architecture, reuse, descriptor, authority and contract probes pass. B-S0 is not closed yet because three items require an actual ChatGPT Draft/Developer Mode OAuth connection: tool scan, OAuth profile linking, and live golden tool-selection/confirmation behavior.
+B-S0 local architecture, reuse, descriptor, authority and contract probes pass. The live ChatGPT Business canary is now complete: tool annotation/discovery scan PASS, OAuth member identity PASS, and the 28-case golden tool-selection set PASS. B-S0 is accepted/closed; production v1.0 remains unchanged.
 
 No Business v1.0 production runtime, app, tunnel, release tag, Personal runtime, Personal Supabase project, or P8 reference was modified.
 
@@ -131,14 +131,14 @@ Primary strategy remains accepted:
 
 The Personal safety-compatibility fallback is **armed but not activated**. There is no local evidence yet that the new focused semantic surface requires fallback. A reproducible live ChatGPT safety/confirmation failure is required to trigger it.
 
-## 12. Gates still pending
+## 12. Historical pre-live gates — all closed on 2026-10-07
 
-The following cannot be honestly marked PASS without an actual ChatGPT Draft/Developer Mode connection:
+The following gates required an actual ChatGPT Draft/Developer Mode connection and are now PASS:
 
 - `OPENAI_TOOL_ANNOTATION_SCAN`;
-- `TOOL_SELECTION_GOLDEN_SET` live execution;
-- `OAUTH_MEMBER_IDENTITY_PATH` live OAuth/profile call;
-- therefore `BUSINESS_V11_S0_ACCEPTED`.
+- `TOOL_SELECTION_GOLDEN_SET`;
+- `OAUTH_MEMBER_IDENTITY_PATH`;
+- `BUSINESS_V11_S0_ACCEPTED`.
 
 ## 13. Live-canary prerequisites
 
@@ -170,9 +170,9 @@ These tests do not substitute for the pending live ChatGPT OAuth/tool-selection 
 
 B-S0 status is:
 
-`LOCAL_VALIDATION_PASS_LIVE_CANARY_PENDING`.
+`BUSINESS_V11_S0_ACCEPTED`.
 
-B-S1 implementation must not treat the live canary as implicitly passed. Production v1.0 remains the frozen active baseline until a later accepted cutover.
+B-S1 is no longer blocked by B-S0 validation gates. Production v1.0 nevertheless remains the frozen active baseline until a later accepted cutover; acceptance of B-S0 does not authorize a production migration or PR merge by itself.
 
 ### Live staging Supabase project created
 
@@ -203,3 +203,109 @@ Preflight evidence:
 - JWKS already exposes an ES256 asymmetric signing key
 
 Dashboard-only prerequisite values are frozen in `B_S0_LIVE_CANARY_RUNBOOK.md`.
+
+## 16. Live canary update — 2026-10-06 KST
+
+The isolated ChatGPT Business-account B-S0 app completed live OAuth and authenticated profile retrieval.
+
+PASS evidence:
+
+- Supabase OAuth Server enabled on dedicated staging project `dxofyjarkzizdzumfyul`;
+- DCR enabled and ChatGPT OAuth client registration completed;
+- dedicated OpenAI tunnel `chatagent-business-v11-bs0` / `tunnel_6ac4981673e48191b1bea1b2cde679f1` ready;
+- ChatGPT app `ChatAgent Business v1.1 B-S0` connected by OAuth in DEVELOPMENT state;
+- active non-revoked ChatGPT OAuth consent exists in staging;
+- live `member_get_profile` call returned the expected authenticated profile shape;
+- deterministic returned profile ID matched the staging OAuth subject derivation exactly;
+- `OAUTH_MEMBER_IDENTITY_PATH = PASS`.
+
+Live compatibility observations:
+
+- ChatGPT requested `offline_access` in addition to canonical identity scopes `openid email profile`; this is recorded as client runtime behavior, not a Business authorization scope.
+- Supabase Edge Functions do not render browser HTML (`text/html` GET is rewritten to `text/plain`), so the live canary consent UI was moved to an isolated local staging-only host on `localhost:32171`. This does not define the production consent-hosting topology.
+
+Evidence file: `B_S0_LIVE_CANARY_EVIDENCE_20261006.md`.
+
+Remaining live gates:
+
+- `OPENAI_TOOL_ANNOTATION_SCAN`;
+- `TOOL_SELECTION_GOLDEN_SET` (28 cases);
+- `BUSINESS_V11_S0_ACCEPTED`.
+
+B-S0 is therefore now `LIVE_CANARY_IN_PROGRESS`, not yet accepted/closed.
+### Live ChatGPT tool scan — 2026-10-06 KST
+
+The Business-account Developer Mode app successfully refreshed and exposed the complete B-S0 candidate tool surface.
+
+Observed live result:
+
+- total tools: 39
+- Read: 16
+- Write: 23
+- tool names/descriptions: matched canonical candidate inventory
+- read/write split: exactly matched canonical `readOnlyHint` annotations
+- authenticated `member_get_profile` call: successful through the live OAuth/tunnel path
+
+Combined with the existing local descriptor serialization and wire-level OAuth `securitySchemes` adapter probes, this closes:
+
+`OPENAI_TOOL_ANNOTATION_SCAN = PASS`
+
+Remaining live gate: `TOOL_SELECTION_GOLDEN_SET` (28 cases).
+
+
+## 16. Live golden-set status — host-process compatibility blocker (2026-10-06 KST)
+
+All 28 live golden cases were attempted. Twenty-seven PASS with zero semantic-selection FAIL. One case remains platform-blocked:
+
+- `test-command` correctly selected `process_start_host`;
+- corrected live input used an existing `/opt/homebrew/bin/npm` and valid canonical schema values;
+- ChatGPT rejected `executable` with `INVALID_ARGUMENT` at the workspace/action schema-validation layer before the connector was reached;
+- the canonical local Business Zod schema accepts the exact corrected payload.
+
+Current gate disposition:
+
+- `OPENAI_TOOL_ANNOTATION_SCAN=PASS`
+- `OAUTH_MEMBER_IDENTITY_PATH=PASS`
+- `TOOL_SELECTION_GOLDEN_SET=BLOCKED_HOST_PROCESS_COMPATIBILITY`
+- `BUSINESS_V11_S0_ACCEPTED=BLOCKED_HOST_PROCESS_COMPATIBILITY`
+
+The safety fallback remains unactivated pending one targeted control using a harmless existing executable. B-S0 must not close and PR #6 must remain Draft until the blocker is resolved and affected live canary coverage is rerun.
+
+### Live finding: OpenAI host-process wire-schema compatibility
+
+The final live golden case exposed a reproducible pre-dispatch ChatGPT host validation defect for `process_start_host.executable`. Existing absolute paths `/opt/homebrew/bin/npm` and `/usr/bin/true` were both rejected against the stored pattern `^\/`, while the exact payload passed the canonical local Zod validator. The connector/backend was never reached.
+
+Official OpenAI documentation confirms that ChatGPT imports tool input schemas during Scan Tools and retains action-definition snapshots that require admin refresh when definitions change. Public OpenAI/Codex reports also document host-side MCP schema projection/staleness failures. The narrow B-S0 remediation therefore keeps the internal absolute-path validation intact and normalizes only the OpenAI-facing wire pattern to the semantically equivalent `^/`.
+
+Post-patch local suite: `BUSINESS_V11_BS0_LOCAL_SUITE=PASS count=9`.
+
+B-S0 remains open pending admin tool refresh/rescan and one live `process_start_host` retest. Personal fallback remains armed, not activated, because the blocked Business input shape already follows the proven Personal host-process structure; changing wholesale to that same structure would not address the observed host-side schema projection issue.
+
+## 19. Fresh-app host schema finding and patternless compatibility patch — 2026-10-06 KST
+
+A newly created ChatGPT Business development app consumed the refreshed `^/` wire pattern, proving the previous `^\\/` frozen-snapshot issue was real but not the complete root cause. The fresh app still rejected a valid `/usr/bin/true` argument during connector schema validation before the MCP server was reached.
+
+The compatibility fix therefore removes only `process_start_host.executable.pattern` from the OpenAI-facing `tools/list` descriptor. The internal Zod/runtime schema is unchanged and continues to enforce an absolute POSIX executable path. This preserves the security boundary while avoiding the ChatGPT Business host-side validation incompatibility.
+
+A staging-only restart configuration drift (`BS0_ORGANIZATION_ID=bs0-test`) also explained the temporary profile-ID change observed in the fresh app. The canonical staging organization ID has been restored to `chatagent-business-v11-bs0`; production remains unchanged.
+
+Current disposition: local suite PASS; 27/28 golden cases PASS; affected host-process case pending one live retest after the patternless wire schema is rescanned/refreshed in ChatGPT.
+
+
+## 20. Final B-S0 closure — 2026-10-07 KST
+
+Final live evidence closes every B-S0 gate.
+
+- `OPENAI_TOOL_ANNOTATION_SCAN = PASS`
+- `OAUTH_MEMBER_IDENTITY_PATH = PASS`
+- `TOOL_SELECTION_GOLDEN_SET = PASS`
+- `BUSINESS_V11_S0_ACCEPTED = PASS`
+- golden selection result: `28/28 PASS`, `0 FAIL`
+- safety fallback: armed but **not activated**
+- production mutation: **NONE**
+
+The final affected host-process path was validated in a fresh ChatGPT Business development app after removing only the incompatible `process_start_host.executable.pattern` from the OpenAI-facing `tools/list` schema. The authoritative server/runtime Zod schema still requires an absolute POSIX executable path. The final harmless `/usr/bin/true` control reached `process_start_host` and returned `probe=true / noEffect=true`.
+
+The authenticated profile also returned the original deterministic staging identity after restoring `BS0_ORGANIZATION_ID=chatagent-business-v11-bs0`, confirming the temporary profile-ID drift was a staging restart configuration error rather than an OAuth identity failure.
+
+Draft PR #6 remains Draft and unmerged pending an explicit source-review/commit/push/PR-readiness decision. B-S1 may be planned after this closure evidence is committed, but Business v1.0 production remains the active frozen baseline.

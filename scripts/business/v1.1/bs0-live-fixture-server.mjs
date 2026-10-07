@@ -6,7 +6,7 @@ import {StreamableHTTPServerTransport} from '@modelcontextprotocol/sdk/server/st
 import {ListToolsRequestSchema} from '@modelcontextprotocol/sdk/types.js';
 import {z} from 'zod';
 import {boundedJSONBody} from '../../l1/bounded-json-body.mjs';
-import {candidateTools} from './bs0-tool-catalog.mjs';
+import {candidateTools,toOpenAiWireInputSchema} from './bs0-tool-catalog.mjs';
 
 const port=Number(process.env.BS0_FIXTURE_PORT||31860);
 const publicOrigin=(process.env.BS0_PUBLIC_ORIGIN||'').replace(/\/$/,'');
@@ -37,7 +37,7 @@ const profileFrom=payload=>{
   return {id,...(typeof payload.email==='string'?{email:payload.email}:{}),...(typeof payload.user_metadata?.name==='string'?{name:payload.user_metadata.name}:{}),nickname:'ChatAgent Business B-S0'};
 };
 const descriptor=t=>({
-  name:t.name,title:t.title,description:t.description,inputSchema:z.toJSONSchema(t.inputSchema),
+  name:t.name,title:t.title,description:t.description,inputSchema:toOpenAiWireInputSchema(t),
   ...(t.outputSchema?{outputSchema:z.toJSONSchema(t.outputSchema)}:{}),annotations:t.annotations,
   securitySchemes:t.securitySchemes,_meta:t._meta
 });

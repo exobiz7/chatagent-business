@@ -68,4 +68,18 @@ export const candidateTools=[
  def('github_create_pull_request','Create GitHub pull request','Create one GitHub pull request for the current/named pushed branch. Does not merge the PR, bypass review/CI, modify branch protection, or force-push.',{...routedProject,title:z.string().min(1).max(256),body:z.string().max(16384).optional(),baseBranch:branchName.optional(),headBranch:branchName.optional(),draft:z.boolean().optional()},openWrite,{reuse:'ADAPT_THINLY',localEffect:true})
 ];
 
+export function toOpenAiWireInputSchema(tool){
+  const schema=z.toJSONSchema(tool.inputSchema);
+  // ChatGPT Business connector compatibility: fresh-app live canaries reject
+  // valid absolute paths even when the OpenAI-facing pattern is normalized to '^/'.
+  // Keep the authoritative SDK/Zod runtime absolute-path validator unchanged,
+  // but omit this one host-side pattern so valid calls can reach MCP. The server
+  // still rejects non-absolute executable paths before any process can start.
+  if(tool.name==='process_start_host'&&schema?.properties?.executable){
+    delete schema.properties.executable.pattern;
+    schema.properties.executable.description='Absolute POSIX executable path. The MCP server independently rejects non-absolute paths.';
+  }
+  return schema;
+}
+
 export const candidateToolByName=new Map(candidateTools.map(tool=>[tool.name,tool]));

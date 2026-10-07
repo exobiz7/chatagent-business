@@ -1,0 +1,133 @@
+{
+  "capturedAt": "2026-10-07T15:56:11+09:00",
+  "product": "ChatAgent Business",
+  "targetRelease": "v1.1.0",
+  "canonicalRepo": "/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business",
+  "git": {
+    "branch": "feat/business-v1.1-bs0-validation",
+    "head": "0b5071e56df7211b5847c900c1e52c60f11c42dc",
+    "worktree": "DIRTY_BS0_CLOSURE_READY_FOR_EXACT_PATH_COMMIT",
+    "modifiedOrUntracked": [
+      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_HANDOFF_20261007.md",
+      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_PACKAGE_INDEX_20261007.md",
+      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CLOSURE_SHA256_MANIFEST_20261007.json",
+      "A  docs/handoff/CHATAGENT_BUSINESS_V1_1_BS0_CURRENT_STATE_20261007.json",
+      "M  docs/verification/v1.1/B_S0_GATE_STATE_20261005.json",
+      "A  docs/verification/v1.1/B_S0_LIVE_CANARY_EVIDENCE_20261006.md",
+      "M  docs/verification/v1.1/B_S0_TOOL_SELECTION_GOLDEN_SET.json",
+      "A  docs/verification/v1.1/B_S0_TOOL_SELECTION_LIVE_RESULTS_20261006.json",
+      "M  docs/verification/v1.1/B_S0_VERIFICATION_REPORT_20261005.md",
+      "M  scripts/business/v1.1/bs0-live-fixture-server.mjs",
+      "A  scripts/business/v1.1/bs0-oauth-consent-server.mjs",
+      "M  scripts/business/v1.1/bs0-tool-catalog-test.mjs",
+      "M  scripts/business/v1.1/bs0-tool-catalog.mjs"
+    ],
+    "draftPullRequest": {
+      "number": 6,
+      "state": "OPEN",
+      "draft": true,
+      "mergeState": "CLEAN",
+      "hostedCi": [
+        "SUCCESS",
+        "SUCCESS"
+      ]
+    }
+  },
+  "productionBaseline": {
+    "version": "1.0.0",
+    "status": "PRODUCTION_ACTIVE_V1.0.0",
+    "tag": "v1.0.0",
+    "commit": "d6373f8ffef4b3739134f4d14cc300918417553e",
+    "mcpListen": "127.0.0.1:31850",
+    "mcpPid": 8871,
+    "productionMutationDuringBS0": false
+  },
+  "acceptedDesign": {
+    "path": "docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md",
+    "revision": "R5",
+    "northStar": "Personal-grade work freedom + Shared team memory + Distributed runtime + Existing organizational governance",
+    "collaborationDefault": "TEAM",
+    "collaborationException": "PRIVATE",
+    "executionDefault": "HOST_USER",
+    "executionOptional": "ISOLATED",
+    "toolCountConstrained": false,
+    "powerTool": "process_start_host",
+    "personalReuseFirst": true
+  },
+  "bs0": {
+    "status": "BUSINESS_V11_S0_ACCEPTED",
+    "acceptedAt": "2026-10-07T09:05:33+09:00",
+    "localSuite": {
+      "status": "PASS",
+      "count": 9
+    },
+    "candidateToolCount": 39,
+    "candidateToolCountIsConstraint": false,
+    "goldenSelection": {
+      "total": 28,
+      "pass": 28,
+      "fail": 0
+    },
+    "gates": {
+      "OPENAI_TOOL_ANNOTATION_SCAN": "PASS",
+      "OAUTH_MEMBER_IDENTITY_PATH": "PASS",
+      "TOOL_SELECTION_GOLDEN_SET": "PASS",
+      "BUSINESS_V11_S0_ACCEPTED": "PASS"
+    },
+    "safetyFallback": {
+      "armed": true,
+      "activated": false
+    },
+    "hostProcessCompatibility": {
+      "status": "RESOLVED",
+      "historicalIssue": "ChatGPT Business rejected valid absolute executable paths when process_start_host.executable.pattern was exposed in the OpenAI-facing schema.",
+      "resolution": "OpenAI-facing schema omits only executable.pattern; authoritative runtime Zod validation still enforces absolute paths.",
+      "finalControl": "/usr/bin/true -> process_start_host -> probe=true/noEffect=true"
+    }
+  },
+  "staging": {
+    "supabaseProjectRef": "dxofyjarkzizdzumfyul",
+    "oauthServer": "ENABLED",
+    "dcr": "ENABLED",
+    "tunnel": {
+      "name": "chatagent-business-v11-bs0",
+      "id": "tunnel_6ac4981673e48191b1bea1b2cde679f1",
+      "healthListen": "127.0.0.1:51961",
+      "status": "READY"
+    },
+    "fixture": {
+      "listen": "127.0.0.1:31861",
+      "status": "RUNNING",
+      "organizationId": "chatagent-business-v11-bs0",
+      "effectModel": "NO_EFFECT"
+    },
+    "chatgptApp": {
+      "name": "ChatAgent Business v1.1 B-S0 SchemaFix",
+      "appId": "asdk_app_6ac512f2fe008191bec2aba975d78a68",
+      "reviewState": "DEVELOPMENT",
+      "oauthConnected": true
+    }
+  },
+  "nextActions": [
+    "Review the bounded B-S0 closure diff and evidence files.",
+    "Commit and push the B-S0 closure changes on feat/business-v1.1-bs0-validation using exact-path staging.",
+    "Only with explicit user authorization, mark Draft PR #6 ready for review; do not merge automatically.",
+    "After closure evidence is committed, begin B-S1 Cloud Foundation / Identity / Runtime Nodes as a new bounded work unit.",
+    "Keep Business v1.0 production active and unchanged until the later accepted production cutover."
+  ],
+  "hardInvariants": [
+    "Do not modify Business v1.0 production before accepted cutover.",
+    "Do not move v1.0.0 tag.",
+    "Do not modify Personal/P8 without explicit authorization.",
+    "Do not expose secret/service-role/runtime API-key values.",
+    "Continuity is context, never host authority.",
+    "No broad destructive Git cleanup/reset."
+  ],
+  "productShortName": "ChatAgent Biz",
+  "legacyInternalDescriptor": "SMB Edition may remain in historical/internal documents, but final release-facing branding should be concise.",
+  "releaseNaming": {
+    "primary": "ChatAgent Business",
+    "short": "ChatAgent Biz",
+    "legacyDescriptorPolicy": "SMB Edition may remain for historical/internal disambiguation, not as the default final release-facing brand."
+  }
+}
