@@ -40,7 +40,7 @@ Deferred to later B-S1 units:
 
 - `supabase/migrations/20261007161000_business_v11_bs1_control_foundation.sql`
 - `supabase/migrations/20261007162500_business_v11_bs1_control_fk_indexes.sql`
-- `scripts/business/v1.1/bs1-control-contract-test.mjs`
+- `scripts/business/v1.1/bs1-control-schema-contract-test.mjs`
 - `scripts/business/v1.1/bs1-control-postgres-integration-test.mjs`
 
 A separately generated broader foundation draft was preserved under `/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business_handoffs/working/B_S1B_MEMBER_PROFILE_FOUNDATION_DRAFT_20261007.sql`. It is **non-authoritative and must not be applied** because its column layout differs from the schema already applied to staging. It is retained only as B-S1B design/reference material.
