@@ -8,6 +8,8 @@ const catalog=readFileSync(`${repo}/scripts/business/v1.1/bs0-tool-catalog.mjs`,
 const mapping=readFileSync(`${repo}/scripts/business/v1.1/runtime/local-workspace-registry.mjs`,'utf8');
 const mappingService=readFileSync(`${repo}/scripts/business/v1.1/runtime/business-runtime-mapping-service.mjs`,'utf8');
 const router=readFileSync(`${repo}/scripts/business/v1.1/runtime/business-runtime-router.mjs`,'utf8');
+const publicConfig=readFileSync(`${repo}/scripts/business/v1.1/runtime/publishable-runtime-config.mjs`,'utf8');
+const liveFixture=readFileSync(`${repo}/scripts/business/v1.1/bs3a-live-fixture-server.mjs`,'utf8');
 const lease=readFileSync(`${repo}/scripts/business/v1.1/control/runtime-authorization-lease.mjs`,'utf8');
 
 assert.equal(manifest.sourceCommit,'da391bf9c38697d706049b3b5d7bd2c2ba4ba28e');
@@ -32,6 +34,10 @@ assert.match(mappingService,/runtimeRegistry\.status\(runtimeNodeId\)/);
 assert.match(mappingService,/assertRuntimeAuthorization/);
 assert.match(mappingService,/BUSINESS_PROJECT_AUTHORIZATION_DENIED/);
 assert.doesNotMatch(mappingService,/memberId|userId|owner_user_id/i,'mapping service must not accept caller-supplied identity authority');
+assert.match(publicConfig,/Object\.keys\(cfg\)\.sort\(\)\.join/,'publishable config must reject unknown credential fields');
+assert.match(publicConfig,/\(st\.mode&0o077\)!==0/,'publishable config must be owner-only');
+assert.match(liveFixture,/BS3A_PUBLIC_CONFIG_PATH/,'live fixture must load publishable config from owner-private file');
+assert.doesNotMatch(liveFixture,/BS0_SUPABASE_PUBLISHABLE_KEY/,'live fixture must not accept publishable key via command-line environment');
 
 assert.match(router,/BUSINESS_RUNTIME_NODE_UNAVAILABLE/);
 assert.match(router,/BUSINESS_RUNTIME_NODE_REQUIRED/);

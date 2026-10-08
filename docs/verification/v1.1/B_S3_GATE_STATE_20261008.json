@@ -8,6 +8,7 @@
     "BUSINESS_S3A_RUNTIME_ROUTING": "PASS",
     "BUSINESS_S3A_MAPPING_AUTHORITY": "PASS",
     "BUSINESS_S3A_LIVE_FIXTURE_SYNTAX": "PASS",
+    "BUSINESS_S3A_STAGING_FIXTURE": "PASS",
     "BUSINESS_S3A_CHATGPT_OAUTH_MAPPING": "PENDING_LIVE_CANARY",
     "BUSINESS_S3_HOST_USER": "PENDING_BS3B",
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "IN_PROGRESS",
@@ -59,11 +60,13 @@
     "B_S3A_FULL_REGRESSION": "PASS"
   },
   "staging": {
-    "existingBs2cFixturePreserved": true,
+    "existingBs2cFixturePreservedBeforeActivation": true,
     "bs3aFixtureImplemented": true,
-    "bs3aFixtureActivated": false,
-    "activationReason": "APPROVED_PUBLISHABLE_ONLY_LOCAL_RUNTIME_CONFIG_PATH_PENDING",
+    "bs3aFixtureActivated": true,
+    "publishableConfigOwnerOnly": true,
+    "publishableKeyAcceptedViaCommandEnvironment": false,
+    "initialMappingCount": 0,
     "productionV1Unchanged": true
   },
-  "nextUnit": "Activate the B-S3A staging fixture through the approved publishable-only local runtime configuration, run the ChatGPT OAuth map/list/unmap canary, then close B-S3A before beginning B-S3B durable HOST_USER process integration."
+  "nextUnit": "Run the ChatGPT OAuth map/list/unmap canary against the active B-S3A fixture, close B-S3A if it passes, then begin B-S3B durable HOST_USER process integration."
 }

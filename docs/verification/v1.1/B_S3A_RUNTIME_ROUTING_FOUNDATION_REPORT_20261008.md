@@ -122,26 +122,37 @@ Behavioral tests prove:
 
 ## Live staging status
 
-A B-S3A staging fixture is implemented and syntax-validated. It DB-backs only:
+The B-S3A staging fixture is active on the existing isolated staging MCP endpoint. It DB-backs only:
 
 - existing B-S2 read-only identity/continuity tools;
 - `runtime_map_project`;
 - `runtime_unmap_project`.
 
-The fixture activation is intentionally not forced through an unsafe credential-injection workaround. The existing B-S2C staging fixture remains active until the B-S3A OAuth mapping canary activation step is provisioned through an approved publishable-only runtime-config path.
+Publishable Supabase configuration is loaded from an owner-private `0600` local runtime-config file. The fixture no longer accepts the publishable key through its command-line environment. The local config is not committed or copied into evidence.
+
+Activation proof:
+
+```text
+B-S3A fixture       127.0.0.1:31861 LIVE
+mappingCount        0
+workspace root      approved label/id only; absolute path not returned by health
+production v1.0     127.0.0.1:31850 UNCHANGED
+staging tunnel      127.0.0.1:51961 UNCHANGED
+```
 
 Therefore:
 
 ```text
+BUSINESS_S3A_STAGING_FIXTURE       = PASS
 BUSINESS_S3A_CHATGPT_OAUTH_MAPPING = PENDING_LIVE_CANARY
-B-S3                              = IN_PROGRESS
+B-S3                               = IN_PROGRESS
 ```
 
 Production Business v1.0 remains unchanged.
 
 ## Next bounded step
 
-Activate the B-S3A staging fixture through the approved publishable-only local runtime configuration, then run an actual ChatGPT OAuth canary:
+Run the actual ChatGPT OAuth mapping canary against the active B-S3A staging fixture:
 
 1. list caller-eligible node/workspace-root labels;
 2. map one existing staging logical project to an existing local checkout;

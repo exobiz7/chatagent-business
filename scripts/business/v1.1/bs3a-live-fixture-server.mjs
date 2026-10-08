@@ -16,12 +16,14 @@ import {createBusinessContinuityRpcSession} from './continuity/business-continui
 import {SupabaseBusinessContinuityStore} from './continuity/supabase-business-continuity-store.mjs';
 import {LocalWorkspaceRegistry} from './runtime/local-workspace-registry.mjs';
 import {BusinessRuntimeMappingService} from './runtime/business-runtime-mapping-service.mjs';
+import {loadBusinessPublishableRuntimeConfig} from './runtime/publishable-runtime-config.mjs';
 
 const port=Number(process.env.BS0_FIXTURE_PORT||31860);
 const publicOrigin=(process.env.BS0_PUBLIC_ORIGIN||'').replace(/\/$/,'');
-const supabaseUrl=(process.env.BS0_SUPABASE_URL||'').replace(/\/$/,'');
 const expectedAudience=process.env.BS0_EXPECTED_AUDIENCE||null;
-const publishableKey=process.env.BS0_SUPABASE_PUBLISHABLE_KEY||'';
+const publicConfig=loadBusinessPublishableRuntimeConfig(process.env.BS3A_PUBLIC_CONFIG_PATH||'');
+const supabaseUrl=publicConfig.url;
+const publishableKey=publicConfig.publishableKey;
 const nodeIdentityPath=process.env.BS3A_NODE_IDENTITY_PATH||'';
 const mappingStateDir=process.env.BS3A_MAPPING_STATE_DIR||'';
 const workspaceRootId=process.env.BS3A_WORKSPACE_ROOT_ID||'';

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {chmodSync,mkdtempSync,mkdirSync,rmSync,symlinkSync} from 'node:fs';
+import {chmodSync,mkdtempSync,mkdirSync,rmSync,symlinkSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
@@ -8,6 +8,7 @@ import {spawnSync} from 'node:child_process';
 import {LocalWorkspaceRegistry} from './runtime/local-workspace-registry.mjs';
 import {BusinessRuntimeMappingService} from './runtime/business-runtime-mapping-service.mjs';
 import {resolveBusinessRuntimeRoute,publicRuntimeRoute} from './runtime/business-runtime-router.mjs';
+import {loadBusinessPublishableRuntimeConfig} from './runtime/publishable-runtime-config.mjs';
 
 const root=mkdtempSync(join(tmpdir(),'business-bs3a-'));
 chmodSync(root,0o700);
@@ -31,6 +32,17 @@ const nodeB='30000000-0000-4000-8000-000000000002';
 const shared='30000000-0000-4000-8000-000000000003';
 
 try{
+  const publicConfigPath=join(root,'public-runtime-config.json');
+  const syntheticPublicConfig={schemaVersion:1,projectRef:'a'.repeat(20),url:'https://example.supabase.co',publishableKey:'sb_publishable_'+('x'.repeat(24))};
+  writeFileSync(publicConfigPath,JSON.stringify(syntheticPublicConfig)+'\n',{mode:0o600});
+  assert.equal(loadBusinessPublishableRuntimeConfig(publicConfigPath).projectRef,'a'.repeat(20));
+  chmodSync(publicConfigPath,0o644);
+  assert.throws(()=>loadBusinessPublishableRuntimeConfig(publicConfigPath),/BUSINESS_PUBLIC_CONFIG_UNSAFE/);
+  chmodSync(publicConfigPath,0o600);
+  writeFileSync(publicConfigPath,JSON.stringify({...syntheticPublicConfig,serviceRole:'forbidden'})+'\n',{mode:0o600});
+  assert.throws(()=>loadBusinessPublishableRuntimeConfig(publicConfigPath),/BUSINESS_PUBLIC_CONFIG_INVALID/);
+  writeFileSync(publicConfigPath,JSON.stringify(syntheticPublicConfig)+'\n',{mode:0o600});
+
   const a=new LocalWorkspaceRegistry({stateDir:stateA,nodeId:nodeA,initialize:true,
     workspaceRoots:[{workspaceRootId:'main',path:workA,label:'Main Workspace'}]});
   const b=new LocalWorkspaceRegistry({stateDir:stateB,nodeId:nodeB,initialize:true,
