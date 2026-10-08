@@ -28,7 +28,7 @@ const authSession={
   async rpc(name,args){
     calls.push({name,args});
     if(failBackend)return {data:null,error:{message:'network unavailable'}};
-    if(name==='bc_member_profile')return {data:{organizationSlug:'acme'},error:null};
+    if(name==='bc_schema_status')return {data:{organizationSlug:'acme'},error:null};
     if(name==='bc_task_get')return {data:taskResult(),error:null};
     if(name==='bc_project_context')return {data:{projectId,contextSeq:seq,integrityVerified:integrity,tasks:[{taskId,status,revision}]},error:null};
     if(name==='bc_export_snapshot')return {data:{project:{projectId},logicalDigest:'sha256:'+'b'.repeat(64),integrityVerified:true},error:null};

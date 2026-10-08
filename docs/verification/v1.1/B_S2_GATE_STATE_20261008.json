@@ -1,6 +1,6 @@
 {
   "phase": "B-S2",
-  "status": "B_S2C_LOCAL_STAGING_PASS_CHATGPT_LIVE_PENDING",
+  "status": "B_S2C_LIVE_ADAPTER_FIX_APPLIED_RETEST_PENDING",
   "baseAcceptedHead": "c69b43ce13be10045c65e17d5dd2f7880ad512d9",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
@@ -18,18 +18,26 @@
     "BUSINESS_S2C_PUBLIC_PROJECT_KEY_ALIGNMENT": "PASS",
     "BUSINESS_S2C_PUBLIC_RPC_SURFACE_LOCKDOWN": "PASS",
     "BUSINESS_S2C_LIVE_ADAPTER": "PASS",
-    "BUSINESS_S2C_CHATGPT_OAUTH_LIVE": "PENDING"
+    "BUSINESS_S2C_CHATGPT_OAUTH_LIVE": "RETEST_PENDING_AFTER_ADAPTER_FIX"
   },
   "handoffContract": {
     "digest": "sha256:<64 lowercase hex>",
     "digestBasis": "TASK_SCOPED_CONTINUITY_STATE",
     "unrelatedOrganizationContextSeqAffectsDigest": false,
-    "freshness": ["FRESH", "STALE", "UNVERIFIED"],
+    "freshness": [
+      "FRESH",
+      "STALE",
+      "UNVERIFIED"
+    ],
     "contextOnly": true,
     "authority": "NONE",
     "targetBytes": 8192,
     "hardCapBytes": 24576,
-    "deterministicOptionalPruning": ["facts", "artifacts", "decisions"]
+    "deterministicOptionalPruning": [
+      "facts",
+      "artifacts",
+      "decisions"
+    ]
   },
   "exportContract": {
     "rpc": "bc_export_snapshot",
@@ -48,9 +56,18 @@
     "callerSuppliedInternalProjectUuidAuthoritative": false
   },
   "stagingMigrations": [
-    {"version": "20261007153724", "name": "business_v11_bs2_handoff_export"},
-    {"version": "20261007154817", "name": "business_v11_bs2_project_key_rpc_adapters"},
-    {"version": "20261008002802", "name": "business_v11_bs2_public_rpc_surface_lockdown"}
+    {
+      "version": "20261007153724",
+      "name": "business_v11_bs2_handoff_export"
+    },
+    {
+      "version": "20261007154817",
+      "name": "business_v11_bs2_project_key_rpc_adapters"
+    },
+    {
+      "version": "20261008002802",
+      "name": "business_v11_bs2_public_rpc_surface_lockdown"
+    }
   ],
   "stagingVerification": {
     "continuityTableCount": 6,
@@ -90,5 +107,15 @@
     ],
     "continuityMutationToolsNoEffect": true
   },
-  "nextUnit": "Run one actual ChatGPT OAuth handoff canary, then mutate only the staging task through controlled DB state and verify the prior digest returns STALE. If PASS, close BUSINESS_S2_HANDOFF_FRESHNESS and BUSINESS_S2_LOCAL. Do not start B-S3 before B-S2 closure."
+  "nextUnit": "Repeat the same read-only ChatGPT OAuth continuity_prepare_handoff canary after the adapter fix. If FRESH with a valid digest, advance only the staging task by one controlled checkpoint and verify the prior digest returns STALE. Do not start B-S3 before B-S2 closure.",
+  "liveCanaryAttempt1": {
+    "result": "FAIL_READ_ONLY_NO_MUTATION",
+    "error": "BUSINESS_CONTINUITY_CONFIG_INVALID",
+    "rootCause": "HANDOFF_ORGANIZATION_IDENTITY_READ_FROM_USER_FACING_PROFILE_CONTRACT",
+    "fix": "READ_ORGANIZATION_SLUG_FROM_AUTHENTICATED_BC_SCHEMA_STATUS",
+    "taskMutation": false,
+    "fixtureRestarted": true,
+    "localBs2cRegression": "PASS",
+    "ciLocal": "PASS"
+  }
 }

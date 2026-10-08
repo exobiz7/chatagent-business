@@ -74,7 +74,7 @@ export class SupabaseBusinessContinuityStore{
     projectId=project(projectId);taskId=uuid(taskId);
     try{
       const [profile,taskResult]=await Promise.all([
-        this.rpc('bc_member_profile',{}),this.taskGet({projectId,taskId})
+        this.rpc('bc_schema_status',{}),this.taskGet({projectId,taskId})
       ]);
       const pkg=assembleBusinessHandoff({organizationId:profile?.organizationSlug,taskResult});
       return applyBusinessFreshness(pkg,null);
@@ -104,7 +104,7 @@ export class SupabaseBusinessContinuityStore{
     taskId=uuid(taskId);
     try{
       const [profile,taskResult]=await Promise.all([
-        this.rpc('bc_member_profile',{}),this.taskGet({projectId,taskId})
+        this.rpc('bc_schema_status',{}),this.taskGet({projectId,taskId})
       ]);
       return applyBusinessFreshness(assembleBusinessHandoff({organizationId:profile?.organizationSlug,taskResult}),expectedContextDigest);
     }catch(error){

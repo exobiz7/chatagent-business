@@ -132,3 +132,26 @@ One actual ChatGPT OAuth handoff/freshness canary remains before B-S2 can be clo
 BUSINESS_S2_HANDOFF_FRESHNESS = PENDING_CHATGPT_OAUTH_LIVE
 BUSINESS_S2_LOCAL             = IN_PROGRESS
 ```
+
+## Live canary attempt 1 — configuration wiring defect, no mutation
+
+The first actual ChatGPT OAuth read-only canary selected the expected continuity read path but both `continuity_prepare_handoff` and fallback `continuity_get_context` returned `BUSINESS_CONTINUITY_CONFIG_INVALID`. No task/checkpoint mutation occurred.
+
+Root cause was isolated to the B-S2C client adapter: the handoff assembler requires an organization identity in its digest basis, but the adapter attempted to read `organizationSlug` from `bc_member_profile()`. That RPC intentionally exposes only the user-facing profile contract (`id`, optional `name`, optional `email`, `nickname`) and does not expose organization metadata.
+
+The fix does **not** widen `bc_member_profile`. B-S2C now obtains the authenticated organization slug from existing read-only `bc_schema_status()`, while preserving `bc_member_profile` as the narrow profile contract. Regression coverage explicitly prevents handoff code from depending on `bc_member_profile().organizationSlug` again.
+
+Post-fix evidence:
+
+```text
+BUSINESS_S2C_HANDOFF_CONTRACT          PASS
+BUSINESS_S2C_HANDOFF_POSTGRES          PASS
+BUSINESS_S2C_HANDOFF_CLIENT            PASS
+BUSINESS_S2C_LIVE_CONTINUITY_ADAPTER   PASS
+npm run test:ci                        PASS
+git diff --check                       PASS
+B-S2C staging fixture restart          PASS
+Production v1.0                        UNCHANGED
+```
+
+The gate remains pending only for repetition of the same read-only OAuth handoff canary.

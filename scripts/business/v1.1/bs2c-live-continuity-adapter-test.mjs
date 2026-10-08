@@ -10,7 +10,7 @@ const fetchImpl=async(url,options)=>{
   const name=url.split('/').at(-1);
   const args=JSON.parse(options.body);
   let data;
-  if(name==='bc_member_profile')data={organizationSlug:'acme'};
+  if(name==='bc_schema_status')data={organizationSlug:'acme'};
   else if(name==='bc_task_get')data={contextSeq:3,integrityVerified:true,task:{taskId,projectId,objective:'Live continuity',status:'ACTIVE',revision:1,startedAt:'2026-10-07T00:00:00Z',completedAt:null},checkpoints:[]};
   else if(name==='bc_project_context')data={projectId,contextSeq:3,integrityVerified:true,tasks:[]};
   else if(name==='bc_history_search')data={projectId,query:args.p_query,contextSeq:3,matches:[]};

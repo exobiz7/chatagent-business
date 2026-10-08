@@ -8,6 +8,7 @@ const sql=readFileSync(repo+'/supabase/migrations/20261008003000_business_v11_bs
 const adapters=readFileSync(repo+'/supabase/migrations/20261008004500_business_v11_bs2_project_key_rpc_adapters.sql','utf8');
 const lockdown=readFileSync(repo+'/supabase/migrations/20261008005500_business_v11_bs2_public_rpc_surface_lockdown.sql','utf8');
 const frozen=JSON.parse(readFileSync(repo+'/docs/verification/v1.1/B_S0_SUPABASE_SCHEMA_RPC_CONTRACT.json','utf8'));
+const storeSource=readFileSync(repo+'/scripts/business/v1.1/continuity/supabase-business-continuity-store.mjs','utf8');
 
 assert.equal(HANDOFF_TARGET_BYTES,8192);
 assert.equal(HANDOFF_HARD_BYTES,24576);
@@ -33,6 +34,8 @@ for(const signature of ['bc_task_start(uuid,text,uuid,uuid,text[])','bc_checkpoi
 assert.doesNotMatch(sql+adapters,/function public\.bc_import_snapshot\(/,'B-S4 migration-only importer must not become runtime surface in B-S2C');
 assert.ok(frozen.rpc.continuity.includes('bc_export_snapshot'));
 assert.ok(frozen.rpc.migrationTemporary.includes('bc_import_snapshot'));
+assert.match(storeSource,/this\.rpc\('bc_schema_status',\{\}\)/,'handoff digest organization identity must come from schema status');
+assert.doesNotMatch(storeSource,/this\.rpc\('bc_member_profile',\{\}\)/,'handoff must not depend on user-facing member profile exposing organization slug');
 
 console.log('PASS B-S2C preserves 8 KiB target / 24 KiB hard handoff bounds and sha256 digest contract');
 console.log('PASS task/context reads expose fail-closed integrity status while export performs full event-chain verification');
