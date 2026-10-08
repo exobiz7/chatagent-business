@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3A_LOCAL_FOUNDATION_PASS_LIVE_MAPPING_PENDING",
+  "status": "B_S3A_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -9,7 +9,7 @@
     "BUSINESS_S3A_MAPPING_AUTHORITY": "PASS",
     "BUSINESS_S3A_LIVE_FIXTURE_SYNTAX": "PASS",
     "BUSINESS_S3A_STAGING_FIXTURE": "PASS",
-    "BUSINESS_S3A_CHATGPT_OAUTH_MAPPING": "PENDING_LIVE_CANARY",
+    "BUSINESS_S3A_CHATGPT_OAUTH_MAPPING": "PASS",
     "BUSINESS_S3_HOST_USER": "PENDING_BS3B",
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "IN_PROGRESS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
@@ -57,7 +57,9 @@
     "BS3A_FIXTURE_SYNTAX": "PASS",
     "CI_LOCAL": "PASS",
     "GIT_DIFF_CHECK": "PASS",
-    "B_S3A_FULL_REGRESSION": "PASS"
+    "B_S3A_FULL_REGRESSION": "PASS",
+    "B_S3A_POST_ACTIVATION_REGRESSION": "PASS",
+    "B_S3A_CLOSURE_REGRESSION_V24": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -66,7 +68,13 @@
     "publishableConfigOwnerOnly": true,
     "publishableKeyAcceptedViaCommandEnvironment": false,
     "initialMappingCount": 0,
-    "productionV1Unchanged": true
+    "productionV1Unchanged": true,
+    "oauthReadAdmissionCanary": "PASS",
+    "oauthMapDiscoveryCanary": "PASS",
+    "oauthExactRevisionUnmapCanary": "PASS",
+    "finalMappingCount": 0,
+    "absoluteHostPathDisclosed": false,
+    "repositoryMutationObserved": false
   },
-  "nextUnit": "Run the ChatGPT OAuth map/list/unmap canary against the active B-S3A fixture, close B-S3A if it passes, then begin B-S3B durable HOST_USER process integration."
+  "nextUnit": "B-S3B \u2014 reuse the frozen Personal durable HOST_USER process core and bind it to B-S3A routing plus B-S1 ownership/lease authority."
 }

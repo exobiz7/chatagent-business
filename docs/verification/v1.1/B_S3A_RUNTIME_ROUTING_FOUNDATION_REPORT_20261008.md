@@ -104,6 +104,7 @@ B-S3A live fixture syntax             = PASS
 npm run test:ci                       = PASS
 git diff --check                      = PASS
 B_S3A_FULL_REGRESSION                 = PASS
+B_S3A_CLOSURE_REGRESSION_V24          = PASS
 ```
 
 Behavioral tests prove:
@@ -144,20 +145,53 @@ Therefore:
 
 ```text
 BUSINESS_S3A_STAGING_FIXTURE       = PASS
-BUSINESS_S3A_CHATGPT_OAUTH_MAPPING = PENDING_LIVE_CANARY
+BUSINESS_S3A_CHATGPT_OAUTH_MAPPING = PASS
+B-S3A                              = ACCEPTED / CLOSED
 B-S3                               = IN_PROGRESS
 ```
 
 Production Business v1.0 remains unchanged.
 
+## ChatGPT OAuth mapping canary closure
+
+The live OAuth canary used one existing TEAM / STANDARD staging logical project and one caller-owned APPROVED PERSONAL_NODE. The public read path returned exactly one eligible node, no existing mappings, and one approved workspace-root ID/label without any absolute host path.
+
+The map step then succeeded exactly once with fixed operation UUID semantics and returned:
+
+```text
+mapped          true
+mappingRevision 1
+```
+
+A follow-up `runtime_list_nodes` call showed the logical project in `mappedProjects` with the same mapping revision and workspace-root ID, while still withholding the absolute host path. No process, filesystem, or Git mutation tool was called.
+
+The exact-revision unmap step then succeeded exactly once:
+
+```text
+unmapped        true
+mappingRevision 1
+```
+
+A final discovery read returned `mappedProjects=[]`. Node-local cross-check confirmed:
+
+```text
+mappingCount        0
+targetMappingPresent false
+unmapReceiptCount    1
+```
+
+The repository remained unchanged across the complete map/discover/unmap sequence:
+
+```text
+branch              feat/business-v1.1-bs3-runtime-routing
+HEAD                2d7a9e83d045ba83766ea105d2116f77b80d75f9
+status SHA-256      e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+working diff SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+staged diff SHA-256  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+```
+
+This closes B-S3A without enabling HOST_USER execution or semantic file/Git effects.
+
 ## Next bounded step
 
-Run the actual ChatGPT OAuth mapping canary against the active B-S3A staging fixture:
-
-1. list caller-eligible node/workspace-root labels;
-2. map one existing staging logical project to an existing local checkout;
-3. verify the mapped node is discoverable without host-path disclosure;
-4. unmap using exact mapping revision;
-5. verify unmap did not mutate repository files.
-
-After that canary, close B-S3A and proceed to B-S3B — Personal durable HOST_USER process core.
+Proceed to B-S3B — Personal durable HOST_USER process core. Reuse the frozen Personal durable-process donor first, then bind start/status/output/terminate to the B-S3A route admission and B-S1 ownership/lease authority. Keep semantic file/Git effects and local effect audit in later B-S3 units.
