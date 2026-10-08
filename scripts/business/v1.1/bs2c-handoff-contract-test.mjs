@@ -9,6 +9,7 @@ const adapters=readFileSync(repo+'/supabase/migrations/20261008004500_business_v
 const lockdown=readFileSync(repo+'/supabase/migrations/20261008005500_business_v11_bs2_public_rpc_surface_lockdown.sql','utf8');
 const frozen=JSON.parse(readFileSync(repo+'/docs/verification/v1.1/B_S0_SUPABASE_SCHEMA_RPC_CONTRACT.json','utf8'));
 const storeSource=readFileSync(repo+'/scripts/business/v1.1/continuity/supabase-business-continuity-store.mjs','utf8');
+const liveFixture=readFileSync(repo+'/scripts/business/v1.1/bs2c-live-fixture-server.mjs','utf8');
 
 assert.equal(HANDOFF_TARGET_BYTES,8192);
 assert.equal(HANDOFF_HARD_BYTES,24576);
@@ -36,6 +37,10 @@ assert.ok(frozen.rpc.continuity.includes('bc_export_snapshot'));
 assert.ok(frozen.rpc.migrationTemporary.includes('bc_import_snapshot'));
 assert.match(storeSource,/this\.rpc\('bc_schema_status',\{\}\)/,'handoff digest organization identity must come from schema status');
 assert.doesNotMatch(storeSource,/this\.rpc\('bc_member_profile',\{\}\)/,'handoff must not depend on user-facing member profile exposing organization slug');
+assert.match(liveFixture,/BS2C_ENABLE_CHECKPOINT_CANARY/,'live checkpoint mutation must require an explicit env gate');
+assert.match(liveFixture,/BS2C_CHECKPOINT_CANARY_SCOPE_DENIED/,'live checkpoint canary must fail closed outside its exact scope');
+assert.match(liveFixture,/args\?\.expectedTaskRevision!==1/,'live checkpoint canary must pin the exact expected revision');
+assert.match(liveFixture,/args\?\.operationId!==checkpointCanaryOperation/,'live checkpoint canary must pin one idempotency operation UUID');
 
 console.log('PASS B-S2C preserves 8 KiB target / 24 KiB hard handoff bounds and sha256 digest contract');
 console.log('PASS task/context reads expose fail-closed integrity status while export performs full event-chain verification');

@@ -25,7 +25,16 @@ const jwks=createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
 const resource=`${publicOrigin}/mcp`;
 const metadataUrl=`${publicOrigin}/.well-known/oauth-protected-resource`;
 const oauthScopes=['openid','email','profile'];
-const dbBackedTools=['member_get_profile','runtime_list_nodes','continuity_get_context','continuity_prepare_handoff','continuity_search_history'];
+const checkpointCanaryEnabled=process.env.BS2C_ENABLE_CHECKPOINT_CANARY==='1';
+const checkpointCanaryProject=process.env.BS2C_CHECKPOINT_CANARY_PROJECT||'';
+const checkpointCanaryTask=process.env.BS2C_CHECKPOINT_CANARY_TASK||'';
+const checkpointCanaryOperation=process.env.BS2C_CHECKPOINT_CANARY_OPERATION||'';
+if(checkpointCanaryEnabled&&(!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(checkpointCanaryProject)||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(checkpointCanaryTask)||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(checkpointCanaryOperation)))
+  throw Error('BS2C_CHECKPOINT_CANARY_CONFIG_INVALID');
+const dbBackedTools=['member_get_profile','runtime_list_nodes','continuity_get_context','continuity_prepare_handoff','continuity_search_history',
+  ...(checkpointCanaryEnabled?['continuity_add_checkpoint']:[])];
 
 const json=(res,status,data,headers={})=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store',...headers});res.end(JSON.stringify(data));};
 const challenge=()=>`Bearer resource_metadata="${metadataUrl}", error="invalid_token", error_description="OAuth login required"`;
@@ -56,6 +65,11 @@ function buildMcp(accessToken){
       if(t.name==='continuity_get_context')return result(await continuity.getContext(args));
       if(t.name==='continuity_prepare_handoff')return result(await continuity.prepareHandoff(args));
       if(t.name==='continuity_search_history')return result(await continuity.historySearch(args));
+      if(t.name==='continuity_add_checkpoint'&&checkpointCanaryEnabled){
+        if(args?.projectId!==checkpointCanaryProject||args?.taskId!==checkpointCanaryTask||args?.expectedTaskRevision!==1||args?.operationId!==checkpointCanaryOperation)
+          throw Error('BS2C_CHECKPOINT_CANARY_SCOPE_DENIED');
+        return result(await continuity.checkpointAppend(args));
+      }
       return {content:[{type:'text',text:JSON.stringify({probe:true,noEffect:true,tool:t.name,argumentKeys:Object.keys(args||{}).sort()})}]};
     });
   }
@@ -66,7 +80,7 @@ function buildMcp(accessToken){
 const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&(req.url==='/.well-known/oauth-protected-resource'||req.url==='/.well-known/oauth-protected-resource/mcp'))
     return json(res,200,{resource,authorization_servers:[issuer],scopes_supported:oauthScopes,bearer_methods_supported:['header']});
-  if(req.method==='GET'&&req.url==='/healthz')return json(res,200,{status:'live',fixture:true,noEffectMutations:true,dbBackedTools});
+  if(req.method==='GET'&&req.url==='/healthz')return json(res,200,{status:'live',fixture:true,noEffectMutations:!checkpointCanaryEnabled,checkpointCanaryEnabled,dbBackedTools});
   if(req.url!=='/mcp'||req.method!=='POST')return json(res,404,{error:'NOT_FOUND'});
   try{await verify(req);}catch{return json(res,401,{error:'UNAUTHORIZED'},{'www-authenticate':challenge()});}
   let body;try{body=(await boundedJSONBody(req,{maxBytes:350000,oversizeCode:'BODY_LIMIT'})).body;}catch(e){return json(res,e.message==='BODY_LIMIT'?413:400,{error:e.message});}
@@ -74,4 +88,4 @@ const server=http.createServer(async(req,res)=>{
   const transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
   try{await mcp.connect(transport);await transport.handleRequest(req,res,body);}catch{if(!res.headersSent)json(res,500,{error:'BS2C_FIXTURE_INTERNAL'});}finally{try{await mcp.close();}catch{}}
 });
-server.listen(port,'127.0.0.1',()=>console.log(JSON.stringify({event:'bs2c_live_fixture_started',port,issuer,resource,noEffectMutations:true,dbBackedTools})));
+server.listen(port,'127.0.0.1',()=>console.log(JSON.stringify({event:'bs2c_live_fixture_started',port,issuer,resource,noEffectMutations:!checkpointCanaryEnabled,checkpointCanaryEnabled,dbBackedTools})));
