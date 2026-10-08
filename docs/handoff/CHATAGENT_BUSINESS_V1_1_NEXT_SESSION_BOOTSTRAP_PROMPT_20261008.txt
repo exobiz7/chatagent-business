@@ -1,0 +1,458 @@
+You are taking over the ChatAgent Business v1.1 implementation session.
+
+Do NOT rely on this prompt alone. The repository and latest accepted evidence are authoritative.
+
+==================================================
+0. CANONICAL REPO / FIRST ACTION
+==================================================
+
+Canonical repo:
+/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+
+GitHub:
+exobiz7/chatagent-business
+
+Use Remote Desktop Commander on the authorized Mac Studio and begin with READ-ONLY inspection.
+
+Before changing anything, run/confirm:
+
+- git branch --show-current
+- git rev-parse HEAD
+- git rev-parse origin/$(git branch --show-current)
+- git status --short
+- recent commits
+- current PR #6/#7/#8/#9 state if GitHub CLI is available
+- production listener 127.0.0.1:31850
+- staging listener 127.0.0.1:31861
+- staging tunnel health 127.0.0.1:51961
+- GET http://127.0.0.1:31861/healthz
+
+IMPORTANT:
+The B-S3A fixture health path is /healthz, not /health.
+
+If the repo or latest gate files show work later than the handoff below, continue from the newest accepted authority and do not repeat already closed work.
+
+==================================================
+1. MUST-READ FILES — READ DIRECTLY FROM REPO
+==================================================
+
+Read in this order:
+
+1) docs/handoff/LATEST_SESSION_HANDOFF.txt
+2) docs/handoff/CHATAGENT_BUSINESS_V1_1_CURRENT_STATE_20261008.json
+3) docs/handoff/CHATAGENT_BUSINESS_V1_1_SESSION_HANDOFF_20261008.md
+4) docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md
+   Focus especially on §§2–18, 24–30, 34–38.
+5) docs/verification/v1.1/B_S3_GATE_STATE_20261008.json
+6) docs/verification/v1.1/B_S3A_RUNTIME_ROUTING_FOUNDATION_REPORT_20261008.md
+7) docs/verification/v1.1/B_S2_GATE_STATE_20261008.json
+8) docs/verification/v1.1/B_S1_GATE_STATE_20261007.json
+9) docs/verification/v1.1/B_S0_GATE_STATE_20261005.json
+10) docs/verification/v1.1/B_S0_PERSONAL_DONOR_MANIFEST.json
+11) docs/verification/v1.1/B_S0_SUPABASE_SCHEMA_RPC_CONTRACT.json
+12) scripts/business/v1.1/bs0-tool-catalog.mjs
+13) scripts/business/v1.1/runtime/business-runtime-router.mjs
+14) scripts/business/v1.1/runtime/business-runtime-mapping-service.mjs
+15) scripts/business/v1.1/runtime/local-workspace-registry.mjs
+16) scripts/business/v1.1/control/runtime-authorization-lease.mjs
+17) scripts/l1/durable-host-processes.mjs
+18) scripts/l1/durable-process-runner.mjs
+19) scripts/l1/broker-core.mjs
+20) scripts/l1/broker-server.mjs
+21) relevant durable-process tests under scripts/l1/
+22) package.json
+
+The Accepted Design is the canonical normative architecture. Its old header/progress wording is historical. Newer B-S0/B-S1/B-S2/B-S3 gate files are authoritative for implementation progress.
+
+==================================================
+2. CURRENT ACCEPTED PHASE STATE AT HANDOFF
+==================================================
+
+At handoff capture, the accepted state was:
+
+B-S0  ACCEPTED / CLOSED
+B-S1  ACCEPTED / CLOSED
+B-S2  ACCEPTED / CLOSED
+B-S3A ACCEPTED / CLOSED
+B-S3B NEXT
+B-S3  IN_PROGRESS
+B-S4..B-S6 PENDING
+
+B-S3A closure HEAD before this handoff package:
+de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5
+
+Branch:
+feat/business-v1.1-bs3-runtime-routing
+
+Do not reopen B-S0/B-S1/B-S2/B-S3A without new evidence.
+
+==================================================
+3. PRODUCT NORTH STAR
+==================================================
+
+Target: ChatAgent Business v1.1.0
+User-facing name: ChatAgent Business
+Short name: ChatAgent Biz
+
+Definition:
+Personal-grade work freedom + Shared team memory + Distributed runtime + Existing organizational governance.
+
+Core rule:
+Work freely on approved nodes; share context broadly by default; respect real OS-user/external-system authority; expose risky effects semantically and truthfully.
+
+==================================================
+4. PRODUCTION SAFETY BOUNDARY
+==================================================
+
+Business v1.0.0 remains the frozen production baseline:
+
+release commit:
+d6373f8ffef4b3739134f4d14cc300918417553e
+
+production MCP:
+127.0.0.1:31850
+
+Do NOT mutate production v1.0 or perform cutover work.
+B-S6 owns production cutover.
+
+Do NOT merge PR #6/#7/#8/#9 without explicit user authorization.
+Do NOT mark Draft PR #7/#8/#9 Ready without explicit user authorization.
+
+No broad destructive Git cleanup:
+- no git reset --hard
+- no git clean -fdx
+- no git add .
+- no git add -A
+
+Use exact-path staging only.
+
+==================================================
+5. ARCHITECTURE INVARIANTS
+==================================================
+
+Effective authority is:
+Organization/Project Policy
+∩ Member/Node Trust
+∩ Local Node Policy
+∩ Logged-in OS User Permission
+∩ External System Policy
+
+TEAM is the default shared continuity mode.
+PRIVATE is an explicit sensitivity exception.
+Continuity is context only, never host authority.
+
+PERSONAL_NODE:
+- exactly one owner
+- owner-only HOST_USER
+- no other member may route host execution to it
+
+SHARED_NODE:
+- semantic root-bounded work may be allowed
+- generic process_start_host is denied unless ADMIN explicitly enabled shared host power
+- cwd is never a security sandbox by itself
+
+OAuth:
+- Supabase Auth OAuth 2.1/OIDC identity path
+- identity scopes openid email profile
+- no caller-supplied user/member ID authority
+- no runtime service_role
+
+Tool design:
+- <domain>_<verb>_<object>
+- tool count is not a goal
+- semantic tool preferred over generic host exec
+- truthful risk annotations are mandatory
+- process_start_host remains destructive/open-world power tool
+
+==================================================
+6. B-S3A ACCEPTED BASELINE
+==================================================
+
+B-S3A already implemented and live-verified:
+
+- node-local workspace-root registry
+- runtime_map_project / runtime_unmap_project real effects
+- project authorization before mapping
+- eligible-node authorization
+- logical project -> node-local host path mapping
+- UUID idempotency
+- monotonic mapping revision
+- exact-revision unmap
+- traversal/symlink/broad-root/state-root overlap denial
+- optional exact Git origin verification
+- 0 / 1 / 2+ runtime routing
+- PERSONAL_NODE owner isolation
+- SHARED_NODE host-power boundary
+- bounded cached authorization lease
+- no public canonical host path disclosure
+
+Live OAuth map/discover/unmap canary passed and final mappingCount returned to 0.
+Repository/Git state was unchanged by map/unmap.
+
+Do NOT redo B-S3A.
+
+==================================================
+7. CURRENT STAGING STATE
+==================================================
+
+At capture:
+
+B-S3A staging MCP:
+127.0.0.1:31861
+
+Health:
+GET /healthz
+
+Staging tunnel health:
+127.0.0.1:51961
+
+Health showed mappingCount=0.
+
+Owner-private local files:
+/Users/macstudio/Library/Application Support/chatagent/business-v11-bs3a/public-runtime-config.json
+/Users/macstudio/Library/Application Support/chatagent/business-v11-bs3a/workspace-mappings.json
+
+Both were mode 0600.
+Do not print/persist the publishable key value.
+Never place service-role/access/refresh tokens in repo/evidence.
+
+==================================================
+8. NODE VERSION — PIN IT EXPLICITLY
+==================================================
+
+Accepted test runtime:
+/Users/macstudio/.nvm/versions/node/v24.21.0/bin/node
+/Users/macstudio/.nvm/versions/node/v24.21.0/bin/npm
+
+Before authoritative regression:
+
+export PATH=/Users/macstudio/.nvm/versions/node/v24.21.0/bin:$PATH
+node -v
+
+It must report v24.21.0.
+
+Do not trust the shell default node; version drift was observed during the previous session.
+
+==================================================
+9. PERSONAL DONOR — REUSE FIRST
+==================================================
+
+Frozen source donor:
+ChatAgent Personal v1.1.1
+commit:
+da391bf9c38697d706049b3b5d7bd2c2ba4ba28e
+
+Manifest:
+docs/verification/v1.1/B_S0_PERSONAL_DONOR_MANIFEST.json
+
+Key blobs:
+
+durable-host-processes.mjs
+27a872de687df1f43fd1ab0c4783ac11a181ba94
+
+broker-server.mjs
+5ee4d6078207031c3b84bc7e238d5c8e3b27d331
+
+Personal is a READ-ONLY donor/reference, never a Business runtime dependency.
+
+Before B-S3B coding, re-hash/verify donor sources and port/reuse relevant process tests first.
+
+==================================================
+10. NEXT UNIT — B-S3B DURABLE HOST_USER PROCESS CORE
+==================================================
+
+Scope public tools:
+
+process_start_host
+process_get_status
+process_read_output
+process_terminate_job
+
+Goal:
+Reuse Personal DurableHostProcesses lifecycle/recovery/idempotency core, then add Business authority/routing adapters.
+
+Business process-start authority must be:
+
+validated OAuth member
+-> authorized logical project
+-> B-S3A mapped runtime route
+-> B-S1 node lifecycle/ownership/bounded lease
+-> local node policy
+-> logged-in macOS user authority
+-> durable process core
+
+Do NOT reuse Personal FULL_HOST pairing/grants as Business authorization.
+
+Keep out of this bounded unit unless technically required:
+
+- semantic filesystem effects
+- semantic Git/GitHub effects
+- Business local effect audit
+- production relay transport
+- final B-S3 OpenAI safety matrix
+- B-S4 migration/backup
+
+==================================================
+11. B-S3B PUBLIC CONTRACT GAPS — RESOLVE, DO NOT HIDE
+==================================================
+
+A) process_read_output maxBytes
+
+Public catalog currently permits maxBytes up to 524288.
+Frozen Personal durable core single-read bound is 16384.
+
+Implement/test a truthful bounded adapter or deliberately re-baseline the schema with B-S0 descriptor regression.
+Do not silently widen the donor core.
+
+B) process_read_output waitMs
+
+Public catalog exposes waitMs up to 30000.
+Donor read is immediate.
+
+Implement bounded wait/poll semantics or re-baseline the schema with evidence.
+Do not claim wait behavior that is not implemented.
+
+C) cwd semantics
+
+Personal donor requires absolute cwd.
+B-S3A intentionally withholds canonical host paths from public mapping receipts.
+Business must define truthful mapped-project cwd resolution while preserving broad HOST_USER semantics.
+
+Do not treat cwd as a SHARED_NODE security sandbox.
+
+D) processId-only read/terminate
+
+process_get_status/read_output/terminate_job take only processId.
+The server must maintain owner-private process-to-member/project/node binding and resolve the route itself.
+
+Never accept arbitrary host PID/member/user ID as caller authority.
+
+E) restart/crash windows
+
+Prove reservation -> runner launch -> PID/start-token binding is fail-closed and does not blindly replay effects.
+
+==================================================
+12. REQUIRED B-S3B VERIFICATION QUESTIONS
+==================================================
+
+Before PASS, prove:
+
+1. donor hashes still match;
+2. proven durable core was reused first;
+3. OAuth/project/node authorization occurs before start effect;
+4. PERSONAL_NODE non-owner is denied;
+5. SHARED_NODE generic host exec is denied without explicit host-power opt-in;
+6. cached lease is bounded and expiry fails closed;
+7. same idempotency key + same input never starts a second process;
+8. same idempotency key + changed input conflicts;
+9. crash/restart reconciliation is fail-closed;
+10. arbitrary/stale/reused PID is never signaled;
+11. status/read/terminate use server-owned process binding;
+12. output/argv/timeout/concurrency are bounded;
+13. output is not copied into audit/credential logs;
+14. cwd behavior is truthful and host-path privacy compatible;
+15. maxBytes/waitMs match public contract;
+16. durable state survives/reconciles restart;
+17. terminate affects exactly the owned job;
+18. process_start_host annotations remain destructive/open-world;
+19. semantic operations still prefer semantic tools;
+20. production v1.0 remains unchanged.
+
+==================================================
+13. RECOMMENDED B-S3B SEQUENCE
+==================================================
+
+B-S3B-1 donor parity/local core:
+- verify donor hashes
+- port relevant tests first
+- prove lifecycle/idempotency/recovery under Node v24.21.0
+- no OAuth/staging process effect yet
+
+B-S3B-2 Business adapter:
+- bind B-S3A route + B-S1 authority
+- owner-private process registry
+- processId-only status/read/terminate resolution
+- resolve cwd/maxBytes/waitMs gaps
+- add PERSONAL/SHARED/outage/revoke tests
+
+B-S3B-3 isolated staging OAuth canary:
+- map a staging project if needed
+- start a benign bounded process
+- get status
+- read known small output
+- terminate a controlled process if applicable
+- prove restart/reconciliation if required
+- cleanup/unmap
+- verify repo/worktree unchanged
+
+If a temporary live-effect gate is required, scope it to exact project/node/executable/idempotency fixture and close it immediately after proof.
+
+==================================================
+14. HOSTED CI NOTE
+==================================================
+
+Code-bearing B-S3A head 2d7a9e8... passed hosted macOS CI.
+
+Docs-only closure head de7cb4b... had two GitHub Actions attempts that failed before runner allocation:
+- steps=[]
+- runner_id=0
+- runner name empty
+- ~5 second run
+
+No test step ran. Treat this as recorded runner-provisioning infrastructure failure, not product/test failure.
+If a later runner executes tests and a real step fails, that is new evidence and must be diagnosed.
+
+==================================================
+15. DEPENDENCY SECURITY NOTE
+==================================================
+
+Current verified direct versions:
+@modelcontextprotocol/sdk 1.30.0
+@supabase/supabase-js     2.117.2
+
+Known MCP SDK advisory tracked:
+GHSA-6qxp-vccf-f47h
+
+Do NOT silently upgrade SDK during B-S3B.
+Any upgrade is a separate bounded compatibility/security unit because B-S0 descriptor/OAuth behavior was live-validated on SDK 1.30.0.
+
+==================================================
+16. WORKING METHOD
+==================================================
+
+- evidence first
+- small bounded units
+- preserve closed gates
+- inspect unknown concurrent changes before touching them
+- exact-path git staging only
+- run git diff --cached --check
+- sensitive-literal scan before commit
+- check HEAD immediately before commit
+- no broad cleanup/reset
+- no production mutation
+- no merge/Ready transition without explicit user authorization
+
+At the end of each work unit, report:
+- exact files changed
+- exact gates/tests run
+- staging/production impact
+- commit SHA
+- PR state
+- next bounded unit
+
+==================================================
+17. TAKEOVER RESPONSE EXPECTATION
+==================================================
+
+After reading/verifying the repo, give a concise takeover report containing:
+
+- actual current branch/HEAD/worktree
+- latest accepted phase/gate
+- whether it matches or supersedes this handoff
+- production/staging listener status
+- pinned Node version
+- any discrepancy found
+- exact B-S3B first bounded task you will execute
+
+If the actual repo matches this handoff, begin B-S3B-1.
+Do not ask the user to restate prior context that is already present in the repo/handoff.

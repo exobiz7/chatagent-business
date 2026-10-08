@@ -1,0 +1,33 @@
+ChatAgent Business v1.1 — latest session handoff pointer
+Captured: 2026-10-08 KST
+
+Canonical repo:
+/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+
+Read first:
+1. docs/handoff/CHATAGENT_BUSINESS_V1_1_CURRENT_STATE_20261008.json
+2. docs/handoff/CHATAGENT_BUSINESS_V1_1_SESSION_HANDOFF_20261008.md
+3. docs/handoff/CHATAGENT_BUSINESS_V1_1_NEXT_SESSION_BOOTSTRAP_PROMPT_20261008.txt
+4. docs/handoff/CHATAGENT_BUSINESS_V1_1_HANDOFF_PACKAGE_INDEX_20261008.md
+5. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md
+6. docs/verification/v1.1/B_S3_GATE_STATE_20261008.json
+7. docs/verification/v1.1/B_S3A_RUNTIME_ROUTING_FOUNDATION_REPORT_20261008.md
+
+Latest accepted bounded unit at capture:
+B-S3A — ACCEPTED / CLOSED
+
+Next bounded unit:
+B-S3B — Durable HOST_USER Process Core
+
+Handoff base branch:
+feat/business-v1.1-bs3-runtime-routing
+
+Handoff base accepted HEAD:
+de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5
+
+IMPORTANT:
+This pointer is a snapshot. The next session must inspect the actual branch/HEAD/worktree and newest gate files first. If the repo has progressed, the repo/latest accepted evidence supersedes this pointer.
+
+Do not redo B-S0/B-S1/B-S2/B-S3A without new evidence.
+Do not mutate production v1.0.
+Do not merge or mark stacked PRs Ready without explicit user authorization.

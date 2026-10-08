@@ -1,0 +1,33 @@
+{
+  "capturedAtKst": "2026-10-08",
+  "algorithm": "sha256",
+  "handoffBaseHead": "de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5",
+  "note": "Regenerate after any intentional handoff-file update; repository/latest accepted evidence remains authoritative.",
+  "files": [
+    {
+      "path": "docs/handoff/LATEST_SESSION_HANDOFF.txt",
+      "sha256": "f29e364e221e506dacf642956cc062fd8aee8cec9638e2fe55d1eb23aef28efd",
+      "bytes": 1312
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_CURRENT_STATE_20261008.json",
+      "sha256": "d1c6311d722c945ffd148b12cab49031171d28665a45fd2e187c43212f6b5b2c",
+      "bytes": 7308
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_SESSION_HANDOFF_20261008.md",
+      "sha256": "87270197f4af60c6b4d70d51c2001c15269606c9e55c43373522760b0235ff69",
+      "bytes": 29827
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_NEXT_SESSION_BOOTSTRAP_PROMPT_20261008.txt",
+      "sha256": "c8f2b23b85e81071fff73e7d63a252ef2ce8d560d75b0f2119494df60ed4333c",
+      "bytes": 15018
+    },
+    {
+      "path": "docs/handoff/CHATAGENT_BUSINESS_V1_1_HANDOFF_PACKAGE_INDEX_20261008.md",
+      "sha256": "0c86bb6892e86932cd1367a123100290d634552e74f4b1285c5bb9209d45c0c1",
+      "bytes": 6159
+    }
+  ]
+}
