@@ -8,10 +8,10 @@ const authSession={
   async rpc(name,args){calls.push({name,args});return {data:{ok:true,name,args},error:null};}
 };
 const store=new SupabaseBusinessContinuityStore({authSession});
-const projectId=randomUUID(),taskId=randomUUID(),operationId=randomUUID();
+const projectId='dev',taskId=randomUUID(),operationId=randomUUID();
 await store.taskStart({projectId,objective:'Ship TEAM continuity foundation',operationId,tags:['bs2a','team']});
 assert.equal(calls.at(-1).name,'bc_task_start');
-assert.equal(calls.at(-1).args.p_project_id,projectId);
+assert.equal(calls.at(-1).args.p_project_key,projectId);
 assert.deepEqual(calls.at(-1).args.p_tags,['bs2a','team']);
 
 await store.checkpointAppend({projectId,taskId,expectedTaskRevision:0,summary:'Foundation complete',currentState:'Contract and integration are green',
