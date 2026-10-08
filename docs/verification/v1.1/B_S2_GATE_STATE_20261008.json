@@ -1,6 +1,6 @@
 {
   "phase": "B-S2",
-  "status": "B_S2C_LIVE_ADAPTER_FIX_APPLIED_RETEST_PENDING",
+  "status": "BUSINESS_S2_ACCEPTED",
   "baseAcceptedHead": "c69b43ce13be10045c65e17d5dd2f7880ad512d9",
   "productionMutation": false,
   "stagingProjectRef": "dxofyjarkzizdzumfyul",
@@ -9,8 +9,8 @@
     "BUSINESS_S2_TEAM_SEARCH": "PASS",
     "BUSINESS_S2_PRIVATE_ISOLATION": "PASS",
     "BUSINESS_S2_CAS_IDEMPOTENCY": "PASS",
-    "BUSINESS_S2_HANDOFF_FRESHNESS": "PENDING_CHATGPT_OAUTH_LIVE",
-    "BUSINESS_S2_LOCAL": "IN_PROGRESS",
+    "BUSINESS_S2_HANDOFF_FRESHNESS": "PASS",
+    "BUSINESS_S2_LOCAL": "PASS",
     "BUSINESS_S2C_HANDOFF_CONTRACT": "PASS",
     "BUSINESS_S2C_POSTGRES_INTEGRATION": "PASS",
     "BUSINESS_S2C_CLIENT_FRESHNESS": "PASS",
@@ -18,7 +18,7 @@
     "BUSINESS_S2C_PUBLIC_PROJECT_KEY_ALIGNMENT": "PASS",
     "BUSINESS_S2C_PUBLIC_RPC_SURFACE_LOCKDOWN": "PASS",
     "BUSINESS_S2C_LIVE_ADAPTER": "PASS",
-    "BUSINESS_S2C_CHATGPT_OAUTH_LIVE": "RETEST_PENDING_AFTER_ADAPTER_FIX"
+    "BUSINESS_S2C_CHATGPT_OAUTH_LIVE": "PASS"
   },
   "handoffContract": {
     "digest": "sha256:<64 lowercase hex>",
@@ -93,7 +93,8 @@
     "BUSINESS_S1C_REGRESSION": "PASS",
     "CI_LOCAL": "PASS",
     "GIT_DIFF_CHECK": "PASS",
-    "B_S2C_FULL_REGRESSION": "PASS"
+    "B_S2C_FULL_REGRESSION": "PASS",
+    "B_S2_FINAL_REGRESSION": "PASS"
   },
   "liveFixture": {
     "stagingOnly": true,
@@ -105,9 +106,11 @@
       "continuity_prepare_handoff",
       "continuity_search_history"
     ],
-    "continuityMutationToolsNoEffect": true
+    "continuityMutationToolsNoEffect": true,
+    "checkpointCanaryClosed": true,
+    "checkpointCanaryEnabled": false
   },
-  "nextUnit": "Repeat the same read-only ChatGPT OAuth continuity_prepare_handoff canary after the adapter fix. If FRESH with a valid digest, advance only the staging task by one controlled checkpoint and verify the prior digest returns STALE. Do not start B-S3 before B-S2 closure.",
+  "nextUnit": "B-S3 \u2014 Distributed Runtime / Semantic Effects / HOST_USER. Re-read the Accepted Design and Personal durable host-process donor before implementation. Keep PR #8 Draft and do not merge or start production cutover.",
   "liveCanaryAttempt1": {
     "result": "FAIL_READ_ONLY_NO_MUTATION",
     "error": "BUSINESS_CONTINUITY_CONFIG_INVALID",
@@ -117,5 +120,39 @@
     "fixtureRestarted": true,
     "localBs2cRegression": "PASS",
     "ciLocal": "PASS"
+  },
+  "liveCanaryAttempt2": {
+    "result": "PASS_FRESH_READ_ONLY",
+    "freshness": "FRESH",
+    "freshnessReason": "CURRENT_AUTHORITY_READ",
+    "taskStatus": "ACTIVE",
+    "taskRevision": 1,
+    "contextSeq": 9,
+    "contextDigest": "sha256:275b9044b22005cc002198498133fc29d80cf7397996b07abcda85e3957a74ad",
+    "taskMutation": false
+  },
+  "controlledFreshnessMutation": {
+    "result": "PASS_SINGLE_SCOPED_CHECKPOINT",
+    "taskRevisionBefore": 1,
+    "taskRevisionAfter": 2,
+    "contextSeqBefore": 9,
+    "contextSeqAfter": 10,
+    "checkpointCountAfter": 2,
+    "operationReceiptCount": 1,
+    "oauthCallerIdentityUsed": true,
+    "directSqlIdentityImpersonationUsed": false,
+    "checkpointCanaryGateClosedAfterUse": true
+  },
+  "liveCanaryAttempt3": {
+    "result": "PASS_STALE_READ_ONLY",
+    "freshness": "STALE",
+    "freshnessReason": "TASK_STATE_CHANGED",
+    "taskStatus": "ACTIVE",
+    "taskRevision": 2,
+    "contextSeq": 10,
+    "suppliedContextDigest": "sha256:275b9044b22005cc002198498133fc29d80cf7397996b07abcda85e3957a74ad",
+    "currentContextDigest": "sha256:d18904dbc76391929e0b906afc77764b795fe0bc39fa9e4ac50e5bcdf69cb2a5",
+    "digestChanged": true,
+    "taskMutation": false
   }
 }

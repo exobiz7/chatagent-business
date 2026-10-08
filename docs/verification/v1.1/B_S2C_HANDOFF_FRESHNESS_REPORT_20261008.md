@@ -154,4 +154,70 @@ B-S2C staging fixture restart          PASS
 Production v1.0                        UNCHANGED
 ```
 
-The gate remains pending only for repetition of the same read-only OAuth handoff canary.
+At that point the gate remained pending only for repetition of the same read-only OAuth handoff canary. The final closure evidence below supersedes that intermediate state.
+
+## Final OAuth freshness closure — PASS
+
+After the adapter fix, the actual ChatGPT OAuth path was exercised end-to-end against the isolated Business v1.1 staging continuity backend.
+
+### FRESH read
+
+The first successful read-only `continuity_prepare_handoff` returned:
+
+```text
+freshness       FRESH
+freshnessReason CURRENT_AUTHORITY_READ
+task status     ACTIVE
+task revision   1
+contextSeq      9
+contextDigest   sha256:275b9044b22005cc002198498133fc29d80cf7397996b07abcda85e3957a74ad
+```
+
+No mutation occurred during this read.
+
+### Controlled single checkpoint advance
+
+To prove that freshness reacts to task-scoped continuity state rather than unrelated project activity, one staging-only checkpoint mutation was allowed through the actual ChatGPT OAuth identity. The temporary fixture gate was fail-closed to one project/task/revision/operation tuple. Direct SQL identity impersonation was not used.
+
+Cross-check after the mutation:
+
+```text
+task status                ACTIVE
+task revision              2
+checkpoint count           2
+latest checkpoint revision 2
+contextSeq                  10
+operation receipt count     1
+```
+
+The single operation receipt proves the bounded canary mutation was recorded once. The temporary checkpoint canary gate was then disabled, restoring the staging fixture to read-only DB-backed continuity tools with all mutation tools no-effect.
+
+### STALE read
+
+Using the pre-mutation digest as `expectedContextDigest`, the actual ChatGPT OAuth `continuity_get_context` path returned:
+
+```text
+freshness       STALE
+freshnessReason TASK_STATE_CHANGED
+task status     ACTIVE
+task revision   2
+contextSeq      10
+supplied digest sha256:275b9044b22005cc002198498133fc29d80cf7397996b07abcda85e3957a74ad
+current digest  sha256:d18904dbc76391929e0b906afc77764b795fe0bc39fa9e4ac50e5bcdf69cb2a5
+```
+
+The STALE read was read-only and invoked no mutation tool. This closes the required freshness proof.
+
+### B-S2 final gate
+
+```text
+BUSINESS_S2_CONTINUITY_CONTRACT  PASS
+BUSINESS_S2_TEAM_SEARCH          PASS
+BUSINESS_S2_PRIVATE_ISOLATION    PASS
+BUSINESS_S2_CAS_IDEMPOTENCY      PASS
+BUSINESS_S2_HANDOFF_FRESHNESS    PASS
+BUSINESS_S2_LOCAL                PASS
+B-S2                              ACCEPTED / CLOSED
+```
+
+The freshness result is continuity-state freshness only. It does not claim Git or host-runtime freshness or authority. Production v1.0 remains unchanged.
