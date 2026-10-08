@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3B1_ACCEPTED",
+  "status": "B_S3B2_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -10,16 +10,21 @@
     "BUSINESS_S3A_LIVE_FIXTURE_SYNTAX": "PASS",
     "BUSINESS_S3A_STAGING_FIXTURE": "PASS",
     "BUSINESS_S3A_CHATGPT_OAUTH_MAPPING": "PASS",
-    "BUSINESS_S3_HOST_USER": "IN_PROGRESS_BS3B2",
-    "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "IN_PROGRESS",
+    "BUSINESS_S3_HOST_USER": "LOCAL_PASS_LIVE_OAUTH_PENDING_BS3B3",
+    "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "LOCAL_PASS_LIVE_PENDING",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PENDING",
     "BUSINESS_S3_GIT_SEMANTICS": "PENDING",
-    "BUSINESS_S3_GENERIC_EXEC": "PENDING_BS3B",
+    "BUSINESS_S3_GENERIC_EXEC": "LOCAL_PASS_LIVE_OAUTH_PENDING_BS3B3",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
     "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
     "BUSINESS_S3B1_DURABLE_DONOR_PARITY": "PASS",
-    "BUSINESS_S3B1_DURABLE_CORE": "PASS"
+    "BUSINESS_S3B1_DURABLE_CORE": "PASS",
+    "BUSINESS_S3B2_HOST_PROCESS_CONTRACT": "PASS",
+    "BUSINESS_S3B2_PROCESS_REGISTRY": "PASS",
+    "BUSINESS_S3B2_AUTHORITY_ADAPTER": "PASS",
+    "BUSINESS_S3B2_PUBLIC_READ_ADAPTER": "PASS",
+    "BUSINESS_S3B2_RESTART_RECONCILIATION": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -71,7 +76,11 @@
     "L6_DURABLE_PHYSICAL_TEST": "PASS",
     "L6_DURABLE_HTTP_RESTART": "PASS",
     "B_S3B1_NODE_VERSION": "v24.21.0",
-    "B_S3B1_FULL_REGRESSION_V24": "PASS"
+    "B_S3B1_FULL_REGRESSION_V24": "PASS",
+    "BUSINESS_S3B2_HOST_PROCESS_CONTRACT": "PASS",
+    "BUSINESS_S3B2_HOST_PROCESS_ADAPTER": "PASS",
+    "BUSINESS_S3B2_BS0_LOCAL_DESCRIPTOR_REGRESSION": "PASS",
+    "B_S3B2_NODE_VERSION": "v24.21.0"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -88,7 +97,7 @@
     "absoluteHostPathDisclosed": false,
     "repositoryMutationObserved": false
   },
-  "nextUnit": "B-S3B-2 — bind the exact frozen durable process core to Business OAuth/project/runtime-node authority with a server-owned process registry, then resolve cwd/maxBytes/waitMs/restart adapter semantics.",
+  "nextUnit": "B-S3B-3 \u2014 isolated staging OAuth HOST_USER canary for process_start_host/status/read/terminate using one exact benign approved fixture; production remains frozen.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -97,5 +106,18 @@
     "oauthProcessEffect": false,
     "publicContractChanged": false,
     "contractGapsDeferredTo": "B-S3B-2"
+  },
+  "bs3b2": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S3B2_HOST_PROCESS_AUTHORITY_ADAPTER_REPORT_20261009.md",
+    "productionMutation": false,
+    "stagingProcessEffect": false,
+    "oauthProcessEffect": false,
+    "publicSchemaShapeChanged": false,
+    "publicDescriptorClarified": "process_start_host.cwd is project-relative; absolute node-local path remains private",
+    "processRegistry": "OWNER_PRIVATE_HMAC_SEALED",
+    "maxBytesAdapter": "COMPOSE_DONOR_READS_UP_TO_524288",
+    "waitMsAdapter": "BOUNDED_POLL_UP_TO_30000",
+    "restartCrashWindow": "RESERVED_TO_BOUND_RECONCILIATION_NO_BLIND_REPLAY"
   }
 }
