@@ -170,3 +170,65 @@ B-S3B-3                               = IN_PROGRESS
 ```
 
 No mapping, process, filesystem, Git, or production mutation occurred in this discovery checkpoint.
+
+## Live OAuth effect closure — 2026-10-09 KST
+
+The recreated ChatGPT development app `ChatAgent Business v1.1 B-S3B-3` completed the real OAuth HOST_USER canary against the armed staging fixture.
+
+Observed live results:
+
+```text
+map                         PASS
+mappingRevision             2
+SHORT processId              0a3a306c-7565-40ef-8c23-e8208ba22083
+SHORT marker                 BS3B3_OAUTH_SHORT_OK
+SHORT final state            EXITED
+SHORT exitCode               0
+LONG processId               462d65c6-4de2-4192-9461-c423102684eb
+LONG marker                  BS3B3_OAUTH_LONG_READY
+LONG observed running        PASS
+terminate                    PASS
+LONG final state             TERMINATED
+LONG signal                  SIGTERM
+unmap expected revision      2
+unmap                        PASS
+final mappedProjects         []
+connector safety block       NONE
+absolute host path disclosed NO
+confirmation UI              NOT OBSERVABLE FROM TOOL RESULT
+```
+
+Independent Mac Studio post-check matched the user-side report:
+
+- Business process registry contains exactly the two expected BOUND records for mapping revision 2;
+- durable SHORT state is `EXITED` with exit code `0`;
+- durable LONG state is `TERMINATED` with signal `SIGTERM`;
+- the two exact durable action records are terminal;
+- no durable runner/process for either canary remains alive;
+- local workspace mapping state contains the exact revision-2 map/unmap receipts and currently has `mappings=[]`;
+- staging health reports `mappingCount=0`;
+- production listener `127.0.0.1:31850` remained unchanged;
+- repository HEAD/worktree were unchanged during the live effect sequence.
+
+After verification, the temporary HOST_USER canary switch was changed to disabled and only the staging `31861` fixture was restarted. Post-disable health reports:
+
+```text
+processCanaryEnabled false
+processEffectTools    []
+mappingCount          0
+processBindingCount   2  # retained terminal audit/reconciliation evidence only
+```
+
+The retained process bindings are terminal server-owned evidence, not active authority and not running processes.
+
+Therefore:
+
+```text
+BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS = PASS
+BUSINESS_S3B3_POST_CANARY_CLEANUP    = PASS
+B-S3B-3                              = ACCEPTED / CLOSED
+B-S3B                                = ACCEPTED / CLOSED
+B-S3                                 = IN_PROGRESS
+```
+
+B-S3 is intentionally not closed here. Remaining Accepted Design gates include SHARED_NODE root policy, semantic filesystem effects, Git/GitHub semantics, isolated regression, Business local effect audit, and the final OpenAI safety canary.

@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3B3_STAGING_ARMED",
+  "status": "B_S3B_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -10,12 +10,12 @@
     "BUSINESS_S3A_LIVE_FIXTURE_SYNTAX": "PASS",
     "BUSINESS_S3A_STAGING_FIXTURE": "PASS",
     "BUSINESS_S3A_CHATGPT_OAUTH_MAPPING": "PASS",
-    "BUSINESS_S3_HOST_USER": "LOCAL_PASS_STAGING_ARMED_LIVE_OAUTH_PENDING",
-    "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "LOCAL_PASS_LIVE_PENDING",
+    "BUSINESS_S3_HOST_USER": "PASS",
+    "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PENDING",
     "BUSINESS_S3_GIT_SEMANTICS": "PENDING",
-    "BUSINESS_S3_GENERIC_EXEC": "LOCAL_PASS_STAGING_ARMED_LIVE_OAUTH_PENDING",
+    "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
     "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
     "BUSINESS_S3B1_DURABLE_DONOR_PARITY": "PASS",
@@ -27,8 +27,10 @@
     "BUSINESS_S3B2_RESTART_RECONCILIATION": "PASS",
     "BUSINESS_S3B3_LIVE_FIXTURE_SMOKE": "PASS",
     "BUSINESS_S3B3_STAGING_ARMED": "PASS",
-    "BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS": "DISCOVERY_PASS_EFFECT_PENDING",
-    "BUSINESS_S3B3_CHATGPT_OAUTH_DISCOVERY": "PASS"
+    "BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS": "PASS",
+    "BUSINESS_S3B3_CHATGPT_OAUTH_DISCOVERY": "PASS",
+    "BUSINESS_S3B3_POST_CANARY_CLEANUP": "PASS",
+    "BUSINESS_S3B": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -86,7 +88,9 @@
     "BUSINESS_S3B2_BS0_LOCAL_DESCRIPTOR_REGRESSION": "PASS",
     "B_S3B2_NODE_VERSION": "v24.21.0",
     "BUSINESS_S3B3_LIVE_FIXTURE_SMOKE": "PASS",
-    "B_S3B3_FULL_REGRESSION_V24": "PASS"
+    "B_S3B3_FULL_REGRESSION_V24": "PASS",
+    "BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS": "PASS",
+    "BUSINESS_S3B3_POST_CANARY_INDEPENDENT_VERIFY": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -102,13 +106,8 @@
     "finalMappingCount": 0,
     "absoluteHostPathDisclosed": false,
     "repositoryMutationObserved": false,
-    "processCanaryEnabled": true,
-    "processEffectTools": [
-      "process_start_host",
-      "process_get_status",
-      "process_read_output",
-      "process_terminate_job"
-    ],
+    "processCanaryEnabled": false,
+    "processEffectTools": [],
     "processBindingCountAtArm": 0,
     "mappingCountAtArm": 0,
     "hostPathDisclosed": false,
@@ -123,9 +122,15 @@
       "ownedByCaller": true,
       "workspaceRootId": "proj04"
     },
-    "discoveryLeaseObservation": "STALE_READ_ONLY_DISCOVERY_SNAPSHOT; EFFECT_PATH_RENEWS_VIA_bc_runtime_status"
+    "discoveryLeaseObservation": "STALE_READ_ONLY_DISCOVERY_SNAPSHOT; EFFECT_PATH_RENEWS_VIA_bc_runtime_status",
+    "processBindingCountFinal": 2,
+    "liveShortProcessState": "EXITED",
+    "liveShortExitCode": 0,
+    "liveLongProcessState": "TERMINATED",
+    "liveLongSignal": "SIGTERM",
+    "residualCanaryRunnerCount": 0
   },
-  "nextUnit": "B-S3B-3 live effect closure — map bs2a-team-staging, run exact SHORT and LONG OAuth HOST_USER canaries, terminate LONG, exact-revision unmap, then independently verify clean state.",
+  "nextUnit": "B-S3 next bounded unit — semantic filesystem effects with focused file primitives and Business local effect audit foundation; B-S3 remains IN_PROGRESS.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -149,14 +154,47 @@
     "restartCrashWindow": "RESERVED_TO_BOUND_RECONCILIATION_NO_BLIND_REPLAY"
   },
   "bs3b3": {
-    "status": "OAUTH_DISCOVERY_PASS_LIVE_EFFECT_PENDING",
+    "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B3_STAGING_OAUTH_HOST_PROCESS_CANARY_20261009.md",
     "fixtureCodeHead": "3c741a9ff951e0e10a323e6599ea4697659d55a9",
     "productionMutation": false,
-    "stagingProcessEffect": false,
-    "oauthProcessEffect": false,
-    "temporaryCanaryGate": "EXACT_PROJECT_NODE_EXECUTABLE_ARGV_IDEMPOTENCY",
-    "liveClosureRequired": true,
-    "oauthDiscovery": true
+    "stagingProcessEffect": true,
+    "oauthProcessEffect": true,
+    "temporaryCanaryGate": "DISABLED_AFTER_PASS",
+    "liveClosureRequired": false,
+    "oauthDiscovery": true,
+    "mappingRevision": 2,
+    "shortProcessId": "0a3a306c-7565-40ef-8c23-e8208ba22083",
+    "shortFinalState": "EXITED",
+    "shortExitCode": 0,
+    "shortMarker": "PASS",
+    "longProcessId": "462d65c6-4de2-4192-9461-c423102684eb",
+    "longReadyMarker": "PASS",
+    "longFinalState": "TERMINATED",
+    "longSignal": "SIGTERM",
+    "unmap": "PASS",
+    "finalMappingCount": 0,
+    "residualRunnerCount": 0,
+    "confirmationUi": "NOT_OBSERVABLE_FROM_TOOL_RESULT",
+    "safetyBlockObserved": false,
+    "absoluteHostPathDisclosed": false
+  },
+  "bs3b": {
+    "status": "ACCEPTED_CLOSED",
+    "scope": "Durable HOST_USER Process Core",
+    "subunits": [
+      "B-S3B-1",
+      "B-S3B-2",
+      "B-S3B-3"
+    ],
+    "productionMutation": false,
+    "remainingB_S3Work": [
+      "SHARED_NODE root policy",
+      "semantic filesystem effects",
+      "Git/GitHub semantics",
+      "isolated regression",
+      "OpenAI safety canary",
+      "Business local effect audit"
+    ]
   }
 }
