@@ -27,7 +27,8 @@
     "BUSINESS_S3B2_RESTART_RECONCILIATION": "PASS",
     "BUSINESS_S3B3_LIVE_FIXTURE_SMOKE": "PASS",
     "BUSINESS_S3B3_STAGING_ARMED": "PASS",
-    "BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS": "PENDING_USER_SIDE_OAUTH_INVOCATION"
+    "BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS": "DISCOVERY_PASS_EFFECT_PENDING",
+    "BUSINESS_S3B3_CHATGPT_OAUTH_DISCOVERY": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -110,9 +111,21 @@
     ],
     "processBindingCountAtArm": 0,
     "mappingCountAtArm": 0,
-    "hostPathDisclosed": false
+    "hostPathDisclosed": false,
+    "oauthPluginRecreated": true,
+    "oauthPluginToolInventory": "39_CANONICAL_TOOLS_23_WRITE_16_READ",
+    "oauthMemberProfileCanary": "PASS",
+    "oauthRuntimeDiscoveryCanary": "PASS",
+    "oauthDiscoveredNode": {
+      "nodeId": "ad610e88-e671-4b7d-818d-a2f1f2eb2de1",
+      "nodeType": "PERSONAL_NODE",
+      "lifecycle": "APPROVED",
+      "ownedByCaller": true,
+      "workspaceRootId": "proj04"
+    },
+    "discoveryLeaseObservation": "STALE_READ_ONLY_DISCOVERY_SNAPSHOT; EFFECT_PATH_RENEWS_VIA_bc_runtime_status"
   },
-  "nextUnit": "B-S3B-3 closure \u2014 execute the real connected ChatGPT OAuth short/long HOST_USER canary, terminate the owned job, unmap exactly, and verify final clean state before advancing.",
+  "nextUnit": "B-S3B-3 live effect closure — map bs2a-team-staging, run exact SHORT and LONG OAuth HOST_USER canaries, terminate LONG, exact-revision unmap, then independently verify clean state.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -136,13 +149,14 @@
     "restartCrashWindow": "RESERVED_TO_BOUND_RECONCILIATION_NO_BLIND_REPLAY"
   },
   "bs3b3": {
-    "status": "STAGING_ARMED_LIVE_OAUTH_PENDING",
+    "status": "OAUTH_DISCOVERY_PASS_LIVE_EFFECT_PENDING",
     "report": "docs/verification/v1.1/B_S3B3_STAGING_OAUTH_HOST_PROCESS_CANARY_20261009.md",
     "fixtureCodeHead": "3c741a9ff951e0e10a323e6599ea4697659d55a9",
     "productionMutation": false,
     "stagingProcessEffect": false,
     "oauthProcessEffect": false,
     "temporaryCanaryGate": "EXACT_PROJECT_NODE_EXECUTABLE_ARGV_IDEMPOTENCY",
-    "liveClosureRequired": true
+    "liveClosureRequired": true,
+    "oauthDiscovery": true
   }
 }

@@ -145,3 +145,28 @@ B-S3    = IN_PROGRESS
 ```
 
 The next action is closure of this same bounded unit using the real connected ChatGPT Business staging app; do not advance to later B-S3 semantic filesystem/Git work until this live process canary is accepted.
+## ChatGPT OAuth discovery checkpoint — 2026-10-09 KST
+
+The recreated development plugin `ChatAgent Business v1.1 B-S3B-3` successfully exposed the canonical 39-tool catalog (23 write / 16 read) and completed authenticated member/profile and runtime-node discovery through the live ChatGPT OAuth path. The authenticated account identifier is intentionally not persisted in repo evidence.
+
+Observed eligible runtime node:
+
+```text
+nodeId       ad610e88-e671-4b7d-818d-a2f1f2eb2de1
+nodeName     Mac Studio B-S1C
+nodeType     PERSONAL_NODE
+lifecycle    APPROVED
+ownedByCaller true
+workspaceRoot proj04
+mappedProjects none
+```
+
+The discovery response carried an expired historical lease timestamp. This is not treated as HOST_USER readiness evidence and is not a blocker by itself. The B-S3B-3 effect path intentionally calls authenticated `bc_runtime_status` immediately before mapping and again before process routing, which is the authoritative control-plane heartbeat/lease check. Therefore the current disposition is:
+
+```text
+BUSINESS_S3B3_CHATGPT_OAUTH_DISCOVERY = PASS
+BUSINESS_S3B3_CHATGPT_OAUTH_PROCESS   = EFFECT_PENDING
+B-S3B-3                               = IN_PROGRESS
+```
+
+No mapping, process, filesystem, Git, or production mutation occurred in this discovery checkpoint.
