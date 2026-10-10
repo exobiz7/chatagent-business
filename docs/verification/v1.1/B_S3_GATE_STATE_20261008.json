@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3C1_ACCEPTED",
+  "status": "B_S3C2_STAGING_ARMED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -13,7 +13,7 @@
     "BUSINESS_S3_HOST_USER": "PASS",
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
-    "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "IN_PROGRESS_BS3C2",
+    "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "IN_PROGRESS_BS3C2_LIVE",
     "BUSINESS_S3_GIT_SEMANTICS": "PENDING",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
@@ -33,7 +33,12 @@
     "BUSINESS_S3B": "PASS",
     "BUSINESS_S3C1_SEMANTIC_FILE_CONTRACT": "PASS",
     "BUSINESS_S3C1_SEMANTIC_FILE_EFFECTS": "PASS",
-    "BUSINESS_S3C1_LOCAL_EFFECT_AUDIT": "PASS"
+    "BUSINESS_S3C1_LOCAL_EFFECT_AUDIT": "PASS",
+    "BUSINESS_S3C2_LIVE_FIXTURE_SMOKE": "PASS",
+    "BUSINESS_S3C2_STAGING_ARMED": "PASS",
+    "BUSINESS_S3C2_CHATGPT_OAUTH_FILESYSTEM": "PENDING_LIVE_CALL",
+    "BUSINESS_S3C2_LOCAL_AUDIT_LIVE": "PENDING_LIVE_CALL",
+    "BUSINESS_S3C2_POST_CANARY_CLEANUP": "PENDING_LIVE_CALL"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -98,7 +103,10 @@
     "BUSINESS_S3C1_SEMANTIC_FILE_EFFECTS": "PASS",
     "B_S3C1_NODE_VERSION": "v24.21.0",
     "B_S3C1_FULL_REGRESSION_V24": "PASS",
-    "B_S3C1_GIT_DIFF_CHECK": "PASS"
+    "B_S3C1_GIT_DIFF_CHECK": "PASS",
+    "BUSINESS_S3C2_LIVE_FIXTURE_SMOKE": "PASS",
+    "B_S3C2_NODE_VERSION": "v24.21.0",
+    "B_S3C2_FULL_REGRESSION_V24": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -136,9 +144,28 @@
     "liveShortExitCode": 0,
     "liveLongProcessState": "TERMINATED",
     "liveLongSignal": "SIGTERM",
-    "residualCanaryRunnerCount": 0
+    "residualCanaryRunnerCount": 0,
+    "fileCanaryEnabled": true,
+    "fileEffectTools": [
+      "fs_list_directory",
+      "fs_get_path_info",
+      "fs_read_file",
+      "fs_get_file_hash",
+      "fs_create_directory",
+      "fs_create_file",
+      "fs_replace_file",
+      "fs_patch_file",
+      "fs_move_path",
+      "fs_delete_path"
+    ],
+    "mappingCountAtFsArm": 0,
+    "auditRecordCountAtFsArm": 0,
+    "fsCanaryWorkspaceRelative": "bs3c2_canary_workspace",
+    "fsCanaryWorkspaceInitiallyEmpty": true,
+    "fsCanaryRepoMutationAtArm": false,
+    "fsCanaryProductionMutationAtArm": false
   },
-  "nextUnit": "B-S3C-2 isolated staging OAuth semantic filesystem canary — activate only bounded fs tools, map disposable/controlled project target, prove semantic read/mkdir/create/replace/patch/move/delete + local audit + cleanup, and verify no process_start_host fallback.",
+  "nextUnit": "B-S3C-2 live OAuth effect closure \u2014 exact disposable map, semantic mkdir/create/hash/replace/patch/move/read/delete, exact-revision unmap, independent audit/workspace verification, then disable the temporary filesystem gate.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -229,5 +256,22 @@
     "localEffectAudit": "OWNER_PRIVATE_HMAC_CHAINED_CONTENT_FREE",
     "semanticSharedNodeRequiresBroadHostPower": false,
     "topLevelSemanticFileGate": "IN_PROGRESS_BS3C2"
+  },
+  "bs3c2": {
+    "status": "STAGING_ARMED_LIVE_OAUTH_PENDING",
+    "report": "docs/verification/v1.1/B_S3C2_STAGING_OAUTH_SEMANTIC_FILESYSTEM_CANARY_20261010.md",
+    "fixtureCodeHead": "1d5bbfd03e296526f0ca90e59c494f4116b0dca6",
+    "productionMutation": false,
+    "stagingFilesystemEffect": false,
+    "oauthFilesystemEffect": false,
+    "controlledWorkspace": "bs3c2_canary_workspace",
+    "initialWorkspaceEmpty": true,
+    "initialMappingCount": 0,
+    "initialAuditRecordCount": 0,
+    "processEffectTools": [],
+    "gitEffectEnabled": false,
+    "temporaryCanaryGate": "ENABLED_EXACT_SCOPE",
+    "mapOperationId": "55d3d76f-f36c-4999-b370-cd2afd85d4e7",
+    "unmapOperationId": "4281192b-d6fa-4c82-a552-204bea2998bf"
   }
 }
