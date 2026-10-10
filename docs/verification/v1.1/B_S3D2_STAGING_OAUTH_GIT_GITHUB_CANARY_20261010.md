@@ -169,3 +169,101 @@ Do not mark B-S3D-2 accepted until a real connected ChatGPT app completes the in
 16. operator cleanup closed the canary PR, removed only the canary remote branch and local disposable checkout, while preserving canary `main`.
 
 Until these requirements are independently verified, authority remains **STAGING ARMED / LIVE OAUTH EFFECT PENDING**.
+
+## Live OAuth closure — ACCEPTED / CLOSED
+
+The real connected ChatGPT OAuth canary completed the full bounded workflow successfully on 2026-10-10.
+
+Observed live results:
+
+- project profile: `STANDARD`;
+- private canary clone: PASS;
+- mapping revision: `4`;
+- initial branch / worktree: `main` / clean;
+- real GitHub fetch: PASS;
+- ff-only pull: PASS, `main` remained `b94b4640774ba17c8210ee0f35fe08ef6aba1ced`;
+- branch create/switch: PASS for `bs3d2-oauth-canary-20261010`;
+- marker file: `oauth-canary.txt`, expected content SHA-256 PASS;
+- staged diff SHA-256: `fd59735f3ece1045e1029218b3007d03a17de41bbd1aee9545528739b5dc329b`;
+- commit: `dbd285fad6dc10411ccd1600e8e25ba34c83ba9e`;
+- same-name non-force push: PASS;
+- GitHub draft PR: `#1`, base `main`, head `bs3d2-oauth-canary-20261010`, unmerged;
+- exact-revision unmap: PASS for revision `4`;
+- final mapped-project result: none;
+- no process tool, force push, reset, clean, history rewrite, branch delete, PR merge/close, or continuity mutation occurred during the OAuth canary;
+- no absolute host path was disclosed through the connector result.
+
+### Independent GitHub verification
+
+The connected GitHub provider independently confirmed before cleanup:
+
+- PR `#1` was open, draft, unmerged, base `main`;
+- PR base SHA was the unchanged seed `b94b4640774ba17c8210ee0f35fe08ef6aba1ced`;
+- PR head SHA was `dbd285fad6dc10411ccd1600e8e25ba34c83ba9e`;
+- exactly one file changed: `oauth-canary.txt`;
+- the branch file content was exactly `BS3D2_OAUTH_GIT_CANARY\n`;
+- the canary branch existed before cleanup.
+
+### Independent Mac Studio verification
+
+Local authority state matched the OAuth report:
+
+- mapping registry contained exact MAP/UNMAP receipts for revision `4` and finished with `mappings=[]`;
+- disposable clone HEAD was `dbd285fad6dc10411ccd1600e8e25ba34c83ba9e`;
+- clone `origin` was the dedicated private canary repository;
+- working tree was clean;
+- no residual canary process was present;
+- canonical ChatAgent Business worktree remained clean before closure documentation.
+
+The owner-private local effect audit verified its HMAC chain with exactly `20` records: ten effects, each represented by `ISSUED -> COMPLETED/OK/COMMITTED`:
+
+1. `git_clone_repository`;
+2. `git_fetch_remote`;
+3. `git_pull_ff_only`;
+4. `git_create_branch`;
+5. `git_switch_branch`;
+6. `fs_create_file`;
+7. `git_stage_files`;
+8. `git_create_commit`;
+9. `git_push_branch`;
+10. `github_create_pull_request`.
+
+Raw audit inspection confirmed no persistence of the marker file content, absolute host root, commit-message text, PR-body text, or full remote URL. OAuth identity remains represented only through the audit actor digest contract.
+
+### Cleanup and platform-safety observation
+
+After independent verification, cleanup was deliberately outside the semantic canary so that evidence remained inspectable first.
+
+A connected GitHub tool request to close PR `#1` was blocked by OpenAI's safety layer. This did **not** occur during the B-S3D-2 semantic Git/GitHub canary itself and does not invalidate its functional result; it is retained as concrete evidence for the later `BUSINESS_S3_OPENAI_SAFETY_CANARY` decision.
+
+Because cleanup had already been explicitly authorized and was restricted to the dedicated canary assets, the authenticated Mac Studio GitHub/Git tooling then performed only these exact cleanup actions:
+
+- close canary PR `#1` without merge;
+- delete only remote branch `bs3d2-oauth-canary-20261010`;
+- preserve `main` at `b94b4640774ba17c8210ee0f35fe08ef6aba1ced`;
+- remove only `/Volumes/SSD 4T/z_proj/proj04_chatagent/bs3d2_canary_clone` after remote/head/mapping safety checks.
+
+Post-cleanup GitHub verification confirmed PR `#1` is closed and unmerged and the canary branch is absent.
+
+The staging launch gate was changed to `BS3D2_ENABLE_GIT_CANARY=0` and only staging `31861` was restarted. Final health:
+
+- `gitCanaryEnabled=false`;
+- `dbBackedMutations=[]`;
+- `gitEffectTools=[]`;
+- `fileEffectTools=[]`;
+- `processEffectTools=[]`;
+- `mappingCount=0`;
+- `auditRecordCount=20`.
+
+Production `31850` remained PID `8871`; secure tunnel `51961` remained PID `99496`.
+
+Post-cleanup validation passed under Node `v24.21.0`:
+
+- `BUSINESS_S3D1_SEMANTIC_GIT_CONTRACT=PASS`;
+- `BUSINESS_S3D1_SEMANTIC_GIT_EFFECTS=PASS`;
+- `BUSINESS_S3D2_LIVE_FIXTURE_SMOKE=PASS`;
+- full `npm run test:ci` -> exit `0`.
+
+**Final B-S3D-2 verdict: ACCEPTED / CLOSED.**
+
+The top-level `BUSINESS_S3_GIT_SEMANTICS` gate is therefore PASS. Remaining B-S3 work is SHARED_NODE root-policy closure, isolated-backend regression, and the final OpenAI safety/tool-selection canary.

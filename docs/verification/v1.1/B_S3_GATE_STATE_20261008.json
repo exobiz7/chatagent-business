@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3D2_STAGING_ARMED",
+  "status": "B_S3D2_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -14,7 +14,7 @@
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
-    "BUSINESS_S3_GIT_SEMANTICS": "IN_PROGRESS_BS3D2_LIVE",
+    "BUSINESS_S3_GIT_SEMANTICS": "PASS",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
     "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
@@ -45,10 +45,11 @@
     "BUSINESS_S3D1_LOCAL_EFFECT_AUDIT": "PASS",
     "BUSINESS_S3D2_LIVE_FIXTURE_SMOKE": "PASS",
     "BUSINESS_S3D2_STAGING_ARMED": "PASS",
-    "BUSINESS_S3D2_CHATGPT_OAUTH_GIT": "PENDING_LIVE_CALL",
-    "BUSINESS_S3D2_GITHUB_PROVIDER": "PENDING_LIVE_CALL",
-    "BUSINESS_S3D2_LOCAL_AUDIT_LIVE": "PENDING_LIVE_CALL",
-    "BUSINESS_S3D2_POST_CANARY_CLEANUP": "PENDING_LIVE_CALL"
+    "BUSINESS_S3D2_CHATGPT_OAUTH_GIT": "PASS",
+    "BUSINESS_S3D2_GITHUB_PROVIDER": "PASS",
+    "BUSINESS_S3D2_LOCAL_AUDIT_LIVE": "PASS",
+    "BUSINESS_S3D2_POST_CANARY_CLEANUP": "PASS",
+    "BUSINESS_S3D": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -128,7 +129,12 @@
     "B_S3D1_BS3C2_AUDIT_BACKCOMPAT": "PASS_14_RECORDS",
     "BUSINESS_S3D2_LIVE_FIXTURE_SMOKE": "PASS",
     "B_S3D2_NODE_VERSION": "v24.21.0",
-    "B_S3D2_FULL_REGRESSION_V24": "PASS"
+    "B_S3D2_FULL_REGRESSION_V24": "PASS",
+    "BUSINESS_S3D2_CHATGPT_OAUTH_GIT": "PASS",
+    "BUSINESS_S3D2_GITHUB_PROVIDER_VERIFY": "PASS",
+    "BUSINESS_S3D2_LOCAL_AUDIT_HMAC": "PASS",
+    "BUSINESS_S3D2_POST_CANARY_REGRESSION_V24": "PASS",
+    "BUSINESS_S3D2_GIT_DIFF_CHECK": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -188,22 +194,8 @@
     "fsCanaryAuditHmacVerified": true,
     "fsCanaryAuditContentFree": true,
     "fsCanaryProductionMutationFinal": false,
-    "gitCanaryEnabled": true,
-    "gitEffectTools": [
-      "git_get_status",
-      "git_get_diff",
-      "git_get_history",
-      "git_list_branches",
-      "git_create_branch",
-      "git_switch_branch",
-      "git_stage_files",
-      "git_create_commit",
-      "git_clone_repository",
-      "git_fetch_remote",
-      "git_pull_ff_only",
-      "git_push_branch",
-      "github_create_pull_request"
-    ],
+    "gitCanaryEnabled": false,
+    "gitEffectTools": [],
     "gitHubProviderEffect": false,
     "gitCanaryFileEffectTools": [
       "fs_create_file"
@@ -215,9 +207,11 @@
     "gitCanaryRemoteBranchInitiallyAbsent": true,
     "gitCanaryOpenPrCountAtArm": 0,
     "gitCanaryProductionMutationAtArm": false,
-    "gitCanaryCanonicalRepoMutationAtArm": false
+    "gitCanaryCanonicalRepoMutationAtArm": false,
+    "mappingCount": 0,
+    "auditRecordCount": 20
   },
-  "nextUnit": "B-S3D-2 live OAuth Git/GitHub closure \u2014 exact private canary clone, map, fetch/ff-only pull, branch/stage/commit with staged-diff SHA, same-name non-force push, draft PR, exact-revision unmap, independent provider/audit verification, then cleanup and disable the temporary Git gate.",
+  "nextUnit": "B-S3E-1 — SHARED_NODE semantic-root policy verification: prove focused filesystem/Git effects remain bounded to approved workspace roots without inheriting broad host-power authority; preserve production freeze.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -375,13 +369,13 @@
     "topLevelGitGate": "IN_PROGRESS_BS3D2"
   },
   "bs3d2": {
-    "status": "STAGING_ARMED_LIVE_OAUTH_PENDING",
+    "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3D2_STAGING_OAUTH_GIT_GITHUB_CANARY_20261010.md",
     "fixtureCodeHead": "ec727d529d9726e1cdf704bb168f5a4be9d2b95d",
     "productionMutation": false,
-    "stagingGitEffect": false,
-    "oauthGitEffect": false,
-    "externalGitHubEffect": false,
+    "stagingGitEffect": true,
+    "oauthGitEffect": true,
+    "externalGitHubEffect": true,
     "canaryRepository": "exobiz7/chatagent-business-v11-canary",
     "canaryRepositoryPrivate": true,
     "canaryMainSeedOid": "b94b4640774ba17c8210ee0f35fe08ef6aba1ced",
@@ -389,8 +383,48 @@
     "branchName": "bs3d2-oauth-canary-20261010",
     "mapOperationId": "7f7a114a-6ef8-4e92-8a2c-acb7658851c0",
     "unmapOperationId": "cdf03dd3-3e04-405a-91c3-8abee51c8f0d",
-    "temporaryCanaryGate": "ENABLED_EXACT_SCOPE",
+    "temporaryCanaryGate": "DISABLED_AFTER_PASS",
     "processEffectTools": [],
-    "liveClosureRequired": true
+    "liveClosureRequired": false,
+    "projectProfile": "STANDARD",
+    "mappingRevision": 4,
+    "mainSeedOid": "b94b4640774ba17c8210ee0f35fe08ef6aba1ced",
+    "stagedDiffSha256": "fd59735f3ece1045e1029218b3007d03a17de41bbd1aee9545528739b5dc329b",
+    "commitOid": "dbd285fad6dc10411ccd1600e8e25ba34c83ba9e",
+    "draftPrNumber": 1,
+    "draftPrCreated": true,
+    "prMerged": false,
+    "finalMappingCount": 0,
+    "finalAuditRecordCount": 20,
+    "auditHmacVerified": true,
+    "auditSensitivePayloadFree": true,
+    "processFallbackObserved": false,
+    "forcePushObserved": false,
+    "resetCleanHistoryRewriteObserved": false,
+    "absoluteHostPathDisclosed": false,
+    "localCloneRemoved": true,
+    "remoteCanaryBranchRemoved": true,
+    "prClosedAfterVerification": true,
+    "mainSeedPreserved": true,
+    "canarySafetyBlockObserved": false,
+    "postCanaryCleanupSafetyObservation": "GITHUB_CONNECTOR_PR_CLOSE_BLOCKED_BY_OPENAI_SAFETY; exact operator cleanup succeeded through existing authenticated Mac Studio GitHub/Git tooling"
+  },
+  "bs3d": {
+    "status": "ACCEPTED_CLOSED",
+    "scope": "Semantic Git/GitHub Effects + Provider Boundary",
+    "subunits": [
+      "B-S3D-1",
+      "B-S3D-2"
+    ],
+    "productionMutation": false,
+    "liveOAuthGitEffect": true,
+    "externalProviderEffect": true,
+    "finalMappingCount": 0,
+    "canaryRepositoryMainPreserved": true,
+    "remainingB_S3Work": [
+      "SHARED_NODE root policy",
+      "isolated regression",
+      "OpenAI safety/tool-selection canary"
+    ]
   }
 }
