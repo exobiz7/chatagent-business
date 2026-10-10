@@ -1,7 +1,7 @@
 # B-S3C-2 — Staging OAuth Semantic Filesystem Canary
 
 Date: 2026-10-10
-Status: **STAGING ARMED / LIVE OAUTH EFFECT PENDING**
+Status: **ACCEPTED / CLOSED**
 
 ## Purpose
 
@@ -145,3 +145,63 @@ Do not mark B-S3C-2 accepted until a real connected ChatGPT app completes all of
 9. temporary filesystem live-effect gate disabled after the pass.
 
 Until those requirements are independently verified, authority remains **STAGING ARMED / LIVE OAUTH EFFECT PENDING**.
+
+## Live OAuth closure evidence
+
+Real ChatGPT OAuth canary completed all 16 requested steps through the connected ChatAgent Business staging app.
+
+Observed public results:
+
+- map: PASS; actual `mappingRevision=3`;
+- initial root: empty (`total=0`, `entries=[]`);
+- directory create: PASS;
+- file create: PASS, 16 bytes;
+- create SHA: `24d5cea65d8bcaafc7973a8c0ca1ea938d1a63eabe69463c9f11beef7b03f140`;
+- exact-SHA replace: PASS, 17 bytes;
+- replace SHA: `a89986cde3ab9e3243dc2e71b30d958f5f0ccb7dbcbde77ad991bea854123859`;
+- exact-text patch: PASS, one occurrence;
+- patched SHA: `ebfd4e351119b6fd535b980b7ad5e09a96ce7c6a7236d14853ce7149fb857888`;
+- semantic move: PASS;
+- moved file metadata: regular file, 17 bytes, mode `600`;
+- moved content: exact `BS3C2_PATCHED_V2\n`;
+- exact-SHA regular-file delete: PASS;
+- empty-directory delete: PASS;
+- final root: empty;
+- exact-revision unmap: PASS with revision `3`;
+- final project-filtered runtime list: no mapped node.
+
+The live run used fourteen filesystem calls: `fs_list_directory` x2, `fs_create_directory` x1, `fs_create_file` x1, `fs_get_file_hash` x3, `fs_replace_file` x1, `fs_patch_file` x1, `fs_move_path` x1, `fs_get_path_info` x1, `fs_read_file` x1, `fs_delete_path` x2. It also used one each of `runtime_map_project`, `runtime_unmap_project`, and `runtime_list_nodes`. No process tool, Git/GitHub tool, continuity mutation, shell, or host-command fallback was reported. No connector safety block or absolute host-path disclosure was observed. Confirmation UI state is not observable from tool results.
+
+## Independent Mac Studio verification
+
+Independent post-run inspection confirmed:
+
+- local mapping registry contains the exact MAP/UNMAP receipts for operation UUIDs `55d3d76f-f36c-4999-b370-cd2afd85d4e7` and `4281192b-d6fa-4c82-a552-204bea2998bf`;
+- both receipts use `mappingRevision=3`;
+- current mappings are empty and `nextMappingRevision=4`;
+- disposable workspace is empty;
+- no residual B-S3C-2 process exists;
+- HMAC verification of the local effect audit passes;
+- audit contains exactly 14 records: seven semantic mutations, each with one `ISSUED/PENDING` and one `COMPLETED/COMMITTED`;
+- audit precondition digests exactly match the create/replace/patched SHA contracts;
+- audit contains no canary file contents and no `/Volumes/` or `/Users/` absolute host path;
+- actor identity is stored only as a SHA-256 digest;
+- canonical repository remained clean at the pre-closure head;
+- production `31850` and tunnel `51961` remained unchanged.
+
+## Post-canary gate closure
+
+After the independent verification, the owner-private staging launch configuration was changed from `BS3C2_ENABLE_FS_CANARY=1` to `0` and staging `31861` alone was restarted. Post-disable health reports:
+
+- `fileCanaryEnabled=false`;
+- `dbBackedMutations=[]`;
+- `fileEffectTools=[]`;
+- `processEffectTools=[]`;
+- `mappingCount=0`;
+- `auditRecordCount=14`.
+
+The audit records are retained as owner-private evidence; the disposable filesystem target itself is clean. Production was not mutated.
+
+Final decision: **B-S3C-2 ACCEPTED / CLOSED**. The top-level semantic filesystem gate and live local-effect-audit gate are PASS.
+
+Post-disable validation under Node `v24.21.0`: targeted B-S3C-1/B-S3C-2 suites PASS and full `npm run test:ci` exits `0`.

@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3C2_STAGING_ARMED",
+  "status": "B_S3C2_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -13,7 +13,7 @@
     "BUSINESS_S3_HOST_USER": "PASS",
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
-    "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "IN_PROGRESS_BS3C2_LIVE",
+    "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
     "BUSINESS_S3_GIT_SEMANTICS": "PENDING",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
@@ -36,9 +36,9 @@
     "BUSINESS_S3C1_LOCAL_EFFECT_AUDIT": "PASS",
     "BUSINESS_S3C2_LIVE_FIXTURE_SMOKE": "PASS",
     "BUSINESS_S3C2_STAGING_ARMED": "PASS",
-    "BUSINESS_S3C2_CHATGPT_OAUTH_FILESYSTEM": "PENDING_LIVE_CALL",
-    "BUSINESS_S3C2_LOCAL_AUDIT_LIVE": "PENDING_LIVE_CALL",
-    "BUSINESS_S3C2_POST_CANARY_CLEANUP": "PENDING_LIVE_CALL"
+    "BUSINESS_S3C2_CHATGPT_OAUTH_FILESYSTEM": "PASS",
+    "BUSINESS_S3C2_LOCAL_AUDIT_LIVE": "PASS",
+    "BUSINESS_S3C2_POST_CANARY_CLEANUP": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -106,7 +106,10 @@
     "B_S3C1_GIT_DIFF_CHECK": "PASS",
     "BUSINESS_S3C2_LIVE_FIXTURE_SMOKE": "PASS",
     "B_S3C2_NODE_VERSION": "v24.21.0",
-    "B_S3C2_FULL_REGRESSION_V24": "PASS"
+    "B_S3C2_FULL_REGRESSION_V24": "PASS",
+    "BUSINESS_S3C2_CHATGPT_OAUTH_FILESYSTEM": "PASS",
+    "BUSINESS_S3C2_INDEPENDENT_AUDIT_VERIFY": "PASS",
+    "BUSINESS_S3C2_POST_CANARY_REGRESSION_V24": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -145,27 +148,29 @@
     "liveLongProcessState": "TERMINATED",
     "liveLongSignal": "SIGTERM",
     "residualCanaryRunnerCount": 0,
-    "fileCanaryEnabled": true,
-    "fileEffectTools": [
-      "fs_list_directory",
-      "fs_get_path_info",
-      "fs_read_file",
-      "fs_get_file_hash",
-      "fs_create_directory",
-      "fs_create_file",
-      "fs_replace_file",
-      "fs_patch_file",
-      "fs_move_path",
-      "fs_delete_path"
-    ],
+    "fileCanaryEnabled": false,
+    "fileEffectTools": [],
     "mappingCountAtFsArm": 0,
     "auditRecordCountAtFsArm": 0,
     "fsCanaryWorkspaceRelative": "bs3c2_canary_workspace",
     "fsCanaryWorkspaceInitiallyEmpty": true,
     "fsCanaryRepoMutationAtArm": false,
-    "fsCanaryProductionMutationAtArm": false
+    "fsCanaryProductionMutationAtArm": false,
+    "finalFsMappingCount": 0,
+    "finalFsAuditRecordCount": 14,
+    "fsCanaryMappingRevision": 3,
+    "fsCanaryWorkspaceFinalEmpty": true,
+    "fsCanaryNoProcessFallback": true,
+    "fsCanaryNoGitEffect": true,
+    "fsCanaryAbsoluteHostPathDisclosed": false,
+    "fsCanarySafetyBlockObserved": false,
+    "fsCanaryConfirmationUi": "NOT_OBSERVABLE_FROM_TOOL_RESULT",
+    "fsCanaryMutationAuditPairs": 7,
+    "fsCanaryAuditHmacVerified": true,
+    "fsCanaryAuditContentFree": true,
+    "fsCanaryProductionMutationFinal": false
   },
-  "nextUnit": "B-S3C-2 live OAuth effect closure \u2014 exact disposable map, semantic mkdir/create/hash/replace/patch/move/read/delete, exact-revision unmap, independent audit/workspace verification, then disable the temporary filesystem gate.",
+  "nextUnit": "B-S3D-1 — semantic Git/GitHub foundation: mapped-repository authority, focused local/remote Git operations, external-provider boundary, and Business local effect audit; production remains frozen.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -225,11 +230,9 @@
     "productionMutation": false,
     "remainingB_S3Work": [
       "SHARED_NODE root policy",
-      "semantic filesystem live OAuth closure (B-S3C-2)",
       "Git/GitHub semantics",
       "isolated regression",
-      "OpenAI safety canary",
-      "Business local effect audit live evidence (foundation PASS)"
+      "OpenAI safety canary"
     ]
   },
   "bs3c1": {
@@ -258,20 +261,49 @@
     "topLevelSemanticFileGate": "IN_PROGRESS_BS3C2"
   },
   "bs3c2": {
-    "status": "STAGING_ARMED_LIVE_OAUTH_PENDING",
+    "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3C2_STAGING_OAUTH_SEMANTIC_FILESYSTEM_CANARY_20261010.md",
     "fixtureCodeHead": "1d5bbfd03e296526f0ca90e59c494f4116b0dca6",
     "productionMutation": false,
-    "stagingFilesystemEffect": false,
-    "oauthFilesystemEffect": false,
+    "stagingFilesystemEffect": true,
+    "oauthFilesystemEffect": true,
     "controlledWorkspace": "bs3c2_canary_workspace",
     "initialWorkspaceEmpty": true,
     "initialMappingCount": 0,
     "initialAuditRecordCount": 0,
     "processEffectTools": [],
     "gitEffectEnabled": false,
-    "temporaryCanaryGate": "ENABLED_EXACT_SCOPE",
+    "temporaryCanaryGate": "DISABLED_AFTER_PASS",
     "mapOperationId": "55d3d76f-f36c-4999-b370-cd2afd85d4e7",
-    "unmapOperationId": "4281192b-d6fa-4c82-a552-204bea2998bf"
+    "unmapOperationId": "4281192b-d6fa-4c82-a552-204bea2998bf",
+    "mappingRevision": 3,
+    "finalWorkspaceEmpty": true,
+    "finalMappingCount": 0,
+    "finalAuditRecordCount": 14,
+    "auditHmacVerified": true,
+    "auditContentFree": true,
+    "processFallbackObserved": false,
+    "gitEffectObserved": false,
+    "absoluteHostPathDisclosed": false,
+    "safetyBlockObserved": false,
+    "confirmationUi": "NOT_OBSERVABLE_FROM_TOOL_RESULT"
+  },
+  "bs3c": {
+    "status": "ACCEPTED_CLOSED",
+    "scope": "Semantic Filesystem Effects + Local Effect Audit",
+    "subunits": [
+      "B-S3C-1",
+      "B-S3C-2"
+    ],
+    "productionMutation": false,
+    "liveOAuthFilesystemEffect": true,
+    "finalMappingCount": 0,
+    "finalWorkspaceEmpty": true,
+    "remainingB_S3Work": [
+      "SHARED_NODE root policy",
+      "Git/GitHub semantics",
+      "isolated regression",
+      "OpenAI safety canary"
+    ]
   }
 }
