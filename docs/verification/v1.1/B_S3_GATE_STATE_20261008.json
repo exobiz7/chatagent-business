@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3D1_ACCEPTED",
+  "status": "B_S3D2_STAGING_ARMED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -14,7 +14,7 @@
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
-    "BUSINESS_S3_GIT_SEMANTICS": "IN_PROGRESS_BS3D2",
+    "BUSINESS_S3_GIT_SEMANTICS": "IN_PROGRESS_BS3D2_LIVE",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
     "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
@@ -42,7 +42,13 @@
     "BUSINESS_S3D1_SEMANTIC_GIT_CONTRACT": "PASS",
     "BUSINESS_S3D1_SEMANTIC_GIT_EFFECTS": "PASS",
     "BUSINESS_S3D1_GIT_SAFETY_BOUNDARY": "PASS",
-    "BUSINESS_S3D1_LOCAL_EFFECT_AUDIT": "PASS"
+    "BUSINESS_S3D1_LOCAL_EFFECT_AUDIT": "PASS",
+    "BUSINESS_S3D2_LIVE_FIXTURE_SMOKE": "PASS",
+    "BUSINESS_S3D2_STAGING_ARMED": "PASS",
+    "BUSINESS_S3D2_CHATGPT_OAUTH_GIT": "PENDING_LIVE_CALL",
+    "BUSINESS_S3D2_GITHUB_PROVIDER": "PENDING_LIVE_CALL",
+    "BUSINESS_S3D2_LOCAL_AUDIT_LIVE": "PENDING_LIVE_CALL",
+    "BUSINESS_S3D2_POST_CANARY_CLEANUP": "PENDING_LIVE_CALL"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -119,7 +125,10 @@
     "B_S3D1_NODE_VERSION": "v24.21.0",
     "B_S3D1_FULL_REGRESSION_V24": "PASS",
     "B_S3D1_GIT_DIFF_CHECK": "PASS",
-    "B_S3D1_BS3C2_AUDIT_BACKCOMPAT": "PASS_14_RECORDS"
+    "B_S3D1_BS3C2_AUDIT_BACKCOMPAT": "PASS_14_RECORDS",
+    "BUSINESS_S3D2_LIVE_FIXTURE_SMOKE": "PASS",
+    "B_S3D2_NODE_VERSION": "v24.21.0",
+    "B_S3D2_FULL_REGRESSION_V24": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -179,11 +188,36 @@
     "fsCanaryAuditHmacVerified": true,
     "fsCanaryAuditContentFree": true,
     "fsCanaryProductionMutationFinal": false,
-    "gitCanaryEnabled": false,
-    "gitEffectTools": [],
-    "gitHubProviderEffect": false
+    "gitCanaryEnabled": true,
+    "gitEffectTools": [
+      "git_get_status",
+      "git_get_diff",
+      "git_get_history",
+      "git_list_branches",
+      "git_create_branch",
+      "git_switch_branch",
+      "git_stage_files",
+      "git_create_commit",
+      "git_clone_repository",
+      "git_fetch_remote",
+      "git_pull_ff_only",
+      "git_push_branch",
+      "github_create_pull_request"
+    ],
+    "gitHubProviderEffect": false,
+    "gitCanaryFileEffectTools": [
+      "fs_create_file"
+    ],
+    "gitCanaryProcessEffectTools": [],
+    "mappingCountAtGitArm": 0,
+    "auditRecordCountAtGitArm": 0,
+    "gitCanaryCloneDirectory": "bs3d2_canary_clone",
+    "gitCanaryRemoteBranchInitiallyAbsent": true,
+    "gitCanaryOpenPrCountAtArm": 0,
+    "gitCanaryProductionMutationAtArm": false,
+    "gitCanaryCanonicalRepoMutationAtArm": false
   },
-  "nextUnit": "B-S3D-2 \u2014 isolated staging OAuth Git/GitHub canary: controlled disposable repository, focused branch/stage/commit/fetch/pull/push/PR path, external provider policy evidence, local audit and cleanup; production remains frozen.",
+  "nextUnit": "B-S3D-2 live OAuth Git/GitHub closure \u2014 exact private canary clone, map, fetch/ff-only pull, branch/stage/commit with staged-diff SHA, same-name non-force push, draft PR, exact-revision unmap, independent provider/audit verification, then cleanup and disable the temporary Git gate.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -339,5 +373,24 @@
     "remoteCommandRewriteDenied": true,
     "localEffectAudit": "HMAC_CHAINED_PROJECT_AND_WORKSPACE_SCOPE",
     "topLevelGitGate": "IN_PROGRESS_BS3D2"
+  },
+  "bs3d2": {
+    "status": "STAGING_ARMED_LIVE_OAUTH_PENDING",
+    "report": "docs/verification/v1.1/B_S3D2_STAGING_OAUTH_GIT_GITHUB_CANARY_20261010.md",
+    "fixtureCodeHead": "ec727d529d9726e1cdf704bb168f5a4be9d2b95d",
+    "productionMutation": false,
+    "stagingGitEffect": false,
+    "oauthGitEffect": false,
+    "externalGitHubEffect": false,
+    "canaryRepository": "exobiz7/chatagent-business-v11-canary",
+    "canaryRepositoryPrivate": true,
+    "canaryMainSeedOid": "b94b4640774ba17c8210ee0f35fe08ef6aba1ced",
+    "controlledCloneDirectory": "bs3d2_canary_clone",
+    "branchName": "bs3d2-oauth-canary-20261010",
+    "mapOperationId": "7f7a114a-6ef8-4e92-8a2c-acb7658851c0",
+    "unmapOperationId": "cdf03dd3-3e04-405a-91c3-8abee51c8f0d",
+    "temporaryCanaryGate": "ENABLED_EXACT_SCOPE",
+    "processEffectTools": [],
+    "liveClosureRequired": true
   }
 }
