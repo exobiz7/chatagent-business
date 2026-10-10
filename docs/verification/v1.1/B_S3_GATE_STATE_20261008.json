@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3C2_ACCEPTED",
+  "status": "B_S3D1_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -14,7 +14,7 @@
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
     "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
-    "BUSINESS_S3_GIT_SEMANTICS": "PENDING",
+    "BUSINESS_S3_GIT_SEMANTICS": "IN_PROGRESS_BS3D2",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
     "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
@@ -38,7 +38,11 @@
     "BUSINESS_S3C2_STAGING_ARMED": "PASS",
     "BUSINESS_S3C2_CHATGPT_OAUTH_FILESYSTEM": "PASS",
     "BUSINESS_S3C2_LOCAL_AUDIT_LIVE": "PASS",
-    "BUSINESS_S3C2_POST_CANARY_CLEANUP": "PASS"
+    "BUSINESS_S3C2_POST_CANARY_CLEANUP": "PASS",
+    "BUSINESS_S3D1_SEMANTIC_GIT_CONTRACT": "PASS",
+    "BUSINESS_S3D1_SEMANTIC_GIT_EFFECTS": "PASS",
+    "BUSINESS_S3D1_GIT_SAFETY_BOUNDARY": "PASS",
+    "BUSINESS_S3D1_LOCAL_EFFECT_AUDIT": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -109,7 +113,13 @@
     "B_S3C2_FULL_REGRESSION_V24": "PASS",
     "BUSINESS_S3C2_CHATGPT_OAUTH_FILESYSTEM": "PASS",
     "BUSINESS_S3C2_INDEPENDENT_AUDIT_VERIFY": "PASS",
-    "BUSINESS_S3C2_POST_CANARY_REGRESSION_V24": "PASS"
+    "BUSINESS_S3C2_POST_CANARY_REGRESSION_V24": "PASS",
+    "BUSINESS_S3D1_SEMANTIC_GIT_CONTRACT": "PASS",
+    "BUSINESS_S3D1_SEMANTIC_GIT_EFFECTS": "PASS",
+    "B_S3D1_NODE_VERSION": "v24.21.0",
+    "B_S3D1_FULL_REGRESSION_V24": "PASS",
+    "B_S3D1_GIT_DIFF_CHECK": "PASS",
+    "B_S3D1_BS3C2_AUDIT_BACKCOMPAT": "PASS_14_RECORDS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -168,9 +178,12 @@
     "fsCanaryMutationAuditPairs": 7,
     "fsCanaryAuditHmacVerified": true,
     "fsCanaryAuditContentFree": true,
-    "fsCanaryProductionMutationFinal": false
+    "fsCanaryProductionMutationFinal": false,
+    "gitCanaryEnabled": false,
+    "gitEffectTools": [],
+    "gitHubProviderEffect": false
   },
-  "nextUnit": "B-S3D-1 — semantic Git/GitHub foundation: mapped-repository authority, focused local/remote Git operations, external-provider boundary, and Business local effect audit; production remains frozen.",
+  "nextUnit": "B-S3D-2 \u2014 isolated staging OAuth Git/GitHub canary: controlled disposable repository, focused branch/stage/commit/fetch/pull/push/PR path, external provider policy evidence, local audit and cleanup; production remains frozen.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -301,9 +314,30 @@
     "finalWorkspaceEmpty": true,
     "remainingB_S3Work": [
       "SHARED_NODE root policy",
-      "Git/GitHub semantics",
+      "Git/GitHub live OAuth semantics (B-S3D-2)",
       "isolated regression",
       "OpenAI safety canary"
     ]
+  },
+  "bs3d1": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S3D1_SEMANTIC_GIT_FOUNDATION_REPORT_20261010.md",
+    "productionMutation": false,
+    "stagingGitEffect": false,
+    "oauthGitEffect": false,
+    "externalGitHubEffect": false,
+    "publicSchemaShapeChanged": false,
+    "gitTools": 13,
+    "projectProfile": "STANDARD_ONLY",
+    "shellExecution": false,
+    "literalPathspec": true,
+    "stagedDiffCommitPrecondition": "SHA256_BINARY_FULL_INDEX_DIFF",
+    "pullMode": "FF_ONLY_NO_REBASE",
+    "pushMode": "SINGLE_SAME_NAME_BRANCH_NO_FORCE",
+    "cloneCreatesMapping": false,
+    "arbitraryFiltersDenied": true,
+    "remoteCommandRewriteDenied": true,
+    "localEffectAudit": "HMAC_CHAINED_PROJECT_AND_WORKSPACE_SCOPE",
+    "topLevelGitGate": "IN_PROGRESS_BS3D2"
   }
 }

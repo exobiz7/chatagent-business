@@ -8,11 +8,11 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SHA=/^[a-f0-9]{64}$/;
 const PROJECT=/^[a-z0-9][a-z0-9._-]{0,63}$/;
 const ORG=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
-const TOOL=/^fs_[a-z0-9_]{3,48}$/;
+const TOOL=/^(?:fs|git|github)_[a-z0-9_]{3,48}$/;
 const CODE=/^[A-Z][A-Z0-9_]{1,79}$/;
 const PROFILES=new Set(['READ_ONLY','SAFE','STANDARD']);
 const NODES=new Set(['PERSONAL_NODE','SHARED_NODE']);
-const EFFECTS=new Set(['CREATE','REPLACE','PATCH','MOVE','DELETE']);
+const EFFECTS=new Set(['CREATE','REPLACE','PATCH','MOVE','DELETE','BRANCH_CREATE','BRANCH_SWITCH','STAGE','COMMIT','CLONE','FETCH','PULL_FF','PUSH','PR_CREATE']);
 const STAGES=new Set(['ISSUED','COMPLETED','FAILED']);
 const OUTCOMES=new Set(['PENDING','NONE','COMMITTED','UNCERTAIN']);
 const fail=code=>{throw Error(code);};
@@ -46,11 +46,14 @@ function cleanActor(value){
   return actorDigest(value);
 }
 function validatePayload(p){
+  const projectScope=PROJECT.test(p?.projectId??'')&&Number.isSafeInteger(p?.mappingRevision)&&p.mappingRevision>=1&&
+    PROFILES.has(p?.projectProfile)&&(p?.workspaceRootId===undefined||p.workspaceRootId===null);
+  const workspaceScope=p?.projectId===null&&p?.mappingRevision===null&&p?.projectProfile===null&&PROJECT.test(p?.workspaceRootId??'');
   if(!p||typeof p!=='object'||Array.isArray(p)||!Number.isSafeInteger(p.seq)||p.seq<1||
      !(p.prevMac===null||SHA.test(p.prevMac))||!UUID.test(p.requestId??'')||!Number.isSafeInteger(p.timestamp)||
-     !SHA.test(p.actorDigest??'')||!ORG.test(p.organizationId??'')||!PROJECT.test(p.projectId??'')||
-     !UUID.test(p.runtimeNodeId??'')||!Number.isSafeInteger(p.mappingRevision)||p.mappingRevision<1||
-     !NODES.has(p.nodeType)||!PROFILES.has(p.projectProfile)||!TOOL.test(p.tool??'')||!EFFECTS.has(p.effectClass)||
+     !SHA.test(p.actorDigest??'')||!ORG.test(p.organizationId??'')||(!projectScope&&!workspaceScope)||
+     !UUID.test(p.runtimeNodeId??'')||
+     !NODES.has(p.nodeType)||!TOOL.test(p.tool??'')||!EFFECTS.has(p.effectClass)||
      !STAGES.has(p.stage)||!Array.isArray(p.targetRelativePaths)||p.targetRelativePaths.length<1||p.targetRelativePaths.length>2||
      p.targetRelativePaths.some(x=>{try{return relative(x)!==x;}catch{return true;}})||
      !(p.preconditionDigest===null||SHA.test(p.preconditionDigest))||!CODE.test(p.resultCode??'')||!OUTCOMES.has(p.effectOutcome))
@@ -88,10 +91,10 @@ export class BusinessLocalEffectAudit{
   }
 
   append({requestId=randomUUID(),authenticatedMemberKey,organizationId,projectId,runtimeNodeId,mappingRevision,nodeType,
-    projectProfile,tool,effectClass,stage,targetRelativePaths,preconditionDigest=null,resultCode,effectOutcome}={}){
+    projectProfile,workspaceRootId=null,tool,effectClass,stage,targetRelativePaths,preconditionDigest=null,resultCode,effectOutcome}={}){
     const records=this.verify(),prev=records.at(-1)?.mac??null;
     const payload=validatePayload({seq:records.length+1,prevMac:prev,requestId,timestamp:Date.now(),actorDigest:cleanActor(authenticatedMemberKey),
-      organizationId,projectId,runtimeNodeId,mappingRevision,nodeType,projectProfile,tool,effectClass,stage,
+      organizationId,projectId,runtimeNodeId,mappingRevision,nodeType,projectProfile,workspaceRootId,tool,effectClass,stage,
       targetRelativePaths:[...targetRelativePaths],preconditionDigest,resultCode,effectOutcome});
     const mac=createHmac('sha256',this.key).update(JSON.stringify(payload)).digest('hex');
     const line=Buffer.from(JSON.stringify({payload,mac})+'\n');
