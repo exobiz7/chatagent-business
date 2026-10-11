@@ -1,6 +1,6 @@
 {
   "phase": "B-S4",
-  "status": "B_S4A_ACCEPTED_B_S4_IN_PROGRESS",
+  "status": "B_S4B_ACCEPTED_B_S4_IN_PROGRESS",
   "baseAcceptedHead": "df86e2889d345e744cd8f5f89dd98223522d5a39",
   "productionMutation": false,
   "gates": {
@@ -12,8 +12,16 @@
     "BUSINESS_S4A_IMPORT_SURFACE_RETIREMENT": "PASS",
     "BUSINESS_S4_MIGRATION_REHEARSAL": "PASS",
     "BUSINESS_S4_CONTEXT_DIGEST_PRESERVED": "PASS",
-    "BUSINESS_S4_BACKUP_RESTORE": "PENDING_BS4B",
-    "BUSINESS_S4_DEGRADED_MODE": "PENDING_LATER_UNIT"
+    "BUSINESS_S4_BACKUP_RESTORE": "IN_PROGRESS_BS4C_OPS_INTEGRATION",
+    "BUSINESS_S4_DEGRADED_MODE": "PENDING_BS4C",
+    "BUSINESS_S4B_LOGICAL_CONTRACT": "PASS",
+    "BUSINESS_S4B_AES256_GCM_BACKUP": "PASS",
+    "BUSINESS_S4B_KEYCHAIN_BACKUP_KEY": "PASS",
+    "BUSINESS_S4B_KEYCHAIN_LIVE_CUSTODY": "PASS",
+    "BUSINESS_S4B_EMPTY_TARGET_RESTORE": "PASS",
+    "BUSINESS_S4B_LOGICAL_DIGEST_RECONCILIATION": "PASS",
+    "BUSINESS_S4B_CONTEXT_DIGEST_RECONCILIATION": "PASS",
+    "BUSINESS_S4B_PRIVATE_ACCESS_RECONCILIATION": "PASS"
   },
   "validation": {
     "nodeVersion": "v24.21.0",
@@ -23,7 +31,13 @@
     "BUSINESS_S4A_MIGRATION_POSTGRES": "PASS",
     "B_S4A_FULL_REGRESSION_V24": "PASS",
     "B_S4A_GIT_DIFF_CHECK": "PASS",
-    "B_S4A_STAGED_SECRET_SCAN": "PASS"
+    "B_S4A_STAGED_SECRET_SCAN": "PASS",
+    "BUSINESS_S4B_BACKUP_CONTRACT": "PASS",
+    "BUSINESS_S4B_KEYCHAIN_LIVE_CUSTODY": "PASS",
+    "BUSINESS_S4B_BACKUP_POSTGRES": "PASS",
+    "B_S4B_FULL_REGRESSION_V24": "PASS",
+    "B_S4B_GIT_DIFF_CHECK": "PASS",
+    "B_S4B_STAGED_SECRET_SCAN": "PASS"
   },
   "bs4a": {
     "status": "ACCEPTED_CLOSED",
@@ -71,5 +85,39 @@
     "handoffDigestTaskTimestampsExcludedForV1Parity": true,
     "fullRegression": "PASS"
   },
-  "nextUnit": "B-S4B \u2014 Encrypted Logical Continuity Backup / Restore Foundation: adapt the proven Personal AES-256-GCM logical backup pattern with Keychain-held backup key, empty-target restore and post-restore identity/revision/contextDigest reconciliation; do not mutate production v1.0."
+  "nextUnit": "B-S4C \u2014 Ops Integration / Degraded Continuity: integrate encrypted logical backup and controlled empty-target restore into operator Backup/Restore, add Status/Doctor readiness and degraded-continuity health behavior; prove local filesystem/Git/HOST_USER availability during control/continuity outage while continuity mutation fails closed; do not mutate production v1.0.",
+  "bs4b": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S4B_ENCRYPTED_LOGICAL_BACKUP_RESTORE_REPORT_20261012.md",
+    "productionMutation": false,
+    "stagingMutation": false,
+    "productionCloudBackupRestore": false,
+    "archiveFormat": "chatagent-business-continuity-backup-v1",
+    "logicalFormat": "chatagent-business-continuity-logical-v1",
+    "encryption": "AES-256-GCM",
+    "nonceBytes": 12,
+    "archiveMode": "0600_EXCLUSIVE_CREATE",
+    "backupKeyBytes": 32,
+    "backupKeyCustody": "MACOS_KEYCHAIN_PINNED_NATIVE_HELPER",
+    "backupKeyStoredInArchive": false,
+    "liveKeychainCanary": "PASS_CREATE_READ_DELETE_CLEANUP",
+    "operatorPrivateExport": true,
+    "operatorPrivateRestore": true,
+    "authenticatedRuntimeRpcExpanded": false,
+    "emptyTargetRequired": true,
+    "activeAdminRestoreActorRequired": true,
+    "memberPrerequisitesRequired": true,
+    "runtimeNodePrerequisitesRequired": true,
+    "missingNodeRollbackVerified": true,
+    "secondRestoreDenied": true,
+    "eventChainPreserved": true,
+    "logicalDigestPreserved": true,
+    "contextDigestPreserved": true,
+    "privateMembershipPreserved": true,
+    "wrongKeyDenied": true,
+    "tamperDenied": true,
+    "archiveOverwriteDenied": true,
+    "plaintextExcludedFromArchive": true,
+    "fullRegression": "PASS"
+  }
 }
