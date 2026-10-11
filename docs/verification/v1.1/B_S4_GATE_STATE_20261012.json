@@ -1,6 +1,6 @@
 {
   "phase": "B-S4",
-  "status": "B_S4B_ACCEPTED_B_S4_IN_PROGRESS",
+  "status": "B_S4_ACCEPTED_CLOSED",
   "baseAcceptedHead": "df86e2889d345e744cd8f5f89dd98223522d5a39",
   "productionMutation": false,
   "gates": {
@@ -12,8 +12,8 @@
     "BUSINESS_S4A_IMPORT_SURFACE_RETIREMENT": "PASS",
     "BUSINESS_S4_MIGRATION_REHEARSAL": "PASS",
     "BUSINESS_S4_CONTEXT_DIGEST_PRESERVED": "PASS",
-    "BUSINESS_S4_BACKUP_RESTORE": "IN_PROGRESS_BS4C_OPS_INTEGRATION",
-    "BUSINESS_S4_DEGRADED_MODE": "PENDING_BS4C",
+    "BUSINESS_S4_BACKUP_RESTORE": "PASS",
+    "BUSINESS_S4_DEGRADED_MODE": "PASS",
     "BUSINESS_S4B_LOGICAL_CONTRACT": "PASS",
     "BUSINESS_S4B_AES256_GCM_BACKUP": "PASS",
     "BUSINESS_S4B_KEYCHAIN_BACKUP_KEY": "PASS",
@@ -21,7 +21,11 @@
     "BUSINESS_S4B_EMPTY_TARGET_RESTORE": "PASS",
     "BUSINESS_S4B_LOGICAL_DIGEST_RECONCILIATION": "PASS",
     "BUSINESS_S4B_CONTEXT_DIGEST_RECONCILIATION": "PASS",
-    "BUSINESS_S4B_PRIVATE_ACCESS_RECONCILIATION": "PASS"
+    "BUSINESS_S4B_PRIVATE_ACCESS_RECONCILIATION": "PASS",
+    "BUSINESS_S4C_OPS_CONTRACT": "PASS",
+    "BUSINESS_S4C_OPS_POSTGRES": "PASS",
+    "BUSINESS_S4C_DEGRADED_CONTINUITY": "PASS",
+    "BUSINESS_S4": "PASS"
   },
   "validation": {
     "nodeVersion": "v24.21.0",
@@ -37,7 +41,14 @@
     "BUSINESS_S4B_BACKUP_POSTGRES": "PASS",
     "B_S4B_FULL_REGRESSION_V24": "PASS",
     "B_S4B_GIT_DIFF_CHECK": "PASS",
-    "B_S4B_STAGED_SECRET_SCAN": "PASS"
+    "B_S4B_STAGED_SECRET_SCAN": "PASS",
+    "BUSINESS_S4C_OPS_CONTRACT": "PASS",
+    "BUSINESS_S4C_OPS_POSTGRES": "PASS",
+    "BUSINESS_S4C_DEGRADED_CONTINUITY": "PASS",
+    "B_S4C_FULL_REGRESSION_V24": "PASS",
+    "B_S4C_NPM_AUDIT_NEW_PG": "NO_NEW_ADVISORY",
+    "B_S4C_GIT_DIFF_CHECK": "PASS",
+    "B_S4C_STAGED_SECRET_SCAN": "PASS"
   },
   "bs4a": {
     "status": "ACCEPTED_CLOSED",
@@ -85,7 +96,7 @@
     "handoffDigestTaskTimestampsExcludedForV1Parity": true,
     "fullRegression": "PASS"
   },
-  "nextUnit": "B-S4C \u2014 Ops Integration / Degraded Continuity: integrate encrypted logical backup and controlled empty-target restore into operator Backup/Restore, add Status/Doctor readiness and degraded-continuity health behavior; prove local filesystem/Git/HOST_USER availability during control/continuity outage while continuity mutation fails closed; do not mutate production v1.0.",
+  "nextUnit": "B-S5A — Distributed TEAM / Node-Security E2E Foundation: assemble at least A=SHARED_NODE and B/C=PERSONAL_NODE logical participants where practical; verify cross-node TEAM continuity/search, same-revision conflict, PERSONAL_NODE isolation, revoke/re-enrollment, and reuse the B-S4 degraded-authority primitive before broader Git/GitHub/OpenAI canaries; production remains frozen.",
   "bs4b": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S4B_ENCRYPTED_LOGICAL_BACKUP_RESTORE_REPORT_20261012.md",
@@ -119,5 +130,51 @@
     "archiveOverwriteDenied": true,
     "plaintextExcludedFromArchive": true,
     "fullRegression": "PASS"
+  },
+  "bs4c": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S4C_OPS_DEGRADED_CONTINUITY_REPORT_20261012.md",
+    "productionMutation": false,
+    "stagingMutation": false,
+    "productionFinalMigration": false,
+    "operatorConfigSchemaVersion": 2,
+    "legacyOperatorSchemaVersion1Preserved": true,
+    "statusIntegrated": true,
+    "doctorIntegrated": true,
+    "backupIntegrated": true,
+    "restoreIntegrated": true,
+    "maintenanceTransport": "PG_8_23_1_FIXED_OPERATIONS_TLS_REMOTE",
+    "maintenanceDatabaseUrlPersisted": false,
+    "projectAuthorizationCache": "MEMBER_PROJECT_SCOPED_IN_MEMORY_BOUNDED_BACKEND_OUTAGE_ONLY",
+    "projectAuthorizationDefaultTtlSeconds": 300,
+    "degradedLocalFilesystem": true,
+    "degradedLocalGit": true,
+    "degradedHostUser": true,
+    "degradedContinuityMutation": "FAIL_CLOSED",
+    "degradedContinuityRead": "UNVERIFIED_CONTINUITY_UNAVAILABLE",
+    "offlineContinuityQueue": false,
+    "sqliteFallback": false,
+    "restoreIncidentReferenceRequired": true,
+    "restoreExpectedDigestRequired": true,
+    "restoreOrganizationConfirmationRequired": true,
+    "restoreEmptyTargetRequired": true,
+    "postRestoreLogicalDigestReconciliation": true,
+    "fullRegression": "PASS",
+    "dependencyAudit": {
+      "pg": "8.23.1",
+      "pgAdvisory": false,
+      "existingMcpSdkHighAdvisory": true
+    }
+  },
+  "closure": {
+    "status": "ACCEPTED_CLOSED",
+    "requiredTopLevelGates": {
+      "BUSINESS_S4_MIGRATION_REHEARSAL": "PASS",
+      "BUSINESS_S4_CONTEXT_DIGEST_PRESERVED": "PASS",
+      "BUSINESS_S4_BACKUP_RESTORE": "PASS",
+      "BUSINESS_S4_DEGRADED_MODE": "PASS"
+    },
+    "productionFinalMigration": false,
+    "nextPhase": "B-S5 — Real Multi-Node / Safety / Failure E2E"
   }
 }
