@@ -9,6 +9,7 @@ import {ListToolsRequestSchema} from '@modelcontextprotocol/sdk/types.js';
 import {z} from 'zod';
 import {boundedJSONBody} from '../../l1/bounded-json-body.mjs';
 import {BusinessExecManager} from '../business-exec.mjs';
+import {settleBs3g1IsolatedCanary} from './runtime/bs3g1-isolated-canary-settle.mjs';
 import {candidateTools,toOpenAiWireInputSchema} from './bs0-tool-catalog.mjs';
 import {fetchBusinessMemberProfile} from './control/business-member-profile-rpc.mjs';
 import {fetchBusinessRuntimeList} from './control/business-runtime-list-rpc.mjs';
@@ -64,7 +65,7 @@ function buildMcp(identity,accessToken){
   if(t.name==='member_get_profile')return result(await fetchBusinessMemberProfile({supabaseUrl,publishableKey,accessToken}));
   if(t.name==='runtime_list_nodes')return result(mergeRuntimeList(await fetchBusinessRuntimeList({supabaseUrl,publishableKey,accessToken,limit:args?.limit??50}),{projectId:args?.projectId??null}));
   if(t.name==='continuity_get_context')return result(await continuity.getContext(args));
-  if(t.name==='process_start_isolated'&&canaryEnabled){if(args?.projectId!==canaryProject||(args.runtimeNodeId!==undefined&&args.runtimeNodeId!==nodeIdentity.nodeId)||args?.command!==isolatedCommand||(args.cwd!==undefined&&args.cwd!=='.')||(args.timeoutMs!==undefined&&args.timeoutMs!==15000)||(args.yieldTimeMs!==undefined&&args.yieldTimeMs!==5000)||(args.maxOutputBytes!==undefined&&args.maxOutputBytes>65536))throw Error('BS3G1_ISOLATED_SCOPE_DENIED');await isolated.initialize();try{const out=await isolated.startIsolated({authenticatedMemberKey:identity.sub,...args,timeoutMs:15000,yieldTimeMs:5000,maxOutputBytes:Math.min(args.maxOutputBytes??65536,65536)});if(out.state!=='EXITED'||out.exitCode!==0||!out.content.includes('BS3G1_ISOLATED_OK'))throw Error('BS3G1_ISOLATED_RESULT_INVALID');return result(out);}finally{await isolated.close();}}
+  if(t.name==='process_start_isolated'&&canaryEnabled){if(args?.projectId!==canaryProject||(args.runtimeNodeId!==undefined&&args.runtimeNodeId!==nodeIdentity.nodeId)||args?.command!==isolatedCommand||(args.cwd!==undefined&&args.cwd!=='.')||(args.timeoutMs!==undefined&&args.timeoutMs!==15000)||(args.yieldTimeMs!==undefined&&args.yieldTimeMs!==5000)||(args.maxOutputBytes!==undefined&&args.maxOutputBytes>65536))throw Error('BS3G1_ISOLATED_SCOPE_DENIED');await isolated.initialize();try{const started=await isolated.startIsolated({authenticatedMemberKey:identity.sub,...args,timeoutMs:15000,yieldTimeMs:5000,maxOutputBytes:Math.min(args.maxOutputBytes??65536,65536)});return result(await settleBs3g1IsolatedCanary({isolated,authenticatedMemberKey:identity.sub,started}));}finally{await isolated.close();}}
   return {content:[{type:'text',text:JSON.stringify({probe:true,noEffect:true,tool:t.name})}]};
  });}
  mcp.server.setRequestHandler(ListToolsRequestSchema,()=>({tools:candidateTools.map(descriptor)}));return mcp;

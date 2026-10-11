@@ -64,7 +64,7 @@
     "test:business:bs3d2:fixture": "node --check scripts/business/v1.1/bs3d2-live-fixture-server.mjs && node scripts/business/v1.1/bs3d2-live-fixture-smoke-test.mjs",
     "test:business:bs3e1": "node --check scripts/business/v1.1/runtime/business-workspace-root-policy.mjs && node scripts/business/v1.1/bs3e1-shared-root-policy-test.mjs",
     "test:business:bs3f1": "node scripts/business/v1.1/bs3f1-isolated-contract-test.mjs && node scripts/business/v1.1/bs3f1-isolated-effects-test.mjs",
-    "test:business:bs3g1:fixture": "node --check scripts/business/v1.1/bs3g1-isolated-live-fixture-server.mjs && node scripts/business/v1.1/bs3g1-isolated-live-fixture-smoke-test.mjs"
+    "test:business:bs3g1:fixture": "node --check scripts/business/v1.1/bs3g1-isolated-live-fixture-server.mjs && node scripts/business/v1.1/bs3g1-isolated-terminal-settle-test.mjs && node scripts/business/v1.1/bs3g1-isolated-live-fixture-smoke-test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

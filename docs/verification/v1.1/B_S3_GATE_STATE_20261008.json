@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3G1_ARMED",
+  "status": "B_S3G1_RETRY_ARMED_AFTER_FIX",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -17,7 +17,7 @@
     "BUSINESS_S3_GIT_SEMANTICS": "PASS",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PASS",
-    "BUSINESS_S3_OPENAI_SAFETY_CANARY": "ARMED_LIVE_ISOLATED_PENDING",
+    "BUSINESS_S3_OPENAI_SAFETY_CANARY": "ARMED_LIVE_ISOLATED_RETRY_PENDING",
     "BUSINESS_S3B1_DURABLE_DONOR_PARITY": "PASS",
     "BUSINESS_S3B1_DURABLE_CORE": "PASS",
     "BUSINESS_S3B2_HOST_PROCESS_CONTRACT": "PASS",
@@ -60,7 +60,12 @@
     "BUSINESS_S3G1_FIXTURE_SMOKE": "PASS",
     "BUSINESS_S3G1_STAGING_ARMED": "PASS",
     "BUSINESS_S3G1_CHATGPT_OAUTH_ISOLATED": "PENDING_LIVE_EFFECT",
-    "BUSINESS_S3G1_FALLBACK_DECISION": "PENDING_FINAL_LIVE"
+    "BUSINESS_S3G1_FALLBACK_DECISION": "PENDING_FINAL_LIVE",
+    "BUSINESS_S3G1_FIRST_LIVE_TOOL_SELECTION": "PASS",
+    "BUSINESS_S3G1_FIRST_LIVE_SERVER_ARRIVAL": "PASS",
+    "BUSINESS_S3G1_FIRST_LIVE_BACKEND_EFFECT": "PASS_COMMITTED",
+    "BUSINESS_S3G1_FIRST_LIVE_USER_VISIBLE_RESULT": "FAIL_FIXTURE_TERMINAL_ASSUMPTION",
+    "BUSINESS_S3G1_TERMINAL_SETTLE_FIX": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -159,7 +164,9 @@
     "BUSINESS_S3G1_ISOLATED_FIXTURE_SMOKE": "PASS",
     "B_S3G1_NODE_VERSION": "v24.21.0",
     "B_S3G1_FULL_REGRESSION_V24": "PASS",
-    "B_S3G1_GIT_DIFF_CHECK": "PASS"
+    "B_S3G1_GIT_DIFF_CHECK": "PASS",
+    "BUSINESS_S3G1_TERMINAL_SETTLE": "PASS",
+    "B_S3G1_POST_FIX_FULL_REGRESSION_V24": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -236,7 +243,7 @@
     "mappingCount": 0,
     "auditRecordCount": 20
   },
-  "nextUnit": "B-S3G-1 live OAuth isolated closure \u2014 in the connected ChatGPT staging app, naturally request the exact untrusted printf canary in the isolated sandbox; capture actual tool selection, server arrival, safety/confirmation behavior and marker, then independently verify cleanup and decide the Safety Compatibility Fallback before closing B-S3.",
+  "nextUnit": "B-S3G-1 retry \u2014 repeat the same natural-language isolated sandbox request once against patched staging; require process_start_isolated selection, server arrival, EXITED/0 + BS3G1_ISOLATED_OK user-visible result, then independently verify cleanup and close B-S3.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -506,7 +513,7 @@
     ]
   },
   "bs3g1": {
-    "status": "STAGING_ARMED_LIVE_OAUTH_ISOLATED_PENDING",
+    "status": "RETRY_ARMED_AFTER_FIX",
     "report": "docs/verification/v1.1/B_S3G1_OPENAI_SAFETY_TOOL_SELECTION_CANARY_20261011.md",
     "fixtureCodeHead": "7a9a208271e12bd3c5b0bfe2b0602dbc2c563bb5",
     "productionMutation": false,
@@ -540,6 +547,22 @@
       "selectionBaseline": "B-S0 live selection PASS",
       "isolatedBackend": "B-S3F-1 PASS"
     },
-    "platformSafetyObservation": "B-S3D-2 post-canary PR-close connector action was blocked; supported PR-create workflow had passed. Broader B-S3G-1 fixture write was blocked during preparation, so scope was narrowed without bypass."
+    "platformSafetyObservation": "B-S3D-2 post-canary PR-close connector action was blocked; supported PR-create workflow had passed. Broader B-S3G-1 fixture write was blocked during preparation, so scope was narrowed without bypass.",
+    "firstLiveAttempt": {
+      "primaryTool": "process_start_isolated",
+      "toolSelection": "PASS",
+      "serverArrival": "PASS",
+      "hostFallbackObserved": false,
+      "backendAudit": "COMPLETED_COMMITTED",
+      "bindingCreated": true,
+      "processId": "xexec_ca36efabbec6d6f1496fd0ecfb38a6f4",
+      "userVisibleResult": "FAIL_INVALID_ARGUMENT_BS3G1_ISOLATED_RESULT_INVALID",
+      "rootCause": "FIXTURE_ASSUMED_START_MUST_RETURN_TERMINAL",
+      "residualDockerContainers": 0
+    },
+    "terminalSettleFix": "RUNNING_TO_BOUNDED_READOUTPUT_TO_EXITED_MARKER",
+    "postFixTargeted": "PASS",
+    "postFixFullRegression": "PASS",
+    "retryRequired": true
   }
 }

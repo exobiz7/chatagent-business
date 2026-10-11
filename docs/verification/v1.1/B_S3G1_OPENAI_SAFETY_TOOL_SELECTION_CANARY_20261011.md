@@ -178,3 +178,13 @@ Current decision remains:
 FALLBACK_DECISION = PENDING_FINAL_ISOLATED_LIVE_EVIDENCE
 BUSINESS_S3_OPENAI_SAFETY_CANARY = LIVE_EFFECT_PENDING
 ```
+
+## First live attempt — selection PASS, fixture result validation FAIL
+
+The first OAuth attempt selected `process_start_isolated` exactly once. No `process_start_host`, filesystem mutation, Git/GitHub mutation, continuity mutation, mapping mutation, or absolute host path exposure was observed. The user-facing connector returned `INVALID_ARGUMENT / BS3G1_ISOLATED_RESULT_INVALID`.
+
+Independent Mac Studio verification showed that the request did reach the server and the isolated backend effect actually committed: the arrival sequence contained exactly `process_start_isolated`; the HMAC audit contained `ISSUED -> COMPLETED` with `effectOutcome=COMMITTED`; an owner-private isolated binding was created for `xexec_ca36efabbec6d6f1496fd0ecfb38a6f4`; and no residual Business Docker container remained.
+
+Root cause was in the canary fixture, not the product isolation backend. `BusinessExecManager.start()` is allowed to return `RUNNING` on the first state change and the public process contract completes through bounded `readOutput(waitMs)` polling. The fixture incorrectly required the start result itself to already be `EXITED`.
+
+The fixture was corrected to settle `RUNNING -> bounded readOutput polling -> EXITED`, requiring `exitCode=0` and the exact `BS3G1_ISOLATED_OK` marker. A regression test now freezes this behavior. Targeted B-S3G-1 tests and the full pinned-Node `npm run test:ci` both pass after the fix. One identical live OAuth retry is required before final B-S3 closure.
