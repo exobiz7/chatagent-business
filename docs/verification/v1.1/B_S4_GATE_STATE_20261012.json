@@ -1,0 +1,75 @@
+{
+  "phase": "B-S4",
+  "status": "B_S4A_ACCEPTED_B_S4_IN_PROGRESS",
+  "baseAcceptedHead": "df86e2889d345e744cd8f5f89dd98223522d5a39",
+  "productionMutation": false,
+  "gates": {
+    "BUSINESS_S4A_V1_SQLITE_LOGICAL_EXPORT": "PASS",
+    "BUSINESS_S4A_LOGICAL_CONTRACT_VALIDATOR": "PASS",
+    "BUSINESS_S4A_ONE_TIME_IMPORTER": "PASS",
+    "BUSINESS_S4A_DISPOSABLE_POSTGRES_RECONCILIATION": "PASS",
+    "BUSINESS_S4A_CONTEXT_DIGEST_PARITY": "PASS",
+    "BUSINESS_S4A_IMPORT_SURFACE_RETIREMENT": "PASS",
+    "BUSINESS_S4_MIGRATION_REHEARSAL": "PASS",
+    "BUSINESS_S4_CONTEXT_DIGEST_PRESERVED": "PASS",
+    "BUSINESS_S4_BACKUP_RESTORE": "PENDING_BS4B",
+    "BUSINESS_S4_DEGRADED_MODE": "PENDING_LATER_UNIT"
+  },
+  "validation": {
+    "nodeVersion": "v24.21.0",
+    "BUSINESS_S2C_HANDOFF_CONTRACT": "PASS",
+    "BUSINESS_S2C_HANDOFF_CLIENT": "PASS",
+    "BUSINESS_S4A_MIGRATION_CONTRACT": "PASS",
+    "BUSINESS_S4A_MIGRATION_POSTGRES": "PASS",
+    "B_S4A_FULL_REGRESSION_V24": "PASS",
+    "B_S4A_GIT_DIFF_CHECK": "PASS",
+    "B_S4A_STAGED_SECRET_SCAN": "PASS"
+  },
+  "bs4a": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S4A_V1_SQLITE_MIGRATION_REHEARSAL_REPORT_20261012.md",
+    "productionMutation": false,
+    "stagingCloudMutation": false,
+    "productionFinalMigration": false,
+    "sourceExporter": "READ_ONLY_SQLITE_HMAC_VERIFIED",
+    "logicalBundle": "CANONICAL_PAYLOAD_SHA256",
+    "hostRootExported": false,
+    "sourceSealKeyExported": false,
+    "disabledProjectPolicy": "FAIL_CLOSED_UNREPRESENTABLE",
+    "actualProductionDisabledProjectCount": 0,
+    "actualProductionOrganizationId": "release-org",
+    "actualProductionProjectCount": 3,
+    "actualProductionSourceKinds": {
+      "PROJECT": 1,
+      "TASK": 1,
+      "CHECKPOINT": 1
+    },
+    "projectEventNormalization": "V1_PROJECT_TO_V11_CONTROL_PLANE",
+    "continuityEventNormalization": {
+      "TASK": "TASK_STARTED",
+      "CHECKPOINT": "CHECKPOINT_APPENDED",
+      "COMPLETE": "TASK_COMPLETED"
+    },
+    "importer": "MIGRATION_OWNER_ONLY_NOT_AUTHENTICATED_RUNTIME",
+    "importerEmptyTargetRequired": true,
+    "importerAdminActorRequired": true,
+    "importerRetirementVerified": true,
+    "disposablePostgresVersion": "16-alpine",
+    "fixtureSourceCounts": {
+      "projects": 2,
+      "tasks": 2,
+      "checkpoints": 2,
+      "operations": 5,
+      "events": 5,
+      "sourceRawEvents": 7
+    },
+    "sourceBytesUnchanged": true,
+    "targetEventChainVerified": true,
+    "authenticatedReadbackReconciled": true,
+    "contextDigestCrossVersionParity": true,
+    "handoffDisplayTimestampsPreserved": true,
+    "handoffDigestTaskTimestampsExcludedForV1Parity": true,
+    "fullRegression": "PASS"
+  },
+  "nextUnit": "B-S4B \u2014 Encrypted Logical Continuity Backup / Restore Foundation: adapt the proven Personal AES-256-GCM logical backup pattern with Keychain-held backup key, empty-target restore and post-restore identity/revision/contextDigest reconciliation; do not mutate production v1.0."
+}

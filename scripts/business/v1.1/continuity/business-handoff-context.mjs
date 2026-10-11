@@ -31,8 +31,6 @@ function basisFrom({organizationId,task,checkpoint}){
     objective:task.objective,
     taskStatus:task.status,
     revision:task.revision,
-    startedAt:epoch(task.startedAt),
-    completedAt:epoch(task.completedAt),
     lastCheckpoint:checkpoint?{
       checkpointId:checkpoint.checkpointId,
       revision:checkpoint.revision,
@@ -64,7 +62,8 @@ export function assembleBusinessHandoff({organizationId,taskResult}){
   const checkpoints=Array.isArray(taskResult.checkpoints)?taskResult.checkpoints:[];
   const latest=checkpoints.at(-1)??null;
   const basis=basisFrom({organizationId,task:taskResult.task,checkpoint:latest});
-  const render=()=>({...basis,storeSeq:taskResult.contextSeq??null,generatedAt:Date.now(),gitObservation:null,
+  const render=()=>({...basis,startedAt:epoch(taskResult.task.startedAt),completedAt:epoch(taskResult.task.completedAt),
+    storeSeq:taskResult.contextSeq??null,generatedAt:Date.now(),gitObservation:null,
     freshness:'FRESH',freshnessReason:'GENERATED_FROM_CURRENT_STATE',contextDigest:digestBasis(basis)});
   let pkg=render();
   const prune=key=>{
