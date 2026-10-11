@@ -226,6 +226,14 @@ export class LocalWorkspaceRegistry{
   listMappings(){return this.read().mappings.map(publicMapping);}
   listWorkspaceRoots(){return [...this.workspaceRoots.values()].map(x=>Object.freeze({workspaceRootId:x.workspaceRootId,label:x.label}));}
 
+  resolveWorkspaceRootForEffect(workspaceRootId){
+    workspaceRootId=cleanSlug(workspaceRootId,'BUSINESS_WORKSPACE_ROOT_ID_INVALID');
+    const root=this.workspaceRoots.get(workspaceRootId);if(!root)fail('BUSINESS_WORKSPACE_ROOT_UNKNOWN');
+    const canonical=validateWorkspaceRoot(root.path,{stateDir:this.stateDir});
+    if(canonical!==root.path)fail('BUSINESS_WORKSPACE_ROOT_CHANGED');
+    return Object.freeze({workspaceRootId,path:canonical,label:root.label});
+  }
+
   resolveProject(projectId){
     projectId=cleanSlug(projectId,'BUSINESS_PROJECT_ID_INVALID');
     const mapping=this.read().mappings.find(x=>x.projectId===projectId);

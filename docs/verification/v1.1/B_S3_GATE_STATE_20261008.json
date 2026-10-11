@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3D2_ACCEPTED",
+  "status": "B_S3E1_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -12,11 +12,11 @@
     "BUSINESS_S3A_CHATGPT_OAUTH_MAPPING": "PASS",
     "BUSINESS_S3_HOST_USER": "PASS",
     "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
-    "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "IN_PROGRESS",
+    "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "PASS",
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
     "BUSINESS_S3_GIT_SEMANTICS": "PASS",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
-    "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_LATER_UNIT",
+    "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_BS3F1",
     "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
     "BUSINESS_S3B1_DURABLE_DONOR_PARITY": "PASS",
     "BUSINESS_S3B1_DURABLE_CORE": "PASS",
@@ -49,7 +49,9 @@
     "BUSINESS_S3D2_GITHUB_PROVIDER": "PASS",
     "BUSINESS_S3D2_LOCAL_AUDIT_LIVE": "PASS",
     "BUSINESS_S3D2_POST_CANARY_CLEANUP": "PASS",
-    "BUSINESS_S3D": "PASS"
+    "BUSINESS_S3D": "PASS",
+    "BUSINESS_S3E1_SHARED_ROOT_POLICY": "PASS",
+    "BUSINESS_S3E": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -134,7 +136,11 @@
     "BUSINESS_S3D2_GITHUB_PROVIDER_VERIFY": "PASS",
     "BUSINESS_S3D2_LOCAL_AUDIT_HMAC": "PASS",
     "BUSINESS_S3D2_POST_CANARY_REGRESSION_V24": "PASS",
-    "BUSINESS_S3D2_GIT_DIFF_CHECK": "PASS"
+    "BUSINESS_S3D2_GIT_DIFF_CHECK": "PASS",
+    "BUSINESS_S3E1_SHARED_ROOT_POLICY": "PASS",
+    "B_S3E1_NODE_VERSION": "v24.21.0",
+    "B_S3E1_FULL_REGRESSION_V24": "PASS",
+    "B_S3E1_GIT_DIFF_CHECK": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -211,7 +217,7 @@
     "mappingCount": 0,
     "auditRecordCount": 20
   },
-  "nextUnit": "B-S3E-1 — SHARED_NODE semantic-root policy verification: prove focused filesystem/Git effects remain bounded to approved workspace roots without inheriting broad host-power authority; preserve production freeze.",
+  "nextUnit": "B-S3F-1 — isolated execution regression: revalidate process_start_isolated against the accepted STANDARD Docker boundary, confirm no host-authority regression from B-S3A–E, and preserve production freeze.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -426,5 +432,24 @@
       "isolated regression",
       "OpenAI safety/tool-selection canary"
     ]
+  },
+  "bs3e1": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S3E1_SHARED_NODE_ROOT_POLICY_REPORT_20261011.md",
+    "productionMutation": false,
+    "stagingMutation": false,
+    "liveNodeTypeMutation": false,
+    "verificationMode": "DETERMINISTIC_LOCAL_POLICY_WITH_SYNTHETIC_APPROVED_SHARED_NODE",
+    "sharedSemanticRequiresBroadHostPower": false,
+    "genericSharedHostPowerDefaultDenied": true,
+    "explicitHostPowerOptInRequired": true,
+    "cloneRootAuthority": "CONFIGURED_CANONICAL_WORKSPACE_ROOT_ONLY",
+    "publicRootPathDisclosure": false,
+    "traversalEscapeDenied": true,
+    "symlinkEscapeDenied": true,
+    "postConfigurationRootReplacementDenied": true,
+    "runtimeNodeIdentityMismatchDenied": true,
+    "localEffectAudit": "HMAC_CHAINED_CONTENT_AND_HOST_PATH_FREE",
+    "realMultiNodeE2EDeferredTo": "B-S5"
   }
 }
