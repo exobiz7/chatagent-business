@@ -188,3 +188,117 @@ Independent Mac Studio verification showed that the request did reach the server
 Root cause was in the canary fixture, not the product isolation backend. `BusinessExecManager.start()` is allowed to return `RUNNING` on the first state change and the public process contract completes through bounded `readOutput(waitMs)` polling. The fixture incorrectly required the start result itself to already be `EXITED`.
 
 The fixture was corrected to settle `RUNNING -> bounded readOutput polling -> EXITED`, requiring `exitCode=0` and the exact `BS3G1_ISOLATED_OK` marker. A regression test now freezes this behavior. Targeted B-S3G-1 tests and the full pinned-Node `npm run test:ci` both pass after the fix. One identical live OAuth retry is required before final B-S3 closure.
+
+
+## Final live retry — PASS
+
+The patched staging fixture received the identical natural-language OAuth request once.
+
+Observed user-visible result:
+
+```text
+primaryTool = process_start_isolated
+callCount = 1
+processId = xexec_9a3c35c3bdf438a6ab51cf691a0a3c9e
+state = EXITED
+exitCode = 0
+marker = BS3G1_ISOLATED_OK
+process_start_host fallback = false
+other filesystem/Git/GitHub mutation = false
+OpenAI/connector safety block = none observed
+absolute host path disclosed = false
+```
+
+Independent staging verification matched the report exactly. The second request produced a second HMAC-audited `ISSUED -> COMPLETED` pair with `resultCode=OK` and `effectOutcome=COMMITTED`, bound to mapping revision `5`. The binding registry contains the reported process ID. No Business Docker container remained after completion.
+
+The first and second attempts therefore prove two distinct facts:
+
+1. model/tool selection and backend isolated execution were correct on both attempts;
+2. the first user-visible failure was solely the canary fixture's incorrect assumption that start must already be terminal, and the bounded terminal-settle fix resolved it.
+
+## Independent final evidence
+
+Final B-S3G-1 local evidence before cleanup:
+
+```text
+auditRecordCount = 4
+isolatedBindingCount = 2
+secondProcessId = xexec_9a3c35c3bdf438a6ab51cf691a0a3c9e
+mappingRevision = 5
+residualDockerContainers = 0
+```
+
+Audit/binding privacy scan confirmed absence of:
+
+```text
+BS3G1_ISOLATED_OK payload text
+raw command text
+absolute /Volumes host root
+/Users/macstudio path
+plaintext OAuth subject
+```
+
+## Cleanup
+
+Exact cleanup completed after evidence capture:
+
+```text
+runtime mapping revision 5 -> exact unmap PASS
+unmap operationId = 7bf10d00-b5ff-4d03-b030-da13cd1c483c
+final mappingCount = 0
+disposable workspace removed = true
+isolated canary gate enabled = false
+processEffectTools = []
+residual Docker containers = 0
+```
+
+Production and tunnel listeners remained unchanged throughout cleanup. Only staging `31861` was restarted with the isolated canary disabled.
+
+Post-cleanup staging health:
+
+```text
+safetyCanaryEnabled = false
+processEffectTools = []
+mappingCount = 0
+auditRecordCount = 4
+isolatedBindingCount = 2
+```
+
+The retained audit/binding records are owner-private verification evidence, not active execution authority.
+
+## Post-cleanup regression
+
+Authoritative runtime: Node `v24.21.0`.
+
+```text
+BUSINESS_S3G1_TERMINAL_SETTLE=PASS
+BUSINESS_S3G1_ISOLATED_FIXTURE_SMOKE=PASS
+npm run test:ci
+TEST_CI_EXIT=0
+```
+
+## Safety Compatibility Fallback decision
+
+Accepted Design section 13 requires the fallback only when a common approved workflow is reproducibly unable to complete because of OpenAI safety/tool-classification behavior despite a bounded semantic tool, truthful annotations, explicit user intent, valid Business authorization, and a working backend.
+
+That trigger condition is **not met**.
+
+Composite live evidence now shows:
+
+```text
+B-S0 semantic tool-selection baseline = PASS
+B-S3B-3 HOST_USER live OAuth execution = PASS
+B-S3C-2 semantic filesystem live OAuth execution = PASS
+B-S3D-2 semantic Git/GitHub live OAuth execution = PASS
+B-S3G-1 isolated live OAuth execution = PASS
+```
+
+The observed GitHub-connector PR-close block occurred during post-canary cleanup outside the supported ChatAgent Business semantic PR-create workflow, which itself passed. The broader fixture-write block occurred while preparing a test harness and was handled by narrowing the test scope rather than bypassing safety. Neither is reproducible evidence that a normal approved ChatAgent Business workflow cannot complete. The first B-S3G-1 live error was a fixture terminal-state assumption bug, not a platform safety block.
+
+Therefore:
+
+```text
+FALLBACK_DECISION = NOT_TRIGGERED
+BUSINESS_S3_OPENAI_SAFETY_CANARY = PASS
+B-S3G-1 = ACCEPTED / CLOSED
+```

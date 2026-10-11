@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3G1_RETRY_ARMED_AFTER_FIX",
+  "status": "B_S3_ACCEPTED_CLOSED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -17,7 +17,7 @@
     "BUSINESS_S3_GIT_SEMANTICS": "PASS",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
     "BUSINESS_S3_ISOLATED_REGRESSION": "PASS",
-    "BUSINESS_S3_OPENAI_SAFETY_CANARY": "ARMED_LIVE_ISOLATED_RETRY_PENDING",
+    "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PASS",
     "BUSINESS_S3B1_DURABLE_DONOR_PARITY": "PASS",
     "BUSINESS_S3B1_DURABLE_CORE": "PASS",
     "BUSINESS_S3B2_HOST_PROCESS_CONTRACT": "PASS",
@@ -59,13 +59,17 @@
     "BUSINESS_S3F": "PASS",
     "BUSINESS_S3G1_FIXTURE_SMOKE": "PASS",
     "BUSINESS_S3G1_STAGING_ARMED": "PASS",
-    "BUSINESS_S3G1_CHATGPT_OAUTH_ISOLATED": "PENDING_LIVE_EFFECT",
-    "BUSINESS_S3G1_FALLBACK_DECISION": "PENDING_FINAL_LIVE",
+    "BUSINESS_S3G1_CHATGPT_OAUTH_ISOLATED": "PASS",
+    "BUSINESS_S3G1_FALLBACK_DECISION": "PASS_NOT_TRIGGERED",
     "BUSINESS_S3G1_FIRST_LIVE_TOOL_SELECTION": "PASS",
     "BUSINESS_S3G1_FIRST_LIVE_SERVER_ARRIVAL": "PASS",
     "BUSINESS_S3G1_FIRST_LIVE_BACKEND_EFFECT": "PASS_COMMITTED",
     "BUSINESS_S3G1_FIRST_LIVE_USER_VISIBLE_RESULT": "FAIL_FIXTURE_TERMINAL_ASSUMPTION",
-    "BUSINESS_S3G1_TERMINAL_SETTLE_FIX": "PASS"
+    "BUSINESS_S3G1_TERMINAL_SETTLE_FIX": "PASS",
+    "BUSINESS_S3G1_POST_CANARY_CLEANUP": "PASS",
+    "BUSINESS_S3G1_FINAL_LIVE_TOOL_SELECTION": "PASS",
+    "BUSINESS_S3G1_FINAL_LIVE_SERVER_ARRIVAL": "PASS",
+    "BUSINESS_S3G1_FINAL_LIVE_USER_VISIBLE_RESULT": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -166,7 +170,13 @@
     "B_S3G1_FULL_REGRESSION_V24": "PASS",
     "B_S3G1_GIT_DIFF_CHECK": "PASS",
     "BUSINESS_S3G1_TERMINAL_SETTLE": "PASS",
-    "B_S3G1_POST_FIX_FULL_REGRESSION_V24": "PASS"
+    "B_S3G1_POST_FIX_FULL_REGRESSION_V24": "PASS",
+    "BUSINESS_S3G1_CHATGPT_OAUTH_ISOLATED": "PASS",
+    "B_S3G1_FINAL_LIVE_SERVER_ARRIVAL": "PASS",
+    "B_S3G1_AUDIT_HMAC_AND_PRIVACY": "PASS",
+    "B_S3G1_EXACT_UNMAP_REVISION_5": "PASS",
+    "B_S3G1_POST_CLEANUP_FULL_REGRESSION_V24": "PASS",
+    "B_S3G1_SAFETY_FALLBACK": "NOT_TRIGGERED"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -241,9 +251,15 @@
     "gitCanaryProductionMutationAtArm": false,
     "gitCanaryCanonicalRepoMutationAtArm": false,
     "mappingCount": 0,
-    "auditRecordCount": 20
+    "auditRecordCount": 20,
+    "safetyCanaryEnabled": false,
+    "safetyProcessEffectTools": [],
+    "bs3g1AuditRecordCount": 4,
+    "bs3g1IsolatedBindingCount": 2,
+    "bs3g1ResidualDockerContainers": 0,
+    "bs3g1WorkspaceRemoved": true
   },
-  "nextUnit": "B-S3G-1 retry \u2014 repeat the same natural-language isolated sandbox request once against patched staging; require process_start_isolated selection, server arrival, EXITED/0 + BS3G1_ISOLATED_OK user-visible result, then independently verify cleanup and close B-S3.",
+  "nextUnit": "B-S4 \u2014 Migration / Backup / Ops Integration: begin with v1 SQLite logical exporter and disposable PostgreSQL import/reconciliation rehearsal; do not perform production final migration.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -513,16 +529,14 @@
     ]
   },
   "bs3g1": {
-    "status": "RETRY_ARMED_AFTER_FIX",
+    "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3G1_OPENAI_SAFETY_TOOL_SELECTION_CANARY_20261011.md",
-    "fixtureCodeHead": "7a9a208271e12bd3c5b0bfe2b0602dbc2c563bb5",
+    "fixtureCodeHead": "54ef5d2cb4a216cf563b2e12a52c170e74bfe915",
     "productionMutation": false,
     "stagingMutation": true,
     "publicToolCatalogCount": 39,
-    "temporaryCanaryGate": "ENABLED_EXACT_ISOLATED_ONLY",
-    "processEffectTools": [
-      "process_start_isolated"
-    ],
+    "temporaryCanaryGate": "DISABLED_AFTER_PASS",
+    "processEffectTools": [],
     "canaryProject": "bs2a-team-staging",
     "runtimeNodeId": "ad610e88-e671-4b7d-818d-a2f1f2eb2de1",
     "workspaceRootId": "proj04",
@@ -539,7 +553,7 @@
       "process_start_host"
     ],
     "exactCommand": "printf 'BS3G1_ISOLATED_OK\\n'",
-    "fallbackDecision": "PENDING_FINAL_ISOLATED_LIVE_EVIDENCE",
+    "fallbackDecision": "NOT_TRIGGERED",
     "priorCompositeLiveEvidence": {
       "hostUser": "B-S3B-3 PASS",
       "semanticFilesystem": "B-S3C-2 PASS",
@@ -563,6 +577,68 @@
     "terminalSettleFix": "RUNNING_TO_BOUNDED_READOUTPUT_TO_EXITED_MARKER",
     "postFixTargeted": "PASS",
     "postFixFullRegression": "PASS",
-    "retryRequired": true
+    "retryRequired": false,
+    "liveOAuthIsolatedEffect": true,
+    "finalLiveAttempt": {
+      "primaryTool": "process_start_isolated",
+      "callCount": 1,
+      "toolSelection": "PASS",
+      "serverArrival": "PASS",
+      "processId": "xexec_9a3c35c3bdf438a6ab51cf691a0a3c9e",
+      "state": "EXITED",
+      "exitCode": 0,
+      "marker": "PASS",
+      "hostFallbackObserved": false,
+      "otherMutationObserved": false,
+      "safetyBlockObserved": false,
+      "absoluteHostPathDisclosed": false
+    },
+    "finalAuditRecordCount": 4,
+    "finalIsolatedBindingCount": 2,
+    "auditHmacVerified": true,
+    "auditSensitivePayloadFree": true,
+    "residualDockerContainers": 0,
+    "exactUnmapRevision5": "PASS",
+    "finalMappingCount": 0,
+    "workspaceRemoved": true,
+    "postCanaryFullRegression": "PASS"
+  },
+  "bs3g": {
+    "status": "ACCEPTED_CLOSED",
+    "scope": "Final OpenAI Safety / Tool-Selection Live Canary",
+    "subunits": [
+      "B-S3G-1"
+    ],
+    "productionMutation": false,
+    "liveOAuthIsolatedEffect": true,
+    "fallbackDecision": "NOT_TRIGGERED",
+    "finalMappingCount": 0
+  },
+  "bs3": {
+    "status": "ACCEPTED_CLOSED",
+    "acceptedDesignGates": {
+      "BUSINESS_S3_HOST_USER": "PASS",
+      "BUSINESS_S3_PERSONAL_NODE_ISOLATION": "PASS",
+      "BUSINESS_S3_SHARED_NODE_ROOT_POLICY": "PASS",
+      "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
+      "BUSINESS_S3_GIT_SEMANTICS": "PASS",
+      "BUSINESS_S3_GENERIC_EXEC": "PASS",
+      "BUSINESS_S3_ISOLATED_REGRESSION": "PASS",
+      "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PASS"
+    },
+    "subunits": [
+      "B-S3A",
+      "B-S3B",
+      "B-S3C",
+      "B-S3D",
+      "B-S3E",
+      "B-S3F",
+      "B-S3G"
+    ],
+    "productionMutation": false,
+    "productionV1Unchanged": true,
+    "finalMappingCount": 0,
+    "safetyFallback": "NOT_TRIGGERED",
+    "nextPhase": "B-S4 \u2014 Migration / Backup / Ops Integration"
   }
 }
