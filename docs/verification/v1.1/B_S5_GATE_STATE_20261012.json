@@ -1,0 +1,68 @@
+{
+  "phase": "B-S5",
+  "status": "B_S5A_ACCEPTED_B_S5_IN_PROGRESS",
+  "baseAcceptedHead": "f2bcf2b5221e658ae9c07dabd449df85dc694242",
+  "productionMutation": false,
+  "stagingMutation": false,
+  "productionFinalMigration": false,
+  "gates": {
+    "BUSINESS_S5A_THREE_LOGICAL_PARTICIPANTS": "PASS",
+    "BUSINESS_S5A_TEAM_CONTEXT_SEARCH": "PASS",
+    "BUSINESS_S5A_PARALLEL_REVISION_CONFLICT": "PASS",
+    "BUSINESS_S5A_STALE_DIGEST": "PASS",
+    "BUSINESS_S5A_PERSONAL_NODE_ISOLATION": "PASS",
+    "BUSINESS_S5A_REVOKE_REENROLL": "PASS",
+    "BUSINESS_S5A_DEGRADED_AUTHORITY_REUSE": "PASS",
+    "BUSINESS_S5A": "PASS",
+    "BUSINESS_S5_DISTRIBUTED_TEAM_E2E": "IN_PROGRESS_BS5B_REMOTE_COLLAB",
+    "BUSINESS_S5_REMOTE_COLLAB": "PENDING_BS5B",
+    "BUSINESS_S5_NODE_SECURITY": "IN_PROGRESS_BS5B_REMOTE_VALIDATION",
+    "BUSINESS_S5_FAILURE_RECOVERY": "IN_PROGRESS_BS5C_LIVE_FAILURE_E2E",
+    "BUSINESS_S5_OPENAI_TOOL_BEHAVIOR": "PENDING_BS5D_OPENAI_MATRIX"
+  },
+  "validation": {
+    "nodeVersion": "v24.21.0",
+    "BUSINESS_S5A_DISTRIBUTED_TEAM_NODE_SECURITY": "PASS",
+    "B_S5A_FULL_REGRESSION_V24": "PASS",
+    "B_S5A_GIT_DIFF_CHECK": "PASS",
+    "B_S5A_STAGED_SECRET_SCAN": "PASS"
+  },
+  "bs5a": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S5A_DISTRIBUTED_TEAM_NODE_SECURITY_REPORT_20261012.md",
+    "participantModel": {
+      "A": "ADMIN_PLUS_APPROVED_SHARED_NODE",
+      "B": "MEMBER_PLUS_APPROVED_PERSONAL_NODE",
+      "C": "MEMBER_PLUS_DISTINCT_APPROVED_PERSONAL_NODE"
+    },
+    "physicalThreeDeviceClaim": false,
+    "postgresVersion": "16-alpine",
+    "distinctAuthSubjects": 3,
+    "logicalRuntimeNodes": 3,
+    "teamProject": "bs5-team",
+    "sharedNodeVisibleToBC": true,
+    "personalNodeCrossMemberDiscoveryDenied": true,
+    "teamContextCrossMember": true,
+    "teamSearchCrossMember": true,
+    "runtimeNodeCheckpointProvenancePersisted": true,
+    "parallelSameRevisionRace": "ONE_COMMIT_ONE_BUSINESS_REVISION_CONFLICT",
+    "oldDigestFreshness": "STALE_TASK_STATE_CHANGED",
+    "crossMemberPersonalHostRouteDenied": true,
+    "revokedNodeRouteDenied": true,
+    "revokedNodeIdTerminal": true,
+    "replacementNodeApproved": true,
+    "degradedProjectAuthority": "BOUNDED_CACHED_LEASE_BACKEND_OUTAGE_ONLY",
+    "degradedAuthorityExpiry": "FAIL_CLOSED",
+    "productionMutation": false,
+    "stagingMutation": false,
+    "fullRegression": "PASS"
+  },
+  "deferred": {
+    "physicalThreeDeviceFleet": "B-S5B/B-S5C_WHERE_PRACTICAL",
+    "realRemoteGitGitHubCollaboration": "B-S5B",
+    "liveIntegratedSupabaseOutage": "B-S5C",
+    "branchProtectionCiReviewNonBypass": "B-S5B",
+    "mandatoryOpenAICanaryMatrix": "B-S5D"
+  },
+  "nextUnit": "B-S5B \u2014 Remote Collaboration / GitHub E2E Foundation: bind a real STANDARD Git repository to participant B PERSONAL_NODE workspace; perform clone/map/edit/stage/commit/fetch/ff-only pull/non-force push and Draft PR under real provider policy; append TEAM checkpoint and verify C sees latest context; prove branch protection/CI/review remain external authority; production remains frozen."
+}
