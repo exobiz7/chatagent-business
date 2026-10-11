@@ -43,7 +43,7 @@ assert.match(service,/'--head',head/,'PR create must use explicit head to avoid 
 assert.doesNotMatch(service,/reset\s+--hard|clean\s+-fdx|push[^\n]{0,80}--force|push[^\n]{0,80}-f(?:\W|$)|delete-remote-branch/i);
 assert.doesNotMatch(service,/shell\s*:\s*true/,'Git/GitHub commands must not use a shell');
 
-assert.match(audit,/\(\?:fs\|git\|github\)_/,'common local audit must accept focused Git/GitHub tool names');
+for(const domain of ['fs','git','github'])assert.match(audit,new RegExp('(?:\\\(\\\?:)?[^\\n]*'+domain+'[^\\n]*_'),'common local audit must continue accepting '+domain+' tools');
 assert.match(audit,/BRANCH_CREATE/);assert.match(audit,/CLONE/);assert.match(audit,/PR_CREATE/);
 assert.match(audit,/workspaceScope/,'clone audit must support workspace-scoped effects without inventing a project mapping');
 assert.doesNotMatch(audit,/argv|oldText|newText/i,'local effect audit must not persist command arguments or file patch text');

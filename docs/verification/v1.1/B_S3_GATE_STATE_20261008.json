@@ -1,6 +1,6 @@
 {
   "phase": "B-S3",
-  "status": "B_S3E1_ACCEPTED",
+  "status": "B_S3F1_ACCEPTED",
   "baseAcceptedHead": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
   "productionMutation": false,
   "gates": {
@@ -16,8 +16,8 @@
     "BUSINESS_S3_SEMANTIC_FILE_EFFECTS": "PASS",
     "BUSINESS_S3_GIT_SEMANTICS": "PASS",
     "BUSINESS_S3_GENERIC_EXEC": "PASS",
-    "BUSINESS_S3_ISOLATED_REGRESSION": "PENDING_BS3F1",
-    "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_LATER_UNIT",
+    "BUSINESS_S3_ISOLATED_REGRESSION": "PASS",
+    "BUSINESS_S3_OPENAI_SAFETY_CANARY": "PENDING_BS3G1",
     "BUSINESS_S3B1_DURABLE_DONOR_PARITY": "PASS",
     "BUSINESS_S3B1_DURABLE_CORE": "PASS",
     "BUSINESS_S3B2_HOST_PROCESS_CONTRACT": "PASS",
@@ -51,7 +51,12 @@
     "BUSINESS_S3D2_POST_CANARY_CLEANUP": "PASS",
     "BUSINESS_S3D": "PASS",
     "BUSINESS_S3E1_SHARED_ROOT_POLICY": "PASS",
-    "BUSINESS_S3E": "PASS"
+    "BUSINESS_S3E": "PASS",
+    "BUSINESS_S3F1_ISOLATED_CONTRACT": "PASS",
+    "BUSINESS_S3F1_ISOLATED_EFFECTS": "PASS",
+    "BUSINESS_S3F1_SHARED_PROCESS_FOLLOWUPS": "PASS",
+    "BUSINESS_S3F1_EXISTING_B5_REGRESSION": "PASS",
+    "BUSINESS_S3F": "PASS"
   },
   "routingContract": {
     "zeroEligible": "BUSINESS_RUNTIME_NODE_UNAVAILABLE",
@@ -140,7 +145,13 @@
     "BUSINESS_S3E1_SHARED_ROOT_POLICY": "PASS",
     "B_S3E1_NODE_VERSION": "v24.21.0",
     "B_S3E1_FULL_REGRESSION_V24": "PASS",
-    "B_S3E1_GIT_DIFF_CHECK": "PASS"
+    "B_S3E1_GIT_DIFF_CHECK": "PASS",
+    "BUSINESS_S3F1_ISOLATED_CONTRACT": "PASS",
+    "BUSINESS_S3F1_ISOLATED_EFFECTS": "PASS",
+    "BUSINESS_B5_ISOLATED_STANDARD_EXEC": "PASS",
+    "B_S3F1_NODE_VERSION": "v24.21.0",
+    "B_S3F1_FULL_REGRESSION_V24": "PASS",
+    "B_S3F1_GIT_DIFF_CHECK": "PASS"
   },
   "staging": {
     "existingBs2cFixturePreservedBeforeActivation": true,
@@ -217,7 +228,7 @@
     "mappingCount": 0,
     "auditRecordCount": 20
   },
-  "nextUnit": "B-S3F-1 — isolated execution regression: revalidate process_start_isolated against the accepted STANDARD Docker boundary, confirm no host-authority regression from B-S3A–E, and preserve production freeze.",
+  "nextUnit": "B-S3G-1 — final OpenAI safety/tool-selection live canary: exercise representative semantic tools, process_start_host, process_start_isolated, confirmation/block behavior, and server-arrival evidence through the connected ChatGPT OAuth app; decide whether the documented safety fallback is required before closing B-S3.",
   "bs3b1": {
     "status": "ACCEPTED_CLOSED",
     "report": "docs/verification/v1.1/B_S3B1_DURABLE_PROCESS_DONOR_PARITY_REPORT_20261008.md",
@@ -451,5 +462,39 @@
     "runtimeNodeIdentityMismatchDenied": true,
     "localEffectAudit": "HMAC_CHAINED_CONTENT_AND_HOST_PATH_FREE",
     "realMultiNodeE2EDeferredTo": "B-S5"
+  },
+  "bs3f1": {
+    "status": "ACCEPTED_CLOSED",
+    "report": "docs/verification/v1.1/B_S3F1_ISOLATED_EXECUTION_REGRESSION_REPORT_20261011.md",
+    "productionMutation": false,
+    "liveOAuthIsolatedEffect": false,
+    "existingDockerBackendReused": true,
+    "processIdNamespace": "xexec_<32hex>",
+    "sharedFollowupDispatcher": true,
+    "bindingRegistry": "OWNER_PRIVATE_HMAC_SEALED",
+    "projectProfile": "STANDARD_ONLY",
+    "sharedNodeRequiresBroadHostPower": false,
+    "hostUserFallbackObserved": false,
+    "networkMode": "NONE",
+    "readonlyRootfs": true,
+    "dockerSocketMounted": false,
+    "businessCredentialMounted": false,
+    "gitMountReadonlyWhenPresent": true,
+    "pidsLimit": 128,
+    "sessionsDurableAcrossRuntimeRecreation": false,
+    "localAudit": "HMAC_CHAINED_COMMAND_OUTPUT_CREDENTIAL_FREE",
+    "existingB5Regression": "PASS",
+    "fullRegression": "PASS"
+  },
+  "bs3f": {
+    "status": "ACCEPTED_CLOSED",
+    "scope": "Isolated Execution Regression + v1.1 Shared Process Contract",
+    "subunits": [
+      "B-S3F-1"
+    ],
+    "productionMutation": false,
+    "remainingB_S3Work": [
+      "OpenAI safety/tool-selection canary"
+    ]
   }
 }

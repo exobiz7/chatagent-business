@@ -440,6 +440,12 @@ export class BusinessExecManager{
   }
   if(session.state==="cleanup_failed")fail("EXEC_CLEANUP_FAILED");
  }
+ status({projectId,sessionId}){
+  const s=this.get(projectId,sessionId,"read_process");
+  return {sessionId:s.id,projectId:s.projectId,state:s.state,exitCode:s.exitCode,
+   startedAt:s.startedAt,finishedAt:s.finishedAt};
+ }
+
  async read({projectId,sessionId,afterSeq=0,waitMs=1000,maxOutputBytes=262144}){
   cleanInt(afterSeq,0,Number.MAX_SAFE_INTEGER,"EXEC_CURSOR_INVALID");
   cleanInt(waitMs,0,30000,"EXEC_WAIT_INVALID");
