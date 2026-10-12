@@ -1,6 +1,6 @@
 {
   "phase": "B-S5",
-  "status": "B_S5B_REMOTE_COLLAB_CORE_PASS_PROVIDER_GOVERNANCE_BLOCKED_B_S5_IN_PROGRESS",
+  "status": "B_S5C_DETERMINISTIC_PASS_LIVE_OAUTH_PENDING_B_S5_IN_PROGRESS",
   "baseAcceptedHead": "f2bcf2b5221e658ae9c07dabd449df85dc694242",
   "productionMutation": false,
   "stagingMutation": false,
@@ -17,7 +17,7 @@
     "BUSINESS_S5_DISTRIBUTED_TEAM_E2E": "IN_PROGRESS_BS5C_LIVE_FAILURE_E2E",
     "BUSINESS_S5_REMOTE_COLLAB": "IN_PROGRESS_EXTERNAL_PROVIDER_GOVERNANCE",
     "BUSINESS_S5_NODE_SECURITY": "IN_PROGRESS_BS5C_REMOTE_VALIDATION",
-    "BUSINESS_S5_FAILURE_RECOVERY": "PENDING_BS5C",
+    "BUSINESS_S5_FAILURE_RECOVERY": "IN_PROGRESS_LIVE_OAUTH_CANARY",
     "BUSINESS_S5_OPENAI_TOOL_BEHAVIOR": "PENDING_BS5D_OPENAI_MATRIX",
     "BUSINESS_S5B_REMOTE_COLLAB_CONTRACT": "PASS",
     "BUSINESS_S5B_REMOTE_GIT_WORKFLOW": "PASS",
@@ -27,7 +27,11 @@
     "BUSINESS_S5B_LOCAL_AUDIT": "PASS",
     "BUSINESS_S5B_CLEANUP": "PASS",
     "BUSINESS_S5B_BRANCH_PROTECTION_ENFORCEMENT": "BLOCKED_GITHUB_PRIVATE_PLAN",
-    "BUSINESS_S5B_REQUIRED_CI_REVIEW": "BLOCKED_NOT_CONFIGURED"
+    "BUSINESS_S5B_REQUIRED_CI_REVIEW": "BLOCKED_NOT_CONFIGURED",
+    "BUSINESS_S5C_FAILURE_RECOVERY_DETERMINISTIC": "PASS",
+    "BUSINESS_S5C_LIVE_OAUTH_OUTAGE": "PENDING_LIVE_CANARY",
+    "BUSINESS_S5C_LIVE_NODE_REVOKE": "DEFERRED_NO_OPERATOR_ADMIN_CREDENTIAL",
+    "BUSINESS_S5C_ISOLATED_REGRESSION": "PASS"
   },
   "validation": {
     "nodeVersion": "v24.21.0",
@@ -39,7 +43,11 @@
     "BUSINESS_S5B_REMOTE_COLLAB_LIVE": "PASS",
     "B_S5B_FULL_REGRESSION_V24": "PASS",
     "B_S5B_GIT_DIFF_CHECK": "PASS",
-    "B_S5B_STAGED_SECRET_SCAN": "PASS"
+    "B_S5B_STAGED_SECRET_SCAN": "PASS",
+    "BUSINESS_S5C_FAILURE_RECOVERY": "PASS",
+    "B_S5C_FULL_REGRESSION_V24": "PASS",
+    "B_S5C_GIT_DIFF_CHECK": "PASS",
+    "B_S5C_STAGED_SECRET_SCAN": "PASS"
   },
   "bs5a": {
     "status": "ACCEPTED_CLOSED",
@@ -78,7 +86,7 @@
     "branchProtectionCiReviewNonBypass": "EXTERNAL_PROVIDER_CAPABILITY_BLOCKER",
     "mandatoryOpenAICanaryMatrix": "B-S5D"
   },
-  "nextUnit": "B-S5C — Live Failure-Recovery / Node-Revoke E2E: exercise bounded degraded continuity with a live staging control path; prove local filesystem/Git/HOST_USER work during controlled backend outage, continuity mutation fails closed, node revoke denies new work, replacement/re-enrollment restores bounded authority, and isolated Docker still passes; keep GitHub provider-governance blocker explicit and production frozen.",
+  "nextUnit": "B-S5C live OAuth canary completion \u2014 arm committed B-S5C fixture on staging 31861; warm exact project/node lease with runtime_map_project + git_get_status, toggle local outage flag, then verify fs_create_file/git_create_branch/process_start_host/process_start_isolated remain bounded while continuity_start_task fails closed and continuity_get_context is UNVERIFIED; cleanup mapping/workspace/effects afterward. Production remains frozen.",
   "bs5b": {
     "status": "REMOTE_COLLAB_CORE_ACCEPTED_PROVIDER_GOVERNANCE_BLOCKED",
     "report": "docs/verification/v1.1/B_S5B_REMOTE_COLLAB_GITHUB_E2E_REPORT_20261012.md",
@@ -110,5 +118,27 @@
     "providerGovernanceBlocker": true,
     "publicCanaryCreated": false,
     "liveMutationRepeatedInCi": false
+  },
+  "bs5c": {
+    "status": "DETERMINISTIC_PASS_LIVE_OAUTH_PENDING",
+    "report": "docs/verification/v1.1/B_S5C_LIVE_FAILURE_RECOVERY_REPORT_20261012.md",
+    "productionMutation": false,
+    "stagingSupabaseMutation": false,
+    "globalSupabaseOutage": false,
+    "deterministicFilesystemDuringOutage": true,
+    "deterministicGitDuringOutage": true,
+    "deterministicHostUserDuringOutage": true,
+    "deterministicContinuityMutation": "FAIL_CLOSED",
+    "deterministicContinuityRead": "UNVERIFIED_CONTINUITY_UNAVAILABLE",
+    "deterministicOldNodeRevokeBlocksNewWork": true,
+    "deterministicReplacementNodeRecovery": true,
+    "deterministicIsolatedDocker": true,
+    "liveFixtureCatalogToolCount": 39,
+    "liveFixtureAddsPublicTool": false,
+    "liveOutageMechanism": "LOCAL_TRANSPORT_INJECTION_FLAG",
+    "liveAdminRevokeCredentialAvailable": false,
+    "oauthTokenExtraction": false,
+    "serviceRoleUsed": false,
+    "liveOAuthCanary": "PENDING"
   }
 }
