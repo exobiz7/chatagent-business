@@ -1,6 +1,6 @@
 {
   "phase": "B-S5",
-  "status": "B_S5D_FIXTURE_PREPARED_LIVE_MATRIX_PENDING_B_S5_IN_PROGRESS",
+  "status": "B_S5D_LIVE_MATRIX_ARMED_B_S5_IN_PROGRESS",
   "baseAcceptedHead": "f2bcf2b5221e658ae9c07dabd449df85dc694242",
   "productionMutation": false,
   "stagingMutation": false,
@@ -36,7 +36,7 @@
     "BUSINESS_S5C_POST_CANARY_CLEANUP": "PASS",
     "BUSINESS_S5D_OPENAI_MATRIX_CONTRACT": "PASS",
     "BUSINESS_S5D_FIXTURE_SMOKE": "PASS",
-    "BUSINESS_S5D_LIVE_OPENAI_MATRIX": "PENDING"
+    "BUSINESS_S5D_LIVE_OPENAI_MATRIX": "ARMED_PENDING_USER_EXECUTION"
   },
   "validation": {
     "nodeVersion": "v24.21.0",
@@ -63,7 +63,10 @@
     "BUSINESS_S5D_OPENAI_MATRIX_CONTRACT": "PASS",
     "BUSINESS_S5D_OPENAI_MATRIX_FIXTURE_SMOKE": "PASS",
     "B_S5D_FULL_REGRESSION_V24": "PASS",
-    "B_S5D_FULL_REGRESSION_SECONDS": 109.22
+    "B_S5D_FULL_REGRESSION_SECONDS": 109.22,
+    "B_S5D_LIVE_FIXTURE_HEALTH": "PASS",
+    "B_S5D_LIVE_MAPPING_REVISION": 7,
+    "B_S5D_LIVE_FOUNDATION_HEAD": "218a60a3aae0a6f7b9e040b713fc53907e572ea6"
   },
   "bs5a": {
     "status": "ACCEPTED_CLOSED",
@@ -102,7 +105,7 @@
     "branchProtectionCiReviewNonBypass": "EXTERNAL_PROVIDER_CAPABILITY_BLOCKER",
     "mandatoryOpenAICanaryMatrix": "B-S5D"
   },
-  "nextUnit": "B-S5D live OpenAI matrix \u2014 arm the committed bounded fixture on staging with one disposable clone/mapping, execute the 20 Accepted Design cases through actual ChatGPT Developer Mode, record selection/confirmation/safety/server-arrival/effect/postcondition for each, then cleanup exact mapping/branch/PR/workspace. Production remains frozen.",
+  "nextUnit": "B-S5D live matrix execution \u2014 run the exact 20-case prompt through the connected staging ChatAgent Business app, then independently reconcile server arrivals/audit/bindings/provider PR+branch/postconditions and cleanup mapping revision 7/workspace. Production remains frozen.",
   "bs5b": {
     "status": "REMOTE_COLLAB_CORE_ACCEPTED_PROVIDER_GOVERNANCE_BLOCKED",
     "report": "docs/verification/v1.1/B_S5B_REMOTE_COLLAB_GITHUB_E2E_REPORT_20261012.md",
@@ -198,7 +201,7 @@
     "cleanupTunnelPid": 99496
   },
   "bs5d": {
-    "status": "FIXTURE_PREPARED_LIVE_MATRIX_PENDING",
+    "status": "LIVE_MATRIX_ARMED",
     "report": "docs/verification/v1.1/B_S5D_OPENAI_CANARY_MATRIX_REPORT_20261013.md",
     "productionMutation": false,
     "publicToolCount": 39,
@@ -213,7 +216,17 @@
     "hostDestructiveExactDisposableScope": true,
     "isolatedSameRequestTerminalSettle": true,
     "serviceRoleUsed": false,
-    "liveMatrix": "PENDING",
-    "providerGovernanceBlockerStillOpen": true
+    "liveMatrix": "ARMED_PENDING_USER_EXECUTION",
+    "providerGovernanceBlockerStillOpen": true,
+    "liveFixtureArmed": true,
+    "liveFixturePid": 16295,
+    "liveMappingRevision": 7,
+    "liveProviderRepository": "exobiz7/chatagent-business-v11-canary",
+    "liveProviderMainBaseline": "b94b4640774ba17c8210ee0f35fe08ef6aba1ced",
+    "liveBranch": "bs5d-openai-matrix-20261013-0eccf6",
+    "liveInitialAuditRecordCount": 0,
+    "liveInitialHostBindingCount": 0,
+    "liveInitialIsolatedBindingCount": 0,
+    "liveInitialArrivalCount": 0
   }
 }

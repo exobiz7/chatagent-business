@@ -89,3 +89,23 @@ B-S5D implementation/fixture foundation: PASS.
 Actual OpenAI Developer Mode matrix: PENDING.
 
 `BUSINESS_S5_OPENAI_TOOL_BEHAVIOR` remains PENDING until all live case results and server-side postconditions are reconciled. Safety Compatibility Fallback is not triggered merely by a confirmation UI; it is considered only for reproducible blocking of an otherwise valid, bounded, supported workflow.
+
+## 8. Live staging armed state
+
+Foundation commit: `218a60a3aae0a6f7b9e040b713fc53907e572ea6`.
+
+Disposable provider repository: `exobiz7/chatagent-business-v11-canary` (PRIVATE).
+
+Provider `main` baseline: `b94b4640774ba17c8210ee0f35fe08ef6aba1ced`; open PR baseline: 0.
+
+Disposable branch: `bs5d-openai-matrix-20261013-0eccf6`.
+
+Local project mapping: `bs2a-team-staging` -> current Mac Studio PERSONAL_NODE, mapping revision 7. The workspace is a dedicated disposable clone; provider `main` is not changed by setup.
+
+Initial live health: `matrixCanaryEnabled=true`, `mappingCount=1`, `auditRecordCount=0`, `hostBindingCount=0`, `isolatedBindingCount=0`, `arrivalSequence=[]`.
+
+Staging 31861 PID: `16295`. Production 31850 PID `8871` and tunnel 51961 PID `99496` are unchanged.
+
+Pre-created local-only temp fixtures are excluded through `.git/info/exclude`, so the Git baseline remains clean. Their SHA preconditions are fixed in the live prompt; they are not provider artifacts.
+
+Current live step: execute the 20-case matrix through the connected ChatGPT Developer Mode app. No runtime map/unmap is part of the matrix; cleanup is operator-side after evidence capture.
