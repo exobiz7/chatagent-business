@@ -117,7 +117,7 @@ function buildMcp(identity,token){
 }
 const server=http.createServer(async(req,res)=>{
  if(req.method==='GET'&&(req.url==='/.well-known/oauth-protected-resource'||req.url==='/.well-known/oauth-protected-resource/mcp'))return json(res,200,{resource,authorization_servers:[issuer],scopes_supported:['openid','email','profile'],bearer_methods_supported:['header']});
- if(req.method==='GET'&&req.url==='/healthz')return json(res,200,{status:'live',fixture:true,canaryEnabled,outageMode:outage(),nodeName:nodeIdentity.nodeName,mappingCount:workspaceRegistry.listMappings().length,projectLeaseCount:projectAuthCache.snapshot().length,routeLeaseCount:routeLease.size,auditRecordCount:audit.readRecent(300).length,isolatedBindingCount:isolatedBindings.snapshot().length,arrivalSequence:arrivals.slice(-30)});
+ if(req.method==='GET'&&req.url==='/healthz')return json(res,200,{status:'live',fixture:true,canaryEnabled,outageMode:outage(),nodeName:nodeIdentity.nodeName,mappingCount:workspaceRegistry.listMappings().length,projectLeaseCount:projectAuthCache.snapshot().length,routeLeaseCount:routeLease.size,auditRecordCount:audit.readRecent(200).length,isolatedBindingCount:isolatedBindings.snapshot().length,arrivalSequence:arrivals.slice(-30)});
  if(req.url!=='/mcp'||req.method!=='POST')return json(res,404,{error:'NOT_FOUND'});
  let identity;try{identity=await verify(req);}catch{return json(res,401,{error:'UNAUTHORIZED'},{'www-authenticate':`Bearer resource_metadata="${metadataUrl}"`});}
  let body;try{body=(await boundedJSONBody(req,{maxBytes:350000,oversizeCode:'BODY_LIMIT'})).body;}catch(e){return json(res,e.message==='BODY_LIMIT'?413:400,{error:e.message});}
