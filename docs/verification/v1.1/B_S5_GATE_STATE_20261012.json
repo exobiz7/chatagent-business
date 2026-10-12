@@ -1,6 +1,6 @@
 {
   "phase": "B-S5",
-  "status": "B_S5C_ACCEPTED_CLOSED_B_S5_IN_PROGRESS",
+  "status": "B_S5D_FIXTURE_PREPARED_LIVE_MATRIX_PENDING_B_S5_IN_PROGRESS",
   "baseAcceptedHead": "f2bcf2b5221e658ae9c07dabd449df85dc694242",
   "productionMutation": false,
   "stagingMutation": false,
@@ -18,7 +18,7 @@
     "BUSINESS_S5_REMOTE_COLLAB": "IN_PROGRESS_EXTERNAL_PROVIDER_GOVERNANCE",
     "BUSINESS_S5_NODE_SECURITY": "PASS",
     "BUSINESS_S5_FAILURE_RECOVERY": "PASS",
-    "BUSINESS_S5_OPENAI_TOOL_BEHAVIOR": "PENDING_BS5D_OPENAI_MATRIX",
+    "BUSINESS_S5_OPENAI_TOOL_BEHAVIOR": "PENDING_BS5D_LIVE_MATRIX",
     "BUSINESS_S5B_REMOTE_COLLAB_CONTRACT": "PASS",
     "BUSINESS_S5B_REMOTE_GIT_WORKFLOW": "PASS",
     "BUSINESS_S5B_TEAM_CHECKPOINT_READBACK": "PASS",
@@ -33,7 +33,10 @@
     "BUSINESS_S5C_LIVE_NODE_REVOKE": "COVERED_BY_EXISTING_CONTROL_PLANE_E2E_NO_HIDDEN_ADMIN_AUTHORITY",
     "BUSINESS_S5C_ISOLATED_REGRESSION": "PASS",
     "BUSINESS_S5C_LIVE_FIXTURE_ARMED": "CLOSED_CLEANED",
-    "BUSINESS_S5C_POST_CANARY_CLEANUP": "PASS"
+    "BUSINESS_S5C_POST_CANARY_CLEANUP": "PASS",
+    "BUSINESS_S5D_OPENAI_MATRIX_CONTRACT": "PASS",
+    "BUSINESS_S5D_FIXTURE_SMOKE": "PASS",
+    "BUSINESS_S5D_LIVE_OPENAI_MATRIX": "PENDING"
   },
   "validation": {
     "nodeVersion": "v24.21.0",
@@ -56,7 +59,11 @@
     "B_S5C_FIRST_EXPIRED_LEASE_FAIL_CLOSED": "PASS",
     "B_S5C_EXACT_UNMAP_REVISION_6": "PASS",
     "B_S5C_POST_CANARY_CLEANUP": "PASS",
-    "B_S5C_POST_CLEANUP_FULL_REGRESSION_V24": "PASS"
+    "B_S5C_POST_CLEANUP_FULL_REGRESSION_V24": "PASS",
+    "BUSINESS_S5D_OPENAI_MATRIX_CONTRACT": "PASS",
+    "BUSINESS_S5D_OPENAI_MATRIX_FIXTURE_SMOKE": "PASS",
+    "B_S5D_FULL_REGRESSION_V24": "PASS",
+    "B_S5D_FULL_REGRESSION_SECONDS": 109.22
   },
   "bs5a": {
     "status": "ACCEPTED_CLOSED",
@@ -95,7 +102,7 @@
     "branchProtectionCiReviewNonBypass": "EXTERNAL_PROVIDER_CAPABILITY_BLOCKER",
     "mandatoryOpenAICanaryMatrix": "B-S5D"
   },
-  "nextUnit": "B-S5D \u2014 Mandatory OpenAI canary matrix: execute the Accepted Design semantic/power-tool matrix through actual ChatGPT Developer Mode, record selection/confirmation/safety/server-arrival/postconditions, keep the GitHub provider-governance blocker explicit, and do not mutate production.",
+  "nextUnit": "B-S5D live OpenAI matrix \u2014 arm the committed bounded fixture on staging with one disposable clone/mapping, execute the 20 Accepted Design cases through actual ChatGPT Developer Mode, record selection/confirmation/safety/server-arrival/effect/postcondition for each, then cleanup exact mapping/branch/PR/workspace. Production remains frozen.",
   "bs5b": {
     "status": "REMOTE_COLLAB_CORE_ACCEPTED_PROVIDER_GOVERNANCE_BLOCKED",
     "report": "docs/verification/v1.1/B_S5B_REMOTE_COLLAB_GITHUB_E2E_REPORT_20261012.md",
@@ -189,5 +196,24 @@
     "cleanupProductionPid": 8871,
     "cleanupStagingPid": 82263,
     "cleanupTunnelPid": 99496
+  },
+  "bs5d": {
+    "status": "FIXTURE_PREPARED_LIVE_MATRIX_PENDING",
+    "report": "docs/verification/v1.1/B_S5D_OPENAI_CANARY_MATRIX_REPORT_20261013.md",
+    "productionMutation": false,
+    "publicToolCount": 39,
+    "mandatoryUniqueToolNames": 19,
+    "mandatoryCases": 20,
+    "hostCases": 2,
+    "fixtureAddsPublicTool": false,
+    "semanticFileActualHandlers": true,
+    "semanticGitActualHandlers": true,
+    "continuityReadActualHandlers": true,
+    "hostBenignExactScope": true,
+    "hostDestructiveExactDisposableScope": true,
+    "isolatedSameRequestTerminalSettle": true,
+    "serviceRoleUsed": false,
+    "liveMatrix": "PENDING",
+    "providerGovernanceBlockerStillOpen": true
   }
 }
