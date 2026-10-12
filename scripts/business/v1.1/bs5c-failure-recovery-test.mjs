@@ -21,6 +21,11 @@ import {SupabaseBusinessContinuityStore} from './continuity/supabase-business-co
 
 const repo=fileURLToPath(new URL('../../../',import.meta.url));
 const l1=join(repo,'scripts/l1'),business=join(repo,'scripts/business'),v11=join(business,'v1.1');
+const liveFixtureSource=readFileSync(join(v11,'bs5c-live-failure-fixture-server.mjs'),'utf8');
+assert.match(liveFixtureSource,/BS5C_AUTO_OUTAGE_AFTER_STATUS/);
+assert.match(liveFixtureSource,/if\(t\.name==='git_get_status'[\s\S]{0,900}autoOutageAfterStatus&&![\s\S]{0,200}writeFileSync\(outageFlag/);
+assert.match(liveFixtureSource,/new BusinessProjectAuthorizationCache\(\{ttlMs:300000/);
+console.log('PASS live fixture can auto-inject outage only after successful normal Git status without changing the 300-second product authority lease');
 const root=realpathSync(mkdtempSync(join(tmpdir(),'business-bs5c-')));chmodSync(root,0o700);
 const projectRoot=join(root,'project'),binDir=join(root,'bin'),auditDir=join(root,'audit'),hostState=join(root,'host'),isolatedState=join(root,'isolated');
 for(const p of [projectRoot])mkdirSync(p);for(const p of [binDir,auditDir,hostState,isolatedState])mkdirSync(p,{mode:0o700});

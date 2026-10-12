@@ -1,5 +1,5 @@
 import http from 'node:http';
-import {existsSync} from 'node:fs';
+import {existsSync,writeFileSync} from 'node:fs';
 import {createHash,randomUUID} from 'node:crypto';
 import {join} from 'node:path';
 import {createRemoteJWKSet,jwtVerify} from 'jose';
@@ -39,7 +39,7 @@ const supabaseUrl=publicConfig.url,publishableKey=publicConfig.publishableKey;
 const nodeIdentityPath=process.env.BS3A_NODE_IDENTITY_PATH||'',mappingStateDir=process.env.BS3A_MAPPING_STATE_DIR||'';
 const workspaceRootId=process.env.BS3A_WORKSPACE_ROOT_ID||'',workspaceRootPath=process.env.BS3A_WORKSPACE_ROOT_PATH||'';
 const stateDir=process.env.BS5C_STATE_DIR||'',outageFlag=process.env.BS5C_OUTAGE_FLAG||join(stateDir,'outage.flag');
-const canaryEnabled=process.env.BS5C_ENABLE_CANARY==='1',canaryProject=process.env.BS5C_CANARY_PROJECT||'',canaryWorkspaceRelative=process.env.BS5C_CANARY_WORKSPACE_RELATIVE||'';
+const canaryEnabled=process.env.BS5C_ENABLE_CANARY==='1',autoOutageAfterStatus=process.env.BS5C_AUTO_OUTAGE_AFTER_STATUS==='1',canaryProject=process.env.BS5C_CANARY_PROJECT||'',canaryWorkspaceRelative=process.env.BS5C_CANARY_WORKSPACE_RELATIVE||'';
 const mapOperationId=process.env.BS5C_MAP_OPERATION_ID||'',unmapOperationId=process.env.BS5C_UNMAP_OPERATION_ID||'';
 const gitBinary=process.env.BS5C_GIT_BIN||'/usr/bin/git';
 const offlineFile='bs5c-offline.txt',offlineContent='BS5C_LOCAL_FILE_OK\n',offlineBranch='bs5c-offline-work';
@@ -101,7 +101,7 @@ function buildMcp(identity,token){
   if(t.name==='runtime_list_nodes'&&!outage())return result(await fetchBusinessRuntimeList({supabaseUrl,publishableKey,accessToken:token,limit:args?.limit??50}));
   if(t.name==='runtime_map_project'&&canaryEnabled&&!outage()){exact(args?.projectId===canaryProject&&args?.runtimeNodeId===nodeIdentity.nodeId&&args?.workspaceRootId===workspaceRootId&&args?.workspaceRelativePath===canaryWorkspaceRelative&&args?.operationId===mapOperationId&&args?.expectedGitRemoteUrl===undefined);return result(await mappingService.mapProject(args));}
   if(t.name==='runtime_unmap_project'&&canaryEnabled&&!outage()){exact(args?.projectId===canaryProject&&args?.runtimeNodeId===nodeIdentity.nodeId&&args?.operationId===unmapOperationId&&Number.isSafeInteger(args?.expectedMappingRevision));return result(await mappingService.unmapProject(args));}
-  if(t.name==='git_get_status'&&canaryEnabled){assertProject(args);return result(await gitService.getStatus({authenticatedMemberKey:identity.sub,...args}));}
+  if(t.name==='git_get_status'&&canaryEnabled){assertProject(args);const value=await gitService.getStatus({authenticatedMemberKey:identity.sub,...args});if(autoOutageAfterStatus&&!outage())writeFileSync(outageFlag,'AUTO_AFTER_GIT_STATUS\n',{flag:'wx',mode:0o600});return result(value);}
   if(t.name==='fs_create_file'&&canaryEnabled&&outage()){assertProject(args);exact(args?.relativePath===offlineFile&&args?.content===offlineContent);return result(await fileService.createFile({authenticatedMemberKey:identity.sub,...args}));}
   if(t.name==='git_create_branch'&&canaryEnabled&&outage()){assertProject(args);exact(args?.branchName===offlineBranch&&(args?.startPoint===undefined||args.startPoint==='HEAD'));return result(await gitService.createBranch({authenticatedMemberKey:identity.sub,...args}));}
   if(t.name==='process_start_host'&&canaryEnabled&&outage()){assertProject(args);exact(args?.executable===hostExecutable&&Array.isArray(args?.argv)&&args.argv.length===1&&args.argv[0]===hostArg&&args?.cwd==='.'&&UUID.test(args?.idempotencyKey??''));return result(await processService.startHost({authenticatedMemberKey:identity.sub,...args,timeoutMs:Math.min(args.timeoutMs??5000,5000)}));}
@@ -117,7 +117,7 @@ function buildMcp(identity,token){
 }
 const server=http.createServer(async(req,res)=>{
  if(req.method==='GET'&&(req.url==='/.well-known/oauth-protected-resource'||req.url==='/.well-known/oauth-protected-resource/mcp'))return json(res,200,{resource,authorization_servers:[issuer],scopes_supported:['openid','email','profile'],bearer_methods_supported:['header']});
- if(req.method==='GET'&&req.url==='/healthz')return json(res,200,{status:'live',fixture:true,canaryEnabled,outageMode:outage(),nodeName:nodeIdentity.nodeName,mappingCount:workspaceRegistry.listMappings().length,projectLeaseCount:projectAuthCache.snapshot().length,routeLeaseCount:routeLease.size,auditRecordCount:audit.readRecent(200).length,isolatedBindingCount:isolatedBindings.snapshot().length,arrivalSequence:arrivals.slice(-30)});
+ if(req.method==='GET'&&req.url==='/healthz')return json(res,200,{status:'live',fixture:true,canaryEnabled,autoOutageAfterStatus,outageMode:outage(),nodeName:nodeIdentity.nodeName,mappingCount:workspaceRegistry.listMappings().length,projectLeaseCount:projectAuthCache.snapshot().length,routeLeaseCount:routeLease.size,auditRecordCount:audit.readRecent(200).length,isolatedBindingCount:isolatedBindings.snapshot().length,arrivalSequence:arrivals.slice(-30)});
  if(req.url!=='/mcp'||req.method!=='POST')return json(res,404,{error:'NOT_FOUND'});
  let identity;try{identity=await verify(req);}catch{return json(res,401,{error:'UNAUTHORIZED'},{'www-authenticate':`Bearer resource_metadata="${metadataUrl}"`});}
  let body;try{body=(await boundedJSONBody(req,{maxBytes:350000,oversizeCode:'BODY_LIMIT'})).body;}catch(e){return json(res,e.message==='BODY_LIMIT'?413:400,{error:e.message});}
@@ -126,4 +126,4 @@ const server=http.createServer(async(req,res)=>{
 });
 async function shutdown(){try{if(isolatedInitialized)await isolatedService.close();}catch{}try{hostProcesses.stopAll();}catch{}server.close(()=>process.exit(0));setTimeout(()=>process.exit(1),2000).unref();}
 process.on('SIGTERM',()=>void shutdown());process.on('SIGINT',()=>void shutdown());
-server.listen(port,'127.0.0.1',()=>console.log(JSON.stringify({event:'bs5c_live_fixture_started',port,canaryEnabled,outageMode:outage(),mappingCount:workspaceRegistry.listMappings().length})));
+server.listen(port,'127.0.0.1',()=>console.log(JSON.stringify({event:'bs5c_live_fixture_started',port,canaryEnabled,autoOutageAfterStatus,outageMode:outage(),mappingCount:workspaceRegistry.listMappings().length})));
