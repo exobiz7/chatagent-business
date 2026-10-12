@@ -1,6 +1,6 @@
 {
   "phase": "B-S5",
-  "status": "B_S5C_DETERMINISTIC_PASS_LIVE_OAUTH_PENDING_B_S5_IN_PROGRESS",
+  "status": "B_S5C_LIVE_FIXTURE_ARMED_WARMUP_PENDING_B_S5_IN_PROGRESS",
   "baseAcceptedHead": "f2bcf2b5221e658ae9c07dabd449df85dc694242",
   "productionMutation": false,
   "stagingMutation": false,
@@ -29,9 +29,10 @@
     "BUSINESS_S5B_BRANCH_PROTECTION_ENFORCEMENT": "BLOCKED_GITHUB_PRIVATE_PLAN",
     "BUSINESS_S5B_REQUIRED_CI_REVIEW": "BLOCKED_NOT_CONFIGURED",
     "BUSINESS_S5C_FAILURE_RECOVERY_DETERMINISTIC": "PASS",
-    "BUSINESS_S5C_LIVE_OAUTH_OUTAGE": "PENDING_LIVE_CANARY",
+    "BUSINESS_S5C_LIVE_OAUTH_OUTAGE": "ARMED_WARMUP_PENDING",
     "BUSINESS_S5C_LIVE_NODE_REVOKE": "DEFERRED_NO_OPERATOR_ADMIN_CREDENTIAL",
-    "BUSINESS_S5C_ISOLATED_REGRESSION": "PASS"
+    "BUSINESS_S5C_ISOLATED_REGRESSION": "PASS",
+    "BUSINESS_S5C_LIVE_FIXTURE_ARMED": "PASS"
   },
   "validation": {
     "nodeVersion": "v24.21.0",
@@ -47,7 +48,9 @@
     "BUSINESS_S5C_FAILURE_RECOVERY": "PASS",
     "B_S5C_FULL_REGRESSION_V24": "PASS",
     "B_S5C_GIT_DIFF_CHECK": "PASS",
-    "B_S5C_STAGED_SECRET_SCAN": "PASS"
+    "B_S5C_STAGED_SECRET_SCAN": "PASS",
+    "B_S5C_LIVE_FIXTURE_HEALTH": "PASS",
+    "B_S5C_COMMITTED_STAGING_HEAD": "d18be9180e94c5f65ac2ba5e7a7195f78e9380fc"
   },
   "bs5a": {
     "status": "ACCEPTED_CLOSED",
@@ -86,7 +89,7 @@
     "branchProtectionCiReviewNonBypass": "EXTERNAL_PROVIDER_CAPABILITY_BLOCKER",
     "mandatoryOpenAICanaryMatrix": "B-S5D"
   },
-  "nextUnit": "B-S5C live OAuth canary completion \u2014 arm committed B-S5C fixture on staging 31861; warm exact project/node lease with runtime_map_project + git_get_status, toggle local outage flag, then verify fs_create_file/git_create_branch/process_start_host/process_start_isolated remain bounded while continuity_start_task fails closed and continuity_get_context is UNVERIFIED; cleanup mapping/workspace/effects afterward. Production remains frozen.",
+  "nextUnit": "B-S5C live OAuth warm-up \u2014 through the connected staging ChatAgent app, exact-map bs2a-team-staging to the current Mac Studio node/workspace and call git_get_status once. This must populate project/node leases while outageMode=false. After server-side verification, operator toggles only the local outage flag and runs the outage canary. Production remains frozen.",
   "bs5b": {
     "status": "REMOTE_COLLAB_CORE_ACCEPTED_PROVIDER_GOVERNANCE_BLOCKED",
     "report": "docs/verification/v1.1/B_S5B_REMOTE_COLLAB_GITHUB_E2E_REPORT_20261012.md",
@@ -139,6 +142,16 @@
     "liveAdminRevokeCredentialAvailable": false,
     "oauthTokenExtraction": false,
     "serviceRoleUsed": false,
-    "liveOAuthCanary": "PENDING"
+    "liveOAuthCanary": "PENDING",
+    "liveFixtureArmed": true,
+    "liveFixtureHead": "d18be9180e94c5f65ac2ba5e7a7195f78e9380fc",
+    "liveFixturePid": 56782,
+    "liveFixtureOutageMode": false,
+    "liveFixtureMappingCount": 0,
+    "liveFixtureProjectLeaseCount": 0,
+    "liveFixtureRouteLeaseCount": 0,
+    "liveFixtureAuditRecordCount": 0,
+    "liveFixtureArrivalCount": 0,
+    "liveWarmup": "PENDING"
   }
 }

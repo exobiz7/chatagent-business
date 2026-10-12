@@ -172,3 +172,30 @@ Deterministic failure/recovery foundation: PASS.
 Live OAuth outage/local-work canary: PENDING.
 
 Therefore top-level `BUSINESS_S5_FAILURE_RECOVERY` remains IN_PROGRESS until live OAuth evidence and post-canary cleanup are independently verified.
+
+## 11. Live fixture armed state
+
+Committed staging code:
+
+`d18be9180e94c5f65ac2ba5e7a7195f78e9380fc`
+
+Staging 31861 was replaced only after the committed fix was pushed.
+
+Initial armed health:
+
+- `canaryEnabled=true`
+- `outageMode=false`
+- `mappingCount=0`
+- `projectLeaseCount=0`
+- `routeLeaseCount=0`
+- `auditRecordCount=0`
+- `isolatedBindingCount=0`
+- `arrivalSequence=[]`
+
+Staging PID: `56782`.
+
+Production PID `8871` and tunnel PID `99496` were unchanged.
+
+A first startup attempt exposed an out-of-range health-only `audit.readRecent(300)` call. The audit contract allows at most 200 records. The server had not received any OAuth tool call or effect before that failure. The health query was corrected to 200, targeted B-S5C re-passed, fix commit `d18be9180e94c5f65ac2ba5e7a7195f78e9380fc` was pushed, and only then was the staging fixture re-armed.
+
+Current live step: OAuth NORMAL-mode warm-up pending.
