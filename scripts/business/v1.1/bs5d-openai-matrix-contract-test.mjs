@@ -34,4 +34,5 @@ assert.doesNotMatch(fixture,/service_role|SERVICE_ROLE/i,'fixture must not embed
 console.log('PASS mandatory B-S5D unique tool matrix is wired to actual bounded handlers with truthful annotations');
 console.log('PASS HOST_USER matrix has distinct benign and exact disposable destructive scenarios without widening the public surface');
 console.log('PASS GitHub matrix remains non-force/non-merge and provider policy authoritative');
+assert.match(fixture,/marker:'BS5D_ISOLATED_OK'/);
 console.log('BUSINESS_S5D_OPENAI_MATRIX_CONTRACT=PASS');
