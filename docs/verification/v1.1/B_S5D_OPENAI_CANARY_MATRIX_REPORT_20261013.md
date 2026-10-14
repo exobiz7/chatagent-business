@@ -2,7 +2,7 @@
 
 Date: 2026-10-13
 Phase: B-S5D
-Status: FIXTURE_PREPARED / LIVE_MATRIX_PENDING
+Status: ACCEPTED / CLOSED
 Production mutation: NO
 Production v1.0: FROZEN
 
@@ -86,11 +86,11 @@ The B-S5B evidence remains authoritative: the current private GitHub plan does n
 
 B-S5D implementation/fixture foundation: PASS.
 
-Actual OpenAI Developer Mode matrix: PENDING.
+Actual OpenAI Developer Mode execution matrix: PASS — 20/20 cases.
 
-`BUSINESS_S5_OPENAI_TOOL_BEHAVIOR` remains PENDING until all live case results and server-side postconditions are reconciled. Safety Compatibility Fallback is not triggered merely by a confirmation UI; it is considered only for reproducible blocking of an otherwise valid, bounded, supported workflow.
+`BUSINESS_S5_OPENAI_TOOL_BEHAVIOR=PASS`. Confirmation UI visibility was not observable from the tool-result evidence and is recorded as `NOT_OBSERVABLE_FROM_TOOL_RESULT`; no claim is made that a confirmation UI did or did not appear. Safety Compatibility Fallback was not triggered.
 
-## 8. Live staging armed state
+## 8. Historical live staging armed state
 
 Foundation commit: `218a60a3aae0a6f7b9e040b713fc53907e572ea6`.
 
@@ -108,4 +108,79 @@ Staging 31861 PID: `16295`. Production 31850 PID `8871` and tunnel 51961 PID `99
 
 Pre-created local-only temp fixtures are excluded through `.git/info/exclude`, so the Git baseline remains clean. Their SHA preconditions are fixed in the live prompt; they are not provider artifacts.
 
-Current live step: execute the 20-case matrix through the connected ChatGPT Developer Mode app. No runtime map/unmap is part of the matrix; cleanup is operator-side after evidence capture.
+Historical live step at arm time: execute the 20-case matrix through the connected ChatGPT Developer Mode app. Runtime map/unmap was not part of the matrix; cleanup was operator-side after evidence capture.
+
+
+## 9. Final OpenAI matrix result
+
+Final execution result: **20 PASS / 0 FAIL / 0 BLOCKED / 0 SKIP_DEPENDENCY**.
+
+All 20 cases selected the expected public Business tool. There were no unexpected tool selections, no force/merge/reset/clean operation, no retry or semantic bypass, and no absolute host path exposure. Cases 1-19 passed in the original full matrix. Case 20 was completed by one bounded isolated-only re-canary after the fixture/runtime faults described below were isolated.
+
+Key immutable live artifacts from the full matrix:
+
+- filesystem replacement SHA-256: `dc75070bc6ab2b22058ca243d8a1a8bee8ea1615bbfd17261fb9578775afdd36`;
+- Git canary file SHA-256: `4b418f696a819aa03395f2f4de14ff916162242e6df22f4595f9eca0b9b7a712`;
+- staged-diff SHA-256: `b002c46e7cd20f5385a1afa764ddf50e82c1dff51dae47e3f4cbdb9b0e7b90f0`;
+- feature commit: `3824150c5530a181bee9f0db312b22149a6cf28c`;
+- feature branch: `bs5d-openai-matrix-20261013-0eccf6`;
+- Draft PR: `#4`, created against provider `main`, never merged.
+
+HOST_USER benign and explicitly destructive disposable cases each started exactly once and exited 0. The destructive case was restricted to `/bin/rm -- bs5d-host-delete.txt` inside the mapped disposable project; no recursive, absolute-path, shell, or alternate-command widening occurred.
+
+Confirmation behavior was recorded as required by the Accepted Design. The tool-result channel did not expose whether the ChatGPT UI displayed a confirmation control, so the evidence value is `NOT_OBSERVABLE_FROM_TOOL_RESULT`. This is an observation limit, not a claimed safety block or confirmation bypass.
+
+## 10. CASE 20 failure isolation and final PASS
+
+The first full-matrix CASE 20 selected `process_start_isolated` correctly and the server actually committed the isolated effect, but the response failed with `BS3G1_ISOLATED_RESULT_INVALID`. Owner-private audit and binding evidence proved the initial isolated execution reached `ISSUED -> COMPLETED / OK / COMMITTED` with process `xexec_539e2613602f1d65312aa5a418890473` and left no Docker residual. Root cause was fixture-only marker validation: the command emitted `BS5D_ISOLATED_OK` while the reused B-S3G-1 settle helper defaulted to `BS3G1_ISOLATED_OK`.
+
+The fixture was minimally corrected to pass `marker:'BS5D_ISOLATED_OK'`. Fix commit: `9462671ebd14f53dfabae15a60f00a745e67eff9`. Targeted B-S5D regression and full regression both passed after the fix.
+
+A subsequent isolated-only attempt returned generic internal failure. This attempt is not counted as an OpenAI tool-behavior failure: tunnel evidence showed HTTP 502 `connection_refused` with `upstream_response_received=false`, and the staging fixture PID had already exited. No new isolated audit record or binding was created. The failure was therefore classified as staging-fixture availability, not a tool-selection, safety, Docker, or product-authority failure.
+
+After rearming both the staging fixture and B-S0 staging tunnel as persistent PPID-1 processes, CASE 20 was executed exactly once more with no follow-up tool call:
+
+- actual tool: `process_start_isolated`;
+- processId: `xexec_8747d59bcb5bbdadd9a9cdfaf89a9092`;
+- state: `EXITED`;
+- exitCode: `0`;
+- output marker: `BS5D_ISOLATED_OK\n`;
+- unexpected tool calls: 0; retries/bypass: 0; absolute host path exposure: false.
+
+Independent server evidence matched the user-visible result: the process-local arrival sequence contained exactly `process_start_isolated`, HMAC audit seq 25/26 recorded `ISSUED -> COMPLETED / OK / COMMITTED`, the isolated binding registry revision advanced to 2 with the exact final processId and mapping revision 7, and the staging tunnel forwarded the request without a 502. Final CASE 20: **PASS**.
+
+## 11. Provider postcondition and cleanup
+
+Before cleanup, independent provider readback showed Draft PR #4 OPEN/unmerged, base `main`, head `bs5d-openai-matrix-20261013-0eccf6`, head OID `3824150c5530a181bee9f0db312b22149a6cf28c`, and exactly one changed file `bs5d-git.txt`. Provider `main` remained `b94b4640774ba17c8210ee0f35fe08ef6aba1ced`.
+
+Cleanup was exact and bounded:
+
+- PR #4 closed unmerged;
+- exact remote feature branch deleted;
+- provider `main` remained `b94b4640774ba17c8210ee0f35fe08ef6aba1ced`;
+- mapping revision 7 exact-unmapped with operation `75500000-0000-4000-8000-000000000002`;
+- mapping count after cleanup: 0;
+- disposable workspace `bs5d_matrix_workspace` removed after containment/non-symlink checks;
+- no B-S5D isolated Docker residual remained.
+
+Staging 31861 was restored to the existing B-S3G-1 effect-disabled fixture: `safetyCanaryEnabled=false`, `processEffectTools=[]`, `mappingCount=0`. The staging tunnel remained separate from the production tunnel.
+
+## 12. Post-cleanup regression
+
+Exact tested HEAD before documentation closure: `9462671ebd14f53dfabae15a60f00a745e67eff9`.
+
+Authoritative Node: `v24.21.0`.
+
+`npm run test:ci` -> **TEST_CI_EXIT=0**, 100 seconds. B-S5D contract and no-effect fixture smoke were included and passed.
+
+## 13. Production observation
+
+B-S5D performed **no production mutation** and no production restart. At final read-only inspection after Desktop Commander reconnection, no production application listener was observed on TCP 31850. The running tunnel on PID `40401` was the separate B-S0 staging tunnel, not a production tunnel. This production runtime observation is external/pre-existing relative to the B-S5D cleanup and is not treated as a B-S5D effect. No attempt was made to start or restart production without explicit authorization.
+
+## 14. Closure decision
+
+B-S5D Mandatory OpenAI Canary Matrix: **ACCEPTED / CLOSED**.
+
+`BUSINESS_S5_OPENAI_TOOL_BEHAVIOR=PASS`.
+
+B-S5 as a whole remains **IN_PROGRESS / EXTERNAL PROVIDER GOVERNANCE BLOCKED**. B-S5B remains authoritative that the current private GitHub plan does not provide the required private-repository branch-protection/ruleset enforcement and that required CI/review checks are not configured. B-S5D does not waive or convert those external provider requirements. Safety Compatibility Fallback remains **NOT_TRIGGERED**.
