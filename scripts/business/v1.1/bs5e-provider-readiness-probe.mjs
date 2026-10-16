@@ -44,7 +44,7 @@ const workflowPermissions=ghGet(`repos/${repo}/actions/permissions/workflow`);
 let checkRuns=[];
 let annotationMessages=[];
 if(head){
-  const checks=ghGet(`repos/${repo}/commits/${head}/check-runs`);
+  const checks=ghGet(`repos/${repo}/commits/${head}/check-runs?filter=latest&per_page=100`);
   if(checks.ok&&Array.isArray(checks.data?.check_runs)){
     for(const check of checks.data.check_runs){
       const row={id:check.id,name:check.name,status:check.status,conclusion:check.conclusion||null,runnerAssigned:null,annotations:[]};
@@ -65,7 +65,19 @@ const hostedCiStatus=billingBlocked?'BLOCKED_GITHUB_BILLING_OR_SPENDING_LIMIT':r
 
 const branchProtection=classifyGovernance(protection);
 const repositoryRulesets=classifyGovernance(rulesets);
-const providerGovernanceReady=branchProtection.status==='AVAILABLE'&&repositoryRulesets.status==='AVAILABLE';
+const protectionPolicy=protection.ok?{
+  active:true,
+  strictStatusChecks:Boolean(protection.data?.required_status_checks?.strict),
+  requiredStatusContexts:Array.isArray(protection.data?.required_status_checks?.contexts)?[...protection.data.required_status_checks.contexts].sort():[],
+  requiredApprovingReviewCount:Number(protection.data?.required_pull_request_reviews?.required_approving_review_count||0),
+  dismissStaleReviews:Boolean(protection.data?.required_pull_request_reviews?.dismiss_stale_reviews),
+  enforceAdmins:Boolean(protection.data?.enforce_admins?.enabled),
+  requiredConversationResolution:Boolean(protection.data?.required_conversation_resolution?.enabled),
+  requiredLinearHistory:Boolean(protection.data?.required_linear_history?.enabled),
+  allowForcePushes:Boolean(protection.data?.allow_force_pushes?.enabled),
+  allowDeletions:Boolean(protection.data?.allow_deletions?.enabled)
+}:null;
+const providerGovernanceReady=Boolean(protectionPolicy?.active&&protectionPolicy.strictStatusChecks&&protectionPolicy.requiredStatusContexts.length>0&&protectionPolicy.requiredApprovingReviewCount>=1&&protectionPolicy.dismissStaleReviews&&protectionPolicy.enforceAdmins&&protectionPolicy.requiredConversationResolution&&protectionPolicy.requiredLinearHistory&&!protectionPolicy.allowForcePushes&&!protectionPolicy.allowDeletions);
 const hostedCiReady=hostedCiStatus==='PASS';
 
 const result={
@@ -75,6 +87,7 @@ const result={
   readOnly:true,
   providerGovernance:{
     branchProtection,
+    protectionPolicy,
     rulesets:repositoryRulesets,
     ready:providerGovernanceReady
   },

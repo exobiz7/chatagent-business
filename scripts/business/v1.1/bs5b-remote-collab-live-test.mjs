@@ -74,10 +74,15 @@ try{
   const initialMain=mainOid();
   const existing=run(gh,['api',`repos/${repository}/git/ref/heads/${branchName}`],{allowFailure:true});
   assert.notEqual(existing.status,0,'generated B-S5B branch unexpectedly already exists');
-  const protection=run(gh,['api',`repos/${repository}/branches/main/protection`],{allowFailure:true});
-  assert.notEqual(protection.status,0,'private-plan canary unexpectedly exposes classic protection; update B-S5B evidence');
-  assert.match(String(protection.stderr),/Upgrade to GitHub Pro|HTTP 403/);
-  console.log('PASS provider reports private-repo branch-protection capability unavailable on the current GitHub plan');
+  const protection=run(gh,['api',`repos/${repository}/branches/main/protection`]);
+  const protectionJson=JSON.parse(protection.stdout);
+  assert.equal(protectionJson.required_status_checks?.strict,true);
+  assert.ok((protectionJson.required_status_checks?.contexts??[]).includes('provider-guard'));
+  assert.ok((protectionJson.required_pull_request_reviews?.required_approving_review_count??0)>=1);
+  assert.equal(protectionJson.enforce_admins?.enabled,true);
+  assert.equal(protectionJson.allow_force_pushes?.enabled,false);
+  assert.equal(protectionJson.allow_deletions?.enabled,false);
+  console.log('PASS provider main enforces public-repository required CI/review/admin protection without force/delete bypass');
 
   const cloned=await gitService.cloneRepository({authenticatedMemberKey:memberKey,runtimeNodeId:nodeB,workspaceRootId,repositoryUrl,directoryName:cloneDir});
   assert.equal(cloned.cloned,true);clonePath=join(workspace,cloneDir);
@@ -87,7 +92,7 @@ try{
   const initial=await gitService.getStatus({...routed,maxEntries:50});assert.equal(initial.branch,'main');assert.deepEqual(initial.entries,[]);
   await gitService.fetchRemote({...routed,remoteName:'origin'});
   const pulled=await gitService.pullFfOnly(routed);assert.equal(pulled.commitOid,initialMain);
-  console.log('PASS participant B PERSONAL_NODE semantic clone/map/fetch/ff-only-pull uses the real private GitHub remote');
+  console.log('PASS participant B PERSONAL_NODE semantic clone/map/fetch/ff-only-pull uses the real governed GitHub remote');
 
   await gitService.createBranch({...routed,branchName});await gitService.switchBranch({...routed,branchName});
   const created=await fileService.createFile({...routed,relativePath:fileName,content:`BS5B_REMOTE_COLLAB_OK ${suffix}\n`});
@@ -143,7 +148,7 @@ try{
   console.log(`B_S5B_LIVE_PR=${pr.url}`);
   console.log(`B_S5B_BRANCH=${branchName}`);
   console.log(`B_S5B_COMMIT=${committed.commitOid}`);
-  console.log('B_S5B_PROVIDER_PROTECTION=UNAVAILABLE_PRIVATE_PLAN');
+  console.log('B_S5B_PROVIDER_PROTECTION=ENFORCED_PUBLIC_REPO');
   console.log('BUSINESS_S5B_REMOTE_COLLAB_LIVE=PASS');
 } finally {
   if(container)run(dockerBin,['rm','-f',container],{allowFailure:true});

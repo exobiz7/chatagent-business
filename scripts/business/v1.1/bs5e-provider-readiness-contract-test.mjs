@@ -10,6 +10,13 @@ assert.match(probe,/commits\/\$\{head\}\/check-runs/);
 assert.match(probe,/check-runs\/\$\{check\.id\}\/annotations/);
 assert.match(probe,/BLOCKED_GITHUB_PRIVATE_PLAN/);
 assert.match(probe,/BLOCKED_GITHUB_BILLING_OR_SPENDING_LIMIT/);
+assert.match(probe,/requiredApprovingReviewCount/);
+assert.match(probe,/strictStatusChecks/);
+assert.match(probe,/enforceAdmins/);
+assert.match(probe,/allowForcePushes/);
+assert.match(probe,/allowDeletions/);
+assert.match(probe,/filter=latest/);
+
 assert.doesNotMatch(probe,/['"](?:POST|PUT|PATCH|DELETE)['"]/i,'probe must not contain mutating HTTP methods');
 assert.doesNotMatch(probe,/auth\s+refresh|repo\s+edit|pr\s+close|pr\s+merge|api[^\n]*--method|api[^\n]*-X/i,'probe must not contain provider mutation/auth-scope escalation commands');
 assert.doesNotMatch(probe,/service[_-]?role/i,'probe must not introduce service-role authority');

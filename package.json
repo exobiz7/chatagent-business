@@ -74,8 +74,9 @@
     "test:business:bs5b:live": "BUSINESS_TEST_GITHUB_LIVE=1 node scripts/business/v1.1/bs5b-remote-collab-live-test.mjs",
     "test:business:bs5c": "node scripts/business/v1.1/bs5c-failure-recovery-test.mjs && node --check scripts/business/v1.1/bs5c-live-failure-fixture-server.mjs",
     "test:business:bs5d": "node scripts/business/v1.1/bs5d-openai-matrix-contract-test.mjs && node --check scripts/business/v1.1/bs5d-openai-matrix-live-fixture-server.mjs && node scripts/business/v1.1/bs5d-openai-matrix-fixture-smoke-test.mjs",
-    "test:business:bs5e": "node scripts/business/v1.1/bs5e-provider-readiness-contract-test.mjs",
-    "probe:business:bs5e": "node scripts/business/v1.1/bs5e-provider-readiness-probe.mjs --repo=exobiz7/chatagent-business --branch=main"
+    "test:business:bs5e": "node scripts/business/v1.1/bs5e-provider-readiness-contract-test.mjs && node scripts/business/v1.1/bs5e-hosted-ci-contract-test.mjs",
+    "probe:business:bs5e": "node scripts/business/v1.1/bs5e-provider-readiness-probe.mjs --repo=exobiz7/chatagent-business --branch=main",
+    "test:ci:hosted": "node scripts/business/v1.1/run-hosted-ci.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",
