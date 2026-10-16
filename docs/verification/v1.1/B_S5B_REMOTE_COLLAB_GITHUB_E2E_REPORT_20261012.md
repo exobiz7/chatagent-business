@@ -393,3 +393,32 @@ Focus:
 - production remains frozen.
 
 The GitHub provider-policy blocker remains tracked independently and must not be silently converted to PASS.
+## 13. Provider-governance resolution — 2026-10-16
+
+The provider-governance blocker recorded in sections 10-12 was later resolved by explicit user authorization to convert both the canonical and canary repositories to PUBLIC rather than upgrade GitHub Pro. The historical private-plan 403 remains valid evidence for the earlier state but no longer describes current provider capability.
+
+Current governed canary `main` uses strict `provider-guard` required CI, one approving review, stale-review dismissal, administrator enforcement, conversation resolution and linear history, with force push and branch deletion disabled.
+
+Disposable PR #5 proved independent CI/review enforcement: `provider-guard=SUCCESS` while `reviewDecision=REVIEW_REQUIRED` and `mergeStateStatus=BLOCKED`. It was closed unmerged and its feature branch was deleted.
+
+B-S5B live was then rerun under this protection and passed:
+
+```text
+BUSINESS_S5B_REMOTE_COLLAB_LIVE=PASS
+B_S5B_PROVIDER_PROTECTION=ENFORCED_PUBLIC_REPO
+```
+
+Latest protected-provider live artifacts:
+
+- PR #6: CLOSED / Draft / unmerged;
+- feature commit: `b2c0850fda3aad1ff2345d00c68059f4b2e5a4fa`;
+- feature branch: `bs5b-remote-collab-20261012-7ed41a`, deleted after verification;
+- provider `main`: `aa952db02e8d8890238bdbeba454b1898a7b595e`, unchanged by the collaboration canary.
+
+Therefore the earlier top-level provider blocker is superseded:
+
+```text
+BUSINESS_S5B_BRANCH_PROTECTION_ENFORCEMENT=PASS
+BUSINESS_S5B_REQUIRED_CI_REVIEW=PASS
+BUSINESS_S5_REMOTE_COLLAB=PASS
+```
