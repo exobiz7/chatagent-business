@@ -1,0 +1,39 @@
+{
+  "phase": "B-S6",
+  "workUnit": "B-S6A",
+  "status": "B_S6A_READONLY_PREFLIGHT_DELIVERED_PRODUCTION_NO_GO",
+  "verdict": "NO_GO",
+  "productionCutoverStarted": false,
+  "productionMutation": false,
+  "finalSqliteExportPerformed": false,
+  "supabaseFinalImportPerformed": false,
+  "pr9ReadyOrMerged": false,
+  "releaseTagCreated": false,
+  "acceptedDesign": "docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md#37",
+  "report": "docs/verification/v1.1/B_S6A_PRE_CUTOVER_READINESS_REPORT_20261018.md",
+  "baselineHead": "1412dbeea1ffe89bb6e8dfb6cc305ac5fe0877d4",
+  "gates": {
+    "B_S6A_B5_ACCEPTED": "PASS",
+    "B_S6A_BASELINE_HOSTED_CI": "PASS_RECHECK_EXACT_RELEASE_HEAD",
+    "B_S6A_READONLY_PREFLIGHT_CONTRACT": "PASS",
+    "B_S6A_PRODUCTION_STATUS": "BLOCKED_STALE_RECORD",
+    "B_S6A_PRODUCTION_DOCTOR": "PENDING_AUTHORIZED_MAINTENANCE",
+    "B_S6A_PRODUCTION_APP_HEALTH": "BLOCKED_PORT_31850_ABSENT",
+    "B_S6A_PRODUCTION_TUNNEL": "PASS_HTTP_200",
+    "B_S6A_SOURCE_SQLITE": "PRESENT_NOT_FINAL_EXPORTED",
+    "B_S6A_FRESH_VERIFIED_BACKUP": "PENDING_MAINTENANCE_WINDOW",
+    "B_S6A_SUPABASE_TARGET_PROOF": "PENDING_CUTOVER_AUTHORIZATION",
+    "B_S6A_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED"
+  },
+  "nextUnit": "Owner-authorized read-only diagnosis and separate bounded recovery plan for v1.0 stale runtime record; do not repair/restart/delete state without explicit approval. Rerun exact-head preflight after reconciliation. No B-S6 final migration, PR Ready/merge or tag without approval.",
+  "validation": {
+    "nodeVersion": "v24.21.0",
+    "B_S6A_FULL_RELEASE_HOST_REGRESSION": "PASS",
+    "B_S6A_FULL_RELEASE_HOST_SECONDS": 103,
+    "B_S6A_INITIAL_READONLY_PROBE": "NO_GO_STALE_RECORD_AND_UNREACHABLE_PRODUCTION",
+    "B_S6A_READONLY_PREFLIGHT_CONTRACT": "PASS",
+    "B_S6A_INITIAL_PROVIDER_CHECKS": "PASS_ON_1412DBE_BASELINE",
+    "B_S6A_HOSTED_MODE_REGRESSION": "PASS",
+    "B_S6A_HOSTED_MODE_SECONDS": 75
+  }
+}
