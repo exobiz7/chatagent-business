@@ -1,7 +1,7 @@
 {
   "phase": "B-S6",
-  "workUnit": "B-S6C",
-  "status": "B_S6C_V1_PRODUCTION_RECOVERY_ACCEPTED_CLOSED_B_S6_CUTOVER_PENDING",
+  "workUnit": "B-S6D",
+  "status": "B_S6D_LOCAL_READINESS_PASS_PUBLISHED_APP_FRESH_CHAT_PENDING",
   "verdict": "PRECHECK_ELIGIBLE_NOT_CUTOVER_AUTHORIZED",
   "productionCutoverStarted": false,
   "productionMutation": true,
@@ -37,9 +37,15 @@
     "B_S6C_PRODUCTION_STATUS_DOCTOR": "PASS",
     "B_S6C_PUBLISHED_FRESH_CHAT_SMOKE": "PENDING_OTHER_WORKSPACE",
     "B_S6C_REBOOT_PERSISTENCE": "NOT_TESTED",
-    "B_S6_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED"
+    "B_S6_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED",
+    "B_S6D_PRODUCTION_LOCAL_HEALTH": "PASS",
+    "B_S6D_PRODUCTION_TUNNEL": "PASS_HTTP_200",
+    "B_S6D_HISTORICAL_PUBLISHED_APP_SMOKE": "PASS_HISTORICAL_NOT_CURRENT",
+    "B_S6D_CURRENT_PUBLISHED_APP_FRESH_CHAT": "PENDING_EXTERNAL_UI",
+    "B_S6D_USER_PATH_TUNNEL_ARRIVAL": "PENDING_LIVE_TOOL_RESULT",
+    "B_S6D_CUTOVER_APPROVAL": "NOT_GRANTED"
   },
-  "nextUnit": "B-S6D read-only published-app fresh-chat smoke and final cutover dossier; no final migration, cutover, PR Ready/merge or tagging without explicit separate owner approval.",
+  "nextUnit": "Obtain one authorized Business published-app fresh-chat read-only smoke result; reconcile production tunnel arrival; do not claim the smoke gate PASS from local health alone. Production cutover remains separately gated.",
   "validation": {
     "nodeVersion": "v24.21.0",
     "B_S6A_FULL_RELEASE_HOST_REGRESSION": "PASS",
@@ -70,5 +76,6 @@
   },
   "reportBS6B": "docs/verification/v1.1/B_S6B_V1_RUNTIME_RECONCILIATION_REPORT_20261028.md",
   "reportBS6C": "docs/verification/v1.1/B_S6C_V1_PRODUCTION_RECOVERY_REPORT_20261028.md",
-  "productionRecoveryOnly": true
+  "productionRecoveryOnly": true,
+  "reportBS6D": "docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_PLAN_20261029.md"
 }
