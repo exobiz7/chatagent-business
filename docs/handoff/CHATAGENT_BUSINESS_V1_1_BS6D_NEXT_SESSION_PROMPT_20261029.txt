@@ -1,0 +1,38 @@
+You are taking over the ChatAgent Business v1.1 — SMB Edition project as the release/readiness supervisor from the B-S6D boundary.
+
+MANDATORY START:
+Use authorized Remote Desktop Commander to read this exact local handoff FIRST:
+  /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business/docs/handoff/CHATAGENT_BUSINESS_V1_1_BS6D_SESSION_HANDOFF_20261029.md
+
+Canonical local repo:
+  /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+GitHub:
+  https://github.com/exobiz7/chatagent-business
+Working branch:
+  feat/business-v1.1-bs3-runtime-routing
+Last verified PRE-HANDOFF documentation baseline:
+  f71d024a5e40961cb46b7ae52bb4fc9d0a3cbf06
+A newer handoff-documentation commit may exist. Verify real HEAD, origin, worktree, PR #9 and hosted CI; do not reset to the older SHA or infer that main is current.
+PR #9 is intentionally OPEN/DRAFT/unmerged.
+
+READ IN ORDER:
+1. The current handoff document above.
+2. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json (current B-S6 gate).
+3. docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_PLAN_20261029.md (exact first task).
+4. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md, sections 37 and 39.
+5. docs/verification/v1.1/B_S6C_V1_PRODUCTION_RECOVERY_REPORT_20261028.md.
+Other B-S6A/B-S6B/B-S5/B6 reports only as needed; see handoff document's reading map.
+
+CURRENT FACTS VERIFIED ON 2026-10-29:
+B-S5 ACCEPTED/CLOSED. B-S6C v1.0 recovery ACCEPTED/CLOSED. v1.0 production Status RUNNING/healthy PID 38634, 31850 /health HTTP 200, tunnel 51950 HTTP 200; staging healthy. Latest B-S6D status is LOCAL_READINESS_PASS/PUBLISHED_APP_FRESH_CHAT_PENDING_EXTERNAL_UI, not live smoke PASS. Exact-head B-S6A read-only probe had blockers=[] and PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED. GitHub hosted push/PR on f71d024 succeeded. Actual macOS LaunchAgent server service is 'not running' although PID 38634 runs with PPID 1: reboot auto-recovery NOT verified. No v1.1 release, migration, PR Ready/merge or release tag. Business ChatGPT published-app read-only fresh-chat after recovery still requires actual external UI evidence.
+
+FIRST WORK:
+1. Inspect current canonical state read-only and reconcile only differences.
+2. Continue B-S6D, not B-S6 final cutover. Arrange a NEW read-only fresh chat inside the authorized ChatGPT Business account's PUBLISHED v1.0 ChatAgent Business app. It must invoke business_status once and read_file docs READ_ONLY docs/README.txt once; continuity_open only if the authorized existing taskId/contextDigest is actually available. Do not fabricate IDs or treat missing optional fixture as PASS.
+3. Ask the Business user session to report actual tool/results, selected tool, safety/connector blocks, retries, UI confirmation if visible and accidental sensitive path/credential leakage. No mutations or retries. Independently correlate the returned tool results to production tunnel arrival and operator Status. If you cannot access that other account or evidence, provide the exact bounded paste-in prompt and mark PENDING_EXTERNAL_UI; never invent success.
+4. If evidence passes, record B-S6D results/gate and run only necessary changed-scope tests. Keep nonverified items nonverified. Stop before any production-changing step.
+
+SAFETY / AUTHORITY:
+No v1.0 restart, runtime-record modification, reboot test, original SQLite/backup write, Supabase final migration/import, protected-main edit, PR #9 Ready/merge, release tag, app republish or B-S6 cutover without a NEW explicit approval. B-S6C v1.0 recovery approval is not cutover authorization. Do not commit private data into the PUBLIC repo. Accepted Design §37's 33-step release sequence and rollback remain normative. Do not restart completed B-S0..B-S5 tasks without evidence.
+
+If this intake is complete and state matches, resume the specified first task without an extra ACK loop. Report verified facts, actual limitations, and the next concrete user action only when external Business-account interaction is required.

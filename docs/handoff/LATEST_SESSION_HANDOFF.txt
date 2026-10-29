@@ -1,0 +1,26 @@
+ChatAgent Business v1.1 — CURRENT session handoff pointer
+Captured: 2026-10-29 KST
+Status: B-S6D local readiness PASS; published-app fresh-chat PENDING_EXTERNAL_UI; B-S6 cutover NOT AUTHORIZED.
+
+Canonical repo:
+/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+
+READ FIRST (current, verified):
+1. docs/handoff/CHATAGENT_BUSINESS_V1_1_BS6D_SESSION_HANDOFF_20261029.md
+2. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
+3. docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_PLAN_20261029.md
+4. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md (§37, §39)
+
+Paste into new session:
+docs/handoff/CHATAGENT_BUSINESS_V1_1_BS6D_NEXT_SESSION_PROMPT_20261029.txt
+
+Branch:
+feat/business-v1.1-bs3-runtime-routing
+Verified PRE-HANDOFF baseline HEAD:
+f71d024a5e40961cb46b7ae52bb4fc9d0a3cbf06
+The final handoff commit may be newer; always verify current HEAD/origin/worktree.
+
+PR #9 remains DRAFT/unmerged. v1.0 production is running; v1.1 has not been released.
+No production cutover, final migration, PR Ready/merge, release tag or published-app republish is authorized.
+
+Historical 2026-10-08 B-S3A handoff files remain preserved in docs/handoff. They are no longer current phase authority.
