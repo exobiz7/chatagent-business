@@ -1,23 +1,30 @@
-ChatAgent Business v1.1 — LATEST PHASE / DECISION POINTER
+ChatAgent Business v1.1 — LATEST VERIFIED PHASE
 Updated: 2026-11-01 KST
-B-S6D published v1.0 Business app read-only smoke: ACCEPTED/CLOSED.
-B-S6E pre-cutover readiness audit + hardened health gate: ACCEPTED/CLOSED.
-B-S6 production cutover: NO-GO / NOT STARTED / NOT AUTHORIZED.
-v1.0.0 remains production.
+B-S6D published v1.0 fresh-chat smoke: ACCEPTED/CLOSED.
+B-S6E hardened preflight audit: ACCEPTED/CLOSED.
+B-S6F cutover operations plan, fail-closed worksheet and disposable lifecycle: ACCEPTED/CLOSED.
+B-S6 PRODUCTION CUTOVER: NO-GO / NOT AUTHORIZED / NOT STARTED.
+v1.0.0 remains the active production product.
 
-Canonical: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Branch: feat/business-v1.1-bs3-runtime-routing; stacked PRs #6 -> #7 -> #8 -> #9.
-Exact B-S6E code-bearing CI authority: 7e2e53ec9d4b792cb9859c83b67bd4748b8dc52e
-Local release-host and local hosted-mode CI PASS; GitHub run 41313940821 SUCCESS; B-S6A blockers=[].
-Docs-only closure commit may advance HEAD; verify current HEAD/upstream/CI before subsequent work.
+Canonical repo: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Working branch: feat/business-v1.1-bs3-runtime-routing.
+Protected PR stack: #6 -> #7 -> #8 -> #9; no PR merge/Ready authorized.
+B-S6F code-bearing CI authority: 77f82dbeeea01446d4b2929a8220d62ad43a880d
+Mac Studio full test:ci PASS (104.63s), hosted PASS (87.57s).
+GitHub macOS runs 41316360392 + 41316363727 SUCCESS.
+Read-only exact-head B-S6A blockers=[] at that code-bearing head.
+Docs-only closure HEAD may be newer: verify actual branch, HEAD, origin and CI.
 
 READ FIRST:
-1. docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md
-2. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
-3. docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md
-4. docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md
-5. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37 and 39
-6. docs/handoff/CHATAGENT_BUSINESS_V1_1_BS6D_SESSION_HANDOFF_20261029.md (historical)
+1. docs/verification/v1.1/B_S6F_CUTOVER_OPERATIONALIZATION_REPORT_20261101.md
+2. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+3. docs/verification/v1.1/B_S6F_CUTOVER_DECISION_WORKSHEET_20261101.json
+4. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
+5. docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md
+6. docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md
+7. docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md
+8. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37 and 39
 
-Next unit: B-S6F operationalization and independent release decision; do not infer cutover authority.
-No v1.0 restart/reboot, SQLite final export, Supabase production import, PR Ready/merge, v1.1 release tag or app republish is authorized.
+Next: B-S6G owner-assisted production-target proof / release integration plan / restart persistence strategy.
+Production v1 stop or reboot, fresh SQLite export, production Supabase import, PR Ready/merge,
+release tag or v1.1 app republish NOT AUTHORIZED.

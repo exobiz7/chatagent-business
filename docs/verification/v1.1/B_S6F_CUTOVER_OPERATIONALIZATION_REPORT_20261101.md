@@ -2,7 +2,7 @@
 
 Date: 2026-11-01 KST
 Work unit: B-S6F
-Verdict: **OPERATIONAL PLAN + FAIL-CLOSED VALIDATOR READY; RELEASE CUTOVER NO-GO**.
+Verdict: **B-S6F OPERATIONAL PREPARATION ACCEPTED/CLOSED; RELEASE CUTOVER NO-GO**.
 Canonical authority: Accepted Design 2026-10-05 section 37 required order and section 39 hard invariants.
 Production change: NONE (only local repo documentation, tests and read-only operator/CI probes).
 
@@ -46,3 +46,20 @@ Production change: NONE (only local repo documentation, tests and read-only oper
 B-S6G — final owner-assisted production target identity and precise operator rehearsal **without** live migration, plus preapproved integration PR release candidate and restart-persistence plan. The owner must supply or authorize authorized production target details/identities via secure app/console controls and designate the maintenance/rollback owners. Do not run a release cutover until a separate owner authorization is explicitly received.
 
 This report is a technical evidence index; review the exact final Git HEAD and CI associated with this unit before treating B-S6F as accepted/closed.
+
+## 6. Verification closure / 2026-11-01
+
+**Actual B-S6F code-bearing commit**: 77f82dbeeea01446d4b2929a8220d62ad43a880d.
+
+- Mac Studio full release-host npm run test:ci: PASS/exit 0 (104.63 seconds), includes real Docker/PostgreSQL effect coverage and new B-S6F tests.
+- Mac Studio npm run test:ci:hosted: PASS/exit 0 (87.57 seconds).
+- GitHub macOS hosted CI on exact code-bearing HEAD: runs 41316360392 and 41316363727 both completed SUCCESS.
+- Exact HEAD read-only B-S6A preflight after both CI completions: local=origin, clean, canonical+canary protected main and required checks true, production /health and tunnel /healthz+/readyz all ready, blockers=[] and PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED.
+- Exact 33-step worksheet structurally valid; full release host/hosted CI PASS, operating v1 Status PASS; source Doctor (current), unreviewed release-head approval, Supabase target, maintenance/roles, importer/rollback and real reboot persistence remain PENDING. Current step 3 PENDING, steps 4–33 NOT_STARTED.
+- All documented tool and process life-cycle checks are **nonproduction or read-only**; the production v1 server/tunnel were not restarted or modified.
+
+B-S6F technical/preparation unit: **ACCEPTED/CLOSED**, with operational release blockers intentionally retained.
+
+B-S6 live cutover: **NO-GO / NOT STARTED / NOT AUTHORIZED**.
+
+After this documentation-only closure commit, its new HEAD may differ from the verified B-S6F code-bearing SHA; do not infer that a later *final release* SHA is approved from this evidence. Any new code-bearing change requires exact-head tests and final release pinning.

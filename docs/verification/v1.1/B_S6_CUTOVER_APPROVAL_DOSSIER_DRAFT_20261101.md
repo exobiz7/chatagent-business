@@ -51,3 +51,9 @@ The new B-S6E audit index is B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md. It p
 ## B-S6E audit closure recorded
 
 B-S6E code-bearing HEAD 7e2e53e PASS: Mac Studio test:ci 102.46s, local hosted-mode 76.21s, GitHub run 41313940821 SUCCESS, exact-head B-S6A preflight blockers=[] after hardened /health + /readyz validation. This closes the pre-cutover **audit** only; GO requires the separately approved source/target/restart/rollback/window/PR-stack gates detailed above. Documentation closure can advance HEAD without changing audited release code.
+
+## B-S6F operations preparation closure — 2026-11-01
+
+The 33-step operator runbook, bounded read-only worksheet validator, and disposable process/record safety rehearsal were completed in B-S6F. Code-bearing commit 77f82db: Mac Studio full CI PASS/104.63s; local hosted CI PASS/87.57s; GitHub macOS runs 41316360392 and 41316363727 SUCCESS; exact-head B-S6A blockers=[]. See B_S6F_CUTOVER_OPERATIONALIZATION_REPORT_20261101.md and docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md.
+
+**This closes B-S6F technical preparation only, not B-S6 release.** Final source Doctor, authorized production Supabase target, maintenance-window fresh stopped-source backup, operator approval, real reboot persistence, integration PR reviewer plan and actual migration remain unresolved. Keep B-S6 cutover NO-GO; no PR ready/merge or v1.1 production effect.

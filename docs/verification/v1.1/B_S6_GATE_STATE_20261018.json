@@ -1,7 +1,7 @@
 {
   "phase": "B-S6",
-  "workUnit": "B-S6E",
-  "status": "B_S6E_PRE_CUTOVER_AUDIT_ACCEPTED_CLOSED_CUTOVER_NO_GO",
+  "workUnit": "B-S6F",
+  "status": "B_S6F_PREPARATION_ACCEPTED_CLOSED_PRODUCTION_CUTOVER_NO_GO",
   "verdict": "PRECHECK_ELIGIBLE_NOT_CUTOVER_AUTHORIZED",
   "productionCutoverStarted": false,
   "productionMutation": true,
@@ -56,9 +56,19 @@
     "B_S6E_RESTART_PERSISTENCE": "NOT_TESTED",
     "B_S6E_OWNER_WINDOW_OPERATORS": "NOT_SET",
     "B_S6E_GITHUB_HOSTED_CI": "PASS_COMMIT_7E2E53E_RUN_41313940821",
-    "B_S6E_EXACT_HEAD_PREFLIGHT": "PASS_PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED"
+    "B_S6E_EXACT_HEAD_PREFLIGHT": "PASS_PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED",
+    "B_S6F_RUNBOOK_33_STEP": "PASS_DOCUMENTED_EXACT_37_ORDER_NOT_EXECUTED",
+    "B_S6F_WORKSHEET_VALIDATOR": "PASS_FAIL_CLOSED_NO_AUTO_AUTHORITY",
+    "B_S6F_DISPOSABLE_LIFECYCLE": "PASS_NONPRODUCTION_NO_REBOOT_CLAIM",
+    "B_S6F_FULL_RELEASE_HOST_CI": "PASS_COMMIT_77F82DB",
+    "B_S6F_HOSTED_MACOS_CI": "PASS_TWO_RUNS_COMMIT_77F82DB",
+    "B_S6F_PRECUTOVER_READONLY_PROBE": "PASS_BLOCKERS_0_NOT_CUTOVER_AUTHORIZED",
+    "B_S6F_PRODUCTION_TARGET": "NOT_PROVEN",
+    "B_S6F_RESTART_PERSISTENCE": "NOT_TESTED_ACTUAL_REBOOT",
+    "B_S6F_PROTECTED_RELEASE_PR_INTEGRATION": "STRATEGY_PROPOSED_OWNER_REVIEW_REQUIRED",
+    "B_S6F_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED"
   },
-  "nextUnit": "B-S6F production cutover operationalization: exact final HEAD CI, isolated restart/rollback procedure, verified production target and operator plan, protected PR-stack strategy, then separate explicit owner approval.",
+  "nextUnit": "B-S6G owner-assisted release operational proof: production Supabase target identity, rollback and operator plan, isolated v1.1 restart persistence/PR integration review, then explicit separate cutover authorization.",
   "validation": {
     "nodeVersion": "v24.21.0",
     "B_S6A_FULL_RELEASE_HOST_REGRESSION": "PASS",
@@ -97,13 +107,26 @@
     "B_S6E_LOCAL_HOSTED_CI_SECONDS": 76.21,
     "B_S6E_CODE_BEARING_CI_HEAD": "7e2e53ec9d4b792cb9859c83b67bd4748b8dc52e",
     "B_S6E_GITHUB_HOSTED_RUN_ID": 41313940821,
-    "B_S6E_EXACT_HEAD_BLOCKERS": []
+    "B_S6E_EXACT_HEAD_BLOCKERS": [],
+    "B_S6F_CODE_BEARING_HEAD": "77f82dbeeea01446d4b2929a8220d62ad43a880d",
+    "B_S6F_FULL_RELEASE_HOST_CI": "PASS",
+    "B_S6F_FULL_RELEASE_HOST_CI_SECONDS": 104.63,
+    "B_S6F_LOCAL_HOSTED_CI": "PASS",
+    "B_S6F_LOCAL_HOSTED_CI_SECONDS": 87.57,
+    "B_S6F_GITHUB_HOSTED_CI_RUNS": [
+      41316360392,
+      41316363727
+    ],
+    "B_S6F_EXACT_HEAD_PREFLIGHT_BLOCKERS": []
   },
   "reportBS6B": "docs/verification/v1.1/B_S6B_V1_RUNTIME_RECONCILIATION_REPORT_20261028.md",
   "reportBS6C": "docs/verification/v1.1/B_S6C_V1_PRODUCTION_RECOVERY_REPORT_20261028.md",
   "productionRecoveryOnly": true,
   "reportBS6D": "docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md",
   "dossierBS6": "docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md",
-  "releaseDecision": "B_S6E_RELEASE_CUTOVER_NO_GO_OPEN_OPERATIONAL_APPROVAL_GATES",
-  "reportBS6E": "docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md"
+  "releaseDecision": "B_S6F_NO_GO_PENDING_OWNER_AND_PRODUCTION_EXECUTION_GATES",
+  "reportBS6E": "docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md",
+  "reportBS6F": "docs/verification/v1.1/B_S6F_CUTOVER_OPERATIONALIZATION_REPORT_20261101.md",
+  "runbookBS6F": "docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md",
+  "worksheetBS6F": "docs/verification/v1.1/B_S6F_CUTOVER_DECISION_WORKSHEET_20261101.json"
 }

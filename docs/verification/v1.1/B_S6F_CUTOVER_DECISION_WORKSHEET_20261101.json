@@ -4,7 +4,7 @@
   "productionCutoverStarted": false,
   "release": {
     "currentProductionVersion": "1.0.0",
-    "candidateHead": "0265fdc94b1668ab77045e1686c12c2d5e5c7f82",
+    "candidateHead": "77f82dbeeea01446d4b2929a8220d62ad43a880d",
     "pullRequestStack": [
       6,
       7,
@@ -16,8 +16,8 @@
   },
   "checks": {
     "finalHeadApproval": "PENDING",
-    "fullReleaseHostCI": "PENDING",
-    "hostedCI": "PENDING",
+    "fullReleaseHostCI": "PASS",
+    "hostedCI": "PASS",
     "productionStatus": "PASS",
     "productionDoctor": "PENDING",
     "protectedPRStackPlan": "PENDING",
@@ -33,12 +33,12 @@
     {
       "number": 1,
       "name": "exact-head full regression",
-      "status": "PENDING"
+      "status": "PASS"
     },
     {
       "number": 2,
       "name": "GitHub/macOS CI",
-      "status": "PENDING"
+      "status": "PASS"
     },
     {
       "number": 3,
