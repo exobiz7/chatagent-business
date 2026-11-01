@@ -1,7 +1,7 @@
 {
   "phase": "B-S6",
   "workUnit": "B-S6D",
-  "status": "B_S6D_LOCAL_READINESS_PASS_PUBLISHED_APP_FRESH_CHAT_PENDING",
+  "status": "B_S6D_ACCEPTED_CLOSED_PUBLISHED_APP_READONLY_SMOKE_PASS",
   "verdict": "PRECHECK_ELIGIBLE_NOT_CUTOVER_AUTHORIZED",
   "productionCutoverStarted": false,
   "productionMutation": true,
@@ -41,11 +41,16 @@
     "B_S6D_PRODUCTION_LOCAL_HEALTH": "PASS",
     "B_S6D_PRODUCTION_TUNNEL": "PASS_HTTP_200",
     "B_S6D_HISTORICAL_PUBLISHED_APP_SMOKE": "PASS_HISTORICAL_NOT_CURRENT",
-    "B_S6D_CURRENT_PUBLISHED_APP_FRESH_CHAT": "PENDING_EXTERNAL_UI",
-    "B_S6D_USER_PATH_TUNNEL_ARRIVAL": "PENDING_LIVE_TOOL_RESULT",
-    "B_S6D_CUTOVER_APPROVAL": "NOT_GRANTED"
+    "B_S6D_CURRENT_PUBLISHED_APP_FRESH_CHAT": "PASS_SCOPED_PUBLISHED_UI_TWO_READONLY_TOOLS",
+    "B_S6D_USER_PATH_TUNNEL_ARRIVAL": "PASS_TWO_TIME_CORRELATED_FORWARDS_TOOL_MAPPING_UNVERIFIED",
+    "B_S6D_CUTOVER_APPROVAL": "NOT_GRANTED",
+    "B_S6D_PUBLISHED_APP_IDENTITY": "PASS_AIspace_CATALOG_AND_ADMIN_SCREENSHOTS",
+    "B_S6D_READONLY_FIXTURE": "PASS_MATCHED_21_BYTE_LOCAL_FILE",
+    "B_S6D_OPTIONAL_CONTINUITY_OPEN": "NOT_RUN_MISSING_AUTHORIZED_FIXTURE",
+    "B_S6D_CONFIRMATION_UI": "NOT_OBSERVABLE",
+    "B_S6D_REBOOT_PERSISTENCE": "NOT_TESTED"
   },
-  "nextUnit": "Obtain one authorized Business published-app fresh-chat read-only smoke result; reconcile production tunnel arrival; do not claim the smoke gate PASS from local health alone. Production cutover remains separately gated.",
+  "nextUnit": "B-S6 final release cutover dossier review and separate explicit owner approval; no production mutation, PR Ready/merge, tag or v1.1 app republish.",
   "validation": {
     "nodeVersion": "v24.21.0",
     "B_S6A_FULL_RELEASE_HOST_REGRESSION": "PASS",
@@ -72,10 +77,15 @@
     "B_S6C_HOSTED_MODE_CI": "PASS",
     "B_S6C_HOSTED_MODE_SECONDS": 74,
     "B_S6C_PRIVATE_RECOVERY_BACKUP_VERIFIED": true,
-    "B_S6C_SINGLE_START_COUNT": 1
+    "B_S6C_SINGLE_START_COUNT": 1,
+    "B_S6D_PUBLISHED_APP_SMOKE_DATE_KST": "2026-11-01",
+    "B_S6D_USER_REPORTED_READONLY_TOOL_CALLS": 2,
+    "B_S6D_TUNNEL_FORWARDED_COMMANDS": 2,
+    "B_S6D_TOOL_TO_TUNNEL_ID_PROOF": "NOT_AVAILABLE"
   },
   "reportBS6B": "docs/verification/v1.1/B_S6B_V1_RUNTIME_RECONCILIATION_REPORT_20261028.md",
   "reportBS6C": "docs/verification/v1.1/B_S6C_V1_PRODUCTION_RECOVERY_REPORT_20261028.md",
   "productionRecoveryOnly": true,
-  "reportBS6D": "docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_PLAN_20261029.md"
+  "reportBS6D": "docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md",
+  "dossierBS6": "docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md"
 }
