@@ -1,20 +1,23 @@
 ChatAgent Business v1.1 — LATEST PHASE / DECISION POINTER
 Updated: 2026-11-01 KST
-B-S6D published v1.0 Business fresh-chat read-only smoke: ACCEPTED/CLOSED.
-B-S6E release readiness audit: IN PROGRESS (B-S6A health gate hardened, CI evidence pending).
-B-S6 production cutover: NO-GO / NOT AUTHORIZED / NOT STARTED.
+B-S6D published v1.0 Business app read-only smoke: ACCEPTED/CLOSED.
+B-S6E pre-cutover readiness audit + hardened health gate: ACCEPTED/CLOSED.
+B-S6 production cutover: NO-GO / NOT STARTED / NOT AUTHORIZED.
 v1.0.0 remains production.
 
-Canonical repo: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Working branch: feat/business-v1.1-bs3-runtime-routing; stacked PRs #6 -> #7 -> #8 -> #9.
-Verify actual HEAD/upstream/CI and project state before further work.
+Canonical: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Branch: feat/business-v1.1-bs3-runtime-routing; stacked PRs #6 -> #7 -> #8 -> #9.
+Exact B-S6E code-bearing CI authority: 7e2e53ec9d4b792cb9859c83b67bd4748b8dc52e
+Local release-host and local hosted-mode CI PASS; GitHub run 41313940821 SUCCESS; B-S6A blockers=[].
+Docs-only closure commit may advance HEAD; verify current HEAD/upstream/CI before subsequent work.
 
 READ FIRST:
 1. docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md
 2. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
 3. docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md
 4. docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md
-5. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37,39
+5. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37 and 39
 6. docs/handoff/CHATAGENT_BUSINESS_V1_1_BS6D_SESSION_HANDOFF_20261029.md (historical)
 
-No v1.0 restart/reboot, final SQLite export, Supabase import, PR Ready/merge, v1.1 release tag or app republish authorized.
+Next unit: B-S6F operationalization and independent release decision; do not infer cutover authority.
+No v1.0 restart/reboot, SQLite final export, Supabase production import, PR Ready/merge, v1.1 release tag or app republish is authorized.

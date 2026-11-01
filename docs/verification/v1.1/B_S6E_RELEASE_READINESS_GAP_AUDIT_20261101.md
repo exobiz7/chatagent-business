@@ -2,7 +2,7 @@
 
 Date: 2026-11-01 KST
 Work unit: B-S6E / evidence-first release readiness gap audit
-Decision: RELEASE-CUTOVER NO-GO, PRECHECK ONLY
+Decision: B-S6E AUDIT ACCEPTED/CLOSED; RELEASE-CUTOVER NO-GO, PRECHECK ONLY
 Authority: Accepted Design 2026-10-05 sections 37 (33 steps) and 39 (hard invariants).
 
 ## 1. Observed current head and governance
@@ -10,7 +10,7 @@ Authority: Accepted Design 2026-10-05 sections 37 (33 steps) and 39 (hard invari
 - Initial audited HEAD: a3c13516c285a408509c7d32bd16fffd3167aad9, local = origin, clean before B-S6E edits.
 - PR #9: OPEN / DRAFT, base B-S2 branch. GitHub-hosted macOS workflow run 41308757916 / 150 completed SUCCESS for the initial audited HEAD.
 - B-S6A read-only exact-head preflight on that initial head: blockers=[] and PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED; two independent hosted standalone checks reported success.
-- Current B-S6E code-bearing working tree passed Mac Studio full release-host npm run test:ci on 2026-11-01 (exit 0, 102.46 seconds), including actual Docker/PostgreSQL effect tests and hardened B-S6A contract. Exact post-commit GitHub-hosted checks and a clean-head B-S6A probe still must be verified.
+- The B-S6E code-bearing HEAD has now passed Mac Studio release-host tests, local hosted-mode tests, GitHub-hosted checks and a clean exact-head B-S6A probe; see section 7.
 - Protected-main release stacking is material: PR #6 B-S0 -> main (OPEN, not merged); PR #7 B-S1 -> B-S0 (OPEN/DRAFT); PR #8 B-S2 -> B-S1 (OPEN/DRAFT); PR #9 B-S3..B-S6 -> B-S2 (OPEN/DRAFT). Do not merge only PR #9 and claim it released the entire stack. Before §37 step 28, choose and review an approved protected-main sequence, retain linear history, required CI/review, do not squash/rebase/Ready/merge without separate authority. The branch HEAD is a CANDIDATE, not an approved release commit.
 - Existing published AIspace ChatAgent Business is v1.0.0 with 17 tools, not the v1.1 39-tool release artifact. B-S6D published v1.0 read-only fresh-chat user-path accepted 2026-11-01.
 
@@ -21,7 +21,7 @@ Finding B-S6E-F01 (preflight accuracy defect):
 - The old probe treated any HTTP response, including HTTP 404, as app-port responding. The probe also did not gate on /readyz, the tunnel readiness endpoint which had actually returned HTTP 503 before the approved tunnel-only recovery.
 - Separate v1.0 operator health was checked, so this did not by itself prove that an unhealthy service could pass the entire previous preflight; it did mean the app/tunnel HTTP checks were too permissive.
 - Minimal repair on B-S6A only: perform read-only GET /health (31850), require HTTP 200 and JSON ready=true, phase B5, execReady=true and execHealthy=true; for production tunnel require both 51950/healthz and /readyz HTTP 200. Preserve existing status output compatibility, distinguish port response from readiness, fail closed on invalid/missing body.
-- Added pure readiness classifiers and deterministic negative tests for non-200 responses, invalid phase/flags and readyz 503. B-S6A contract test PASS. Mac Studio full release-host test:ci PASS/102.46s on the exact code-bearing working tree. GitHub hosted CI on the final commit remains to be checked.
+- Added pure readiness classifiers and deterministic negative tests for non-200 responses, invalid phase/flags and readyz 503. B-S6A contract test PASS. Full release-host and both hosted-mode validations PASS on the referenced code-bearing HEAD; see section 7.
 
 No production application, tunnel, database or config was changed to repair this detector.
 
@@ -82,3 +82,16 @@ B-S6F — Cutover operationalization and independent release decision:
 5. Provide owner-filled cutover window, primary/verifier/rollback ownership and rollback cutoffs; re-evaluate GO/NO-GO, then STOP for separate §37 cutover authorization.
 
 Public evidence hygiene: no private paths, screenshots, raw secrets, live organization member IDs or backup file names are included in this audit.
+
+## 7. B-S6E verification closure — exact code-bearing HEAD
+
+- Verified code-bearing commit: 7e2e53ec9d4b792cb9859c83b67bd4748b8dc52e (the immediately prior documentation closure commit).
+- Mac Studio complete release-host test:ci **PASS**, exit 0, 102.46s (real Docker/PostgreSQL effect tests included).
+- Mac Studio test:ci:hosted **PASS**, exit 0, 76.21s.
+- Actual GitHub macOS hosted run 41313940821, run number 152, **completed/success**.
+- B-S6A exact-head GET-only preflight on that commit returned blockers=[], local=origin, clean worktree, canonical/canary main protected, two standalone hosted checks PASS, PR #9 OPEN/DRAFT.
+- Hardened app health /health: HTTP 200, expected B5 readiness true; production tunnel /healthz and /readyz: HTTP 200; staging healthz HTTP 200; original SQLite exists. Tool-level negative classifiers reject invalid JSON, HTTP 404/503, and stale readyz.
+- These verify the B-S6E preflight repair and close the **audit work unit**, NOT the final release checklist or operational cutover. The documentation-only closure commit may have a newer HEAD; the pre-closure exact code-bearing HEAD remains the referenced test authority until its latest hosted checks are seen.
+
+Final audit verdict: B-S6E ACCEPTED/CLOSED (pre-cutover gap and hardened preflight).
+Release verdict: B-S6 PRODUCTION CUTOVER NO-GO / NOT AUTHORIZED / NOT STARTED.
