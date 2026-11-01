@@ -1,20 +1,25 @@
 ChatAgent Business v1.1 — LATEST SESSION POINTER
 Updated: 2026-11-02 KST
-B-S6D/E CLOSED. B-S6F prep CLOSED. B-S6G-1 connected Supabase inventory: NO dedicated ACTIVE production project identified, target BLOCKED.
-B-S6 live cutover: NO-GO / NOT STARTED / NOT AUTHORIZED. v1.0.0 remains production.
+B-S6D/E/F: ACCEPTED/CLOSED.
+B-S6G-1 connected Supabase inventory, schema probe template, target evidence validator and PR integration investigation: ACCEPTED/CLOSED.
+B-S6G-2 dedicated production Supabase proof: BLOCKED — no identified ACTIVE dedicated Business production project in linked accounts.
+B-S6 actual production cutover: NO-GO / NOT AUTHORIZED / NOT STARTED. v1.0.0 remains production.
 
-Repo: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Branch: feat/business-v1.1-bs3-runtime-routing. Verify actual HEAD / origin / CI before further work.
-PR stack: #6 -> #7 -> #8 -> #9. Main protected; no Ready/merge approved.
-GitHub visibility PUBLIC; exclude secrets, DB records and private operator identities.
+Canonical: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Branch feat/business-v1.1-bs3-runtime-routing. Protected PR chain #6 -> #7 -> #8 -> #9, not merged.
+Repo currently PUBLIC: never commit secrets, user/member IDs, SQLite exports, migration receipts, production env.
+Code-bearing B-S6G-1 CI head 2e92fb1966946f2ff34d63e7075f95858c0ab372:
+Mac Studio full CI PASS 99.94s, local hosted CI PASS 75.65s;
+GitHub macOS 41319636007 and 41319640769 SUCCESS; exact-head B-S6A blockers=[].
+A later docs-only closure commit can advance HEAD; recheck actual HEAD/upstream/CI.
 
-READ FIRST
+READ FIRST:
 1. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_AND_INTEGRATION_REVIEW_20261102.md
 2. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
-3. docs/ops/B_S6G_PRODUCTION_TARGET_READONLY_SQL_20261102.sql (NOT EXECUTED)
+3. docs/ops/B_S6G_PRODUCTION_TARGET_READONLY_SQL_20261102.sql (UNEXECUTED)
 4. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
 5. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
 6. docs/verification/v1.1/B_S6F_CUTOVER_DECISION_WORKSHEET_20261101.json
-7. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37 and 39
+7. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37/39
 
-Next B-S6G-2: owner selects/connects dedicated ACTIVE Business Supabase project; authorize read-only target proof; independent release approval separately. No project creation/resume, v1 restart/reboot, SQLite final export, Supabase import, PR Ready/merge, release tag or app republish authorized.
+Next B-S6G-2: user choose/connect/create dedicated ACTIVE Business Supabase project under approved account, assess free-plan quota and ownership; then authorization for read-only target inspection. Production migrations/restart, PR Ready/merge, tag and app republish are NOT authorized.

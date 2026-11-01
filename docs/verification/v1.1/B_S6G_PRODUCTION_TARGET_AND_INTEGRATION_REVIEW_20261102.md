@@ -48,3 +48,19 @@ B-S6G overall production target: **BLOCKED / NOT VERIFIED**.
 B-S6 final production cutover: **NO-GO**.
 
 Next B-S6G-2: owner explicitly selects or provisions a dedicated ACTIVE Business production Supabase project, or connects the account containing one. Then obtain private identity/roles/empty-target proof and run SQL under the selected authorized account in read-only mode; continue exact-head final integration and operator review. Project creation, app restart, migration, PR merge and release are outside this unit.
+
+## 6. Independent verification / B-S6G-1 closure
+
+Code-bearing commit 2e92fb1966946f2ff34d63e7075f95858c0ab372:
+- Mac Studio full release-host CI npm run test:ci: PASS / 99.94 seconds, including existing Docker/Postgres effect coverage.
+- Mac Studio local hosted-mode CI npm run test:ci:hosted: PASS / 75.65 seconds.
+- GitHub macOS hosted CI exact commit runs 41319636007 and 41319640769 both completed SUCCESS.
+- B-S6A read-only preflight re-executed after both successes: local/origin exact, clean, hostedChecks=2, v1 app health READY, tunnel health+ready READY, blockers=[] and PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED.
+- B-S6G target proof verifier: structurally valid, 0/11 proofs, NO_GO_TARGET_NOT_VERIFIED; no create/import/cutover authority.
+- Both linked Supabase organization plans are currently Free. KAI Org had two INACTIVE projects; bluemaje Org returned no projects. Quota/creation cost not assumed.
+- No project restore, SQL execution, operator credential retrieval, source database export/import or production effects.
+
+B-S6G-1 technical investigation and guardrails: ACCEPTED/CLOSED.
+B-S6G-2 external dedicated target identity/schema/empty state: BLOCKED/NOT EXECUTED.
+Overall B-S6 live production cutover: NO-GO/NOT AUTHORIZED.
+A docs-only closure commit advances HEAD after the code-bearing verified SHA; do not infer new source code from that docs-only commit.
