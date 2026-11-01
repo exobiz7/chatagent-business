@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "workUnit": "B-S6G",
+  "targetRole": "DEDICATED_BUSINESS_PRODUCTION",
+  "projectInventory": {
+    "linkedAccountsChecked": 2,
+    "businessStagingState": "INACTIVE",
+    "productionCandidateFound": false
+  },
+  "targetProof": {
+    "projectIdentity": "PENDING",
+    "projectActive": "PENDING",
+    "distinctFromStagingAndPersonal": "PENDING",
+    "applicationOrgSlug": "PENDING",
+    "controlSchema": "PENDING",
+    "continuitySchema": "PENDING",
+    "migrationAdmin": "PENDING",
+    "emptyTarget": "PENDING",
+    "importerPrivilegeIsolation": "PENDING",
+    "authenticatedReadbackPlan": "PENDING",
+    "runtimeSecretCustody": "PENDING"
+  },
+  "approvedByOwner": false,
+  "productionMutationPerformed": false
+}

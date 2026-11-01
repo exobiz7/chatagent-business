@@ -1,7 +1,7 @@
 {
   "phase": "B-S6",
-  "workUnit": "B-S6F",
-  "status": "B_S6F_PREPARATION_ACCEPTED_CLOSED_PRODUCTION_CUTOVER_NO_GO",
+  "workUnit": "B-S6G-1",
+  "status": "B_S6G_1_DISCOVERY_IN_PROGRESS_TARGET_BLOCKED_CUTOVER_NO_GO",
   "verdict": "PRECHECK_ELIGIBLE_NOT_CUTOVER_AUTHORIZED",
   "productionCutoverStarted": false,
   "productionMutation": true,
@@ -66,9 +66,16 @@
     "B_S6F_PRODUCTION_TARGET": "NOT_PROVEN",
     "B_S6F_RESTART_PERSISTENCE": "NOT_TESTED_ACTUAL_REBOOT",
     "B_S6F_PROTECTED_RELEASE_PR_INTEGRATION": "STRATEGY_PROPOSED_OWNER_REVIEW_REQUIRED",
-    "B_S6F_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED"
+    "B_S6F_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED",
+    "B_S6G_LINKED_ACCOUNT_INVENTORY": "TWO_ACCOUNTS_CHECKED_NO_PRODUCTION_TARGET_FOUND",
+    "B_S6G_PRODUCTION_TARGET": "BLOCKED_NOT_IDENTIFIED",
+    "B_S6G_TARGET_SQL": "PREPARED_NOT_EXECUTED",
+    "B_S6G_TARGET_EVIDENCE": "TARGETED_TEST_PASS_FINAL_CI_PENDING",
+    "B_S6G_PR_STACK": "ANCESTRY_4_OF_4_PASS_INTEGRATION_REVIEW_NOT_APPROVED",
+    "B_S6G_GITHUB_VISIBILITY": "PUBLIC_SECRETS_EXCLUDED",
+    "B_S6G_CUTOVER_APPROVAL": "NOT_GRANTED"
   },
-  "nextUnit": "B-S6G owner-assisted release operational proof: production Supabase target identity, rollback and operator plan, isolated v1.1 restart persistence/PR integration review, then explicit separate cutover authorization.",
+  "nextUnit": "B-S6G-2 owner-selected dedicated ACTIVE Supabase production project and authorized read-only schema/identity/empty-target proof; integration PR review; restart/rollback owner plan.",
   "validation": {
     "nodeVersion": "v24.21.0",
     "B_S6A_FULL_RELEASE_HOST_REGRESSION": "PASS",
@@ -124,9 +131,11 @@
   "productionRecoveryOnly": true,
   "reportBS6D": "docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md",
   "dossierBS6": "docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md",
-  "releaseDecision": "B_S6F_NO_GO_PENDING_OWNER_AND_PRODUCTION_EXECUTION_GATES",
+  "releaseDecision": "B_S6G_NO_GO_NO_VERIFIED_PRODUCTION_SUPABASE_PROJECT",
   "reportBS6E": "docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md",
   "reportBS6F": "docs/verification/v1.1/B_S6F_CUTOVER_OPERATIONALIZATION_REPORT_20261101.md",
   "runbookBS6F": "docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md",
-  "worksheetBS6F": "docs/verification/v1.1/B_S6F_CUTOVER_DECISION_WORKSHEET_20261101.json"
+  "worksheetBS6F": "docs/verification/v1.1/B_S6F_CUTOVER_DECISION_WORKSHEET_20261101.json",
+  "reportBS6G": "docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_AND_INTEGRATION_REVIEW_20261102.md",
+  "targetEvidenceBS6G": "docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json"
 }

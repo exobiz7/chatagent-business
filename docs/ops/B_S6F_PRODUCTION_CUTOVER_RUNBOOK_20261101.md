@@ -103,3 +103,9 @@ Owner-authorized rollback deadline and decision owner must be recorded before st
 - B-S6B stale-record disposable contract PASS is not the same as a v1.1 host reboot/restart canary.
 - The accepted B-S4 disposable import/readback and encrypted backup are reusable evidence but not production operations evidence.
 - Approval to write this runbook is not permission to execute any of its steps 4–33.
+
+## B-S6G amendment — 2026-11-02
+
+Connected Supabase accounts currently have no verified dedicated ACTIVE Business production project. Historical B-S0 staging is INACTIVE and not a replacement for production. Do not claim step 9 completed. The prepared B-S6G read-only SQL has not been run.
+
+GitHub canonical repository is currently PUBLIC, so raw DB backups, tokens, migration receipts and private operator/member identifiers must remain entirely outside Git. Any change to repository visibility is a separate owner decision.
