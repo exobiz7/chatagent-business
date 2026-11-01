@@ -43,3 +43,7 @@ C4 steps 25-33: encrypted post-backup, privately publish changed v1.1 app and po
 Protect all section 39 hard invariants, unchanged original SQLite, retained v1.0 recoverability, and private credentials. Never treat B-S6C recovery backup as the cutover-window final snapshot. No blind retry of UNCERTAIN effects, no dual-master. Rollback before acceptance: stop v1.1, restore retained v1.0 app/config, use untouched original v1 SQLite state, restart v1.0 through its approved operator, abandon partial Supabase import target.
 
 Next: verify exact PR/CI and release-head selection plan, existing import/rollback runbook and reboot persistence risk; fill owner/operator/window data; produce GO/NO-GO recommendation. STOP and obtain separate cutover approval before any production effect.
+
+## B-S6E independent audit update — 2026-11-01
+
+The new B-S6E audit index is B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md. It proves PR #6/#7/#8/#9 stack is unmerged (PR #9 must not be treated as a standalone main release), identifies and repairs the B-S6A HTTP readiness false-positive in a development-only probe, and sets release NO-GO for absent exact final HEAD CI, live target identity proof, new stopped-source backup, operational importer/rollback plan, restart persistence, and separate owner authorization. See the audit for evidence limits. This remains a DRAFT; B-S6D closed status is unchanged.

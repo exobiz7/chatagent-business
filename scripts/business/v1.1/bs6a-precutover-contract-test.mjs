@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {isReadyV1Health,isReadyTunnel} from './runtime/bs6a-health-readiness.mjs';
 import {readFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
@@ -16,6 +17,20 @@ assert.match(s,/cutoverExecuted:false/);
 assert.match(s,/releaseTagNotCreated:true/);
 assert.match(s,/NO_GO/);
 assert.match(s,/EXPLICIT_CUTOVER_AUTHORIZATION/);
+assert.match(s,/127\.0\.0\.1:31850\/health/);
+assert.match(s,/http\(51950,'readyz'\)/);
+assert.match(s,/V1_PRODUCTION_APPLICATION_NOT_READY/);
+assert.match(s,/V1_PRODUCTION_TUNNEL_NOT_READY/);
+const healthy={ready:true,phase:'B5',execReady:true,execHealthy:true};
+assert.equal(isReadyV1Health(200,healthy),true);
+for(const status of [0,200-1,204,404,503])
+ if(status!==200)assert.equal(isReadyV1Health(status,healthy),false);
+for(const body of [null,{}, {...healthy,ready:false},{...healthy,phase:'B4'},
+  {...healthy,execReady:false},{...healthy,execHealthy:false}])
+ assert.equal(isReadyV1Health(200,body),false);
+assert.equal(isReadyTunnel(200,200),true);
+assert.equal(isReadyTunnel(200,503),false);
+assert.equal(isReadyTunnel(503,200),false);
 assert.doesNotMatch(s,/['"](?:POST|PATCH|PUT|DELETE)['"]/i);
 assert.doesNotMatch(s,/gh\s+(?:repo edit|pr merge|pr ready|release create|auth refresh|api --method)|git\s+(?:push|reset|clean|tag)|launchctl\s+(?:kickstart|bootstrap|bootout)/i);
 assert.doesNotMatch(s,/unlinkSync|writeFileSync|rmSync|renameSync|execSync/);
@@ -25,3 +40,4 @@ assert.match(bad.stderr,/BS6A_EXACT_HEAD_REQUIRED/);
 console.log('PASS B-S6A is exact-head, GET-only/nonmutating and cannot initiate cutover or cleanup');
 console.log('PASS missing exact-head refuses before any operational probe');
 console.log('BUSINESS_S6A_READONLY_PREFLIGHT_CONTRACT=PASS');
+console.log('PASS B-S6A health classification fails closed on app non-200/body and tunnel readyz 503');

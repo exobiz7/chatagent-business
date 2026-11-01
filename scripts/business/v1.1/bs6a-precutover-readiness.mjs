@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Read-only B-S6A evidence acquisition. NEVER initiates cutover or recovery.
 import {spawnSync} from 'node:child_process';
+import {isReadyV1Health,isReadyTunnel} from './runtime/bs6a-health-readiness.mjs';
 import {readFileSync,existsSync,lstatSync} from 'node:fs';
 import {join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -58,16 +59,28 @@ if(existsSync(config)&&existsSync(ops)){
 const sqlite=join(prodRoot,'state/continuity/memory.sqlite');
 const sqlitePresent=existsSync(sqlite)&&lstatSync(sqlite).isFile()&&!lstatSync(sqlite).isSymbolicLink();
 const productionHealthy=status?.state==='RUNNING'&&status.healthy===true;
-const http=async(port)=>{
- try{const r=await fetch('http://127.0.0.1:'+port+'/healthz',{signal:AbortSignal.timeout(1200)});return r.status;}catch{return null;}
+const http=async(port,path='healthz')=>{
+ try{const r=await fetch('http://127.0.0.1:'+port+'/'+path,{signal:AbortSignal.timeout(1200)});return r.status;}catch{return null;}
 };
-const [tunnelHttp,stagingHttp]=await Promise.all([http(51950),http(31861)]);
-const prodPort=(await http(31850))!==null;
+const v1Health=async()=>{
+ try{
+  const r=await fetch('http://127.0.0.1:31850/health',{signal:AbortSignal.timeout(1200)});
+  if(r.status!==200)return {httpStatus:r.status,ready:false};
+  const body=await r.json();
+  return {httpStatus:r.status,ready:isReadyV1Health(r.status,body)};
+ }catch{return {httpStatus:null,ready:false};}
+};
+const [tunnelHttp,tunnelReadyHttp,stagingHttp,applicationHealth]=await Promise.all([
+ http(51950),http(51950,'readyz'),http(31861),v1Health()
+]);
+const tunnelReady=isReadyTunnel(tunnelHttp,tunnelReadyHttp);
+const prodPort=applicationHealth.httpStatus!==null;
 const staticReady=local===expected&&remote===expected&&!dirty&&v1tag.ok&&s5ok&&canonicalProtected&&canaryProtected&&hostedPassed&&prFrozen;
 const findings=[
  ...(!staticReady?['EXACT_HEAD_OR_GOVERNANCE_PREREQUISITE_NOT_READY']:[]),
  ...(!productionHealthy?['V1_PRODUCTION_RUNTIME_NOT_HEALTHY']:[]),
- ...(!prodPort?['V1_PRODUCTION_APPLICATION_UNREACHABLE']:[]),
+ ...(!applicationHealth.ready?['V1_PRODUCTION_APPLICATION_NOT_READY']:[]),
+ ...(!tunnelReady?['V1_PRODUCTION_TUNNEL_NOT_READY']:[]),
  ...(!sqlitePresent?['V1_SQLITE_SOURCE_NOT_VERIFIED']:[])
 ];
 const out={
@@ -75,7 +88,10 @@ const out={
  expectedHead:expected,actualHead:local,originHead:remote,worktreeClean:!dirty,
  v1TagPresent:v1tag.ok,bS5Closed:s5ok,
  provider:{canonicalMainProtected:canonicalProtected,canaryMainProtected:canaryProtected,hostedCheckSuccessCount:checks.filter(x=>x.conclusion==='success').length,hostedChecksPassed:hostedPassed,releasePrOpenDraft:prFrozen},
- production:{operatorStatus:status?.state??'UNAVAILABLE',healthy:productionHealthy,appPortResponding:prodPort,tunnelHealthHttp:tunnelHttp,stagingHealthHttp:stagingHttp,sourceSqliteFilePresent:sqlitePresent},
+ production:{operatorStatus:status?.state??'UNAVAILABLE',healthy:productionHealthy,
+  applicationHealthHttp:applicationHealth.httpStatus,appPortResponding:prodPort,
+  appHealthReady:applicationHealth.ready,tunnelHealthHttp:tunnelHttp,tunnelReadyHttp,
+  tunnelReady,stagingHealthHttp:stagingHttp,sourceSqliteFilePresent:sqlitePresent},
  evidence:{staticReady,productionStatusReady:productionHealthy,doctorNotExecuted:true,freshBackupNotExecuted:true,targetImportNotExecuted:true,releaseTagNotCreated:true},
  blockers:findings,
  verdict:findings.length===0?'PRECHECKS_ELIGIBLE_NOT_CUTOVER_AUTHORIZED':'NO_GO',
