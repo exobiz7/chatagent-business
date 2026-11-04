@@ -1,7 +1,7 @@
 {
   "phase": "B-S6",
-  "workUnit": "B-S6G-1",
-  "status": "B_S6G_1_DISCOVERY_ACCEPTED_CLOSED_BS6G_2_TARGET_BLOCKED",
+  "workUnit": "B-S6G-2",
+  "status": "B_S6G_2_PRODUCTION_PROJECT_PROVISIONED_SCHEMA_NOT_READY_CUTOVER_NO_GO",
   "verdict": "PRECHECK_ELIGIBLE_NOT_CUTOVER_AUTHORIZED",
   "productionCutoverStarted": false,
   "productionMutation": true,
@@ -68,9 +68,9 @@
     "B_S6F_PROTECTED_RELEASE_PR_INTEGRATION": "STRATEGY_PROPOSED_OWNER_REVIEW_REQUIRED",
     "B_S6F_OWNER_CUTOVER_APPROVAL": "NOT_GRANTED",
     "B_S6G_LINKED_ACCOUNT_INVENTORY": "TWO_ACCOUNTS_CHECKED_NO_PRODUCTION_TARGET_FOUND",
-    "B_S6G_PRODUCTION_TARGET": "BLOCKED_NOT_IDENTIFIED_NO_SQL_EXECUTED",
-    "B_S6G_TARGET_SQL": "PREPARED_NOT_EXECUTED",
-    "B_S6G_TARGET_EVIDENCE": "PASS_CONTRACT_0_OF_11_ACTUAL_PROOFS_TARGET_BLOCKED",
+    "B_S6G_PRODUCTION_TARGET": "ACTIVE_HEALTHY_DEDICATED_KAI_ORG_NO_APP_SCHEMA",
+    "B_S6G_TARGET_SQL": "BASELINE_SQL_READONLY_PASS_FULL_SCHEMA_CHECK_NOT_EXECUTED",
+    "B_S6G_TARGET_EVIDENCE": "3_OF_11_PASS_SEPARATE_RELEASE_APPROVAL_REQUIRED",
     "B_S6G_PR_STACK": "ANCESTRY_4_OF_4_PASS_INTEGRATION_REVIEW_NOT_APPROVED",
     "B_S6G_GITHUB_VISIBILITY": "PUBLIC_SECRETS_EXCLUDED",
     "B_S6G_CUTOVER_APPROVAL": "NOT_GRANTED",
@@ -79,7 +79,7 @@
     "B_S6G_GITHUB_HOSTED_CI": "PASS_TWO_RUNS_COMMIT_2E92FB1",
     "B_S6G_EXACT_HEAD_PREFLIGHT": "PASS_BLOCKERS_0_NOT_CUTOVER_AUTHORIZED"
   },
-  "nextUnit": "B-S6G-2 requires owner-selected dedicated ACTIVE Business Supabase production project or connected account, then authorized READ ONLY schema/admin/empty-target proof and protected full-stack PR review; separate cutover approval.",
+  "nextUnit": "B-S6G-3 review approved canonical B-S1/B-S2 schema installation in new empty target; verify RLS and establish application org/admin with authorized identity. No v1.0 source export/import or cutover.",
   "validation": {
     "nodeVersion": "v24.21.0",
     "B_S6A_FULL_RELEASE_HOST_REGRESSION": "PASS",
@@ -138,16 +138,18 @@
       41319636007,
       41319640769
     ],
-    "B_S6G_TARGET_PROOFS_PASSED": 0,
+    "B_S6G_TARGET_PROOFS_PASSED": 3,
     "B_S6G_TARGET_PROOFS_REQUIRED": 11,
-    "B_S6G_FINAL_SQL_EXECUTED": false
+    "B_S6G_FINAL_SQL_EXECUTED": false,
+    "B_S6G_PRODUCTION_DB_CREATED_KST": "2026-11-04",
+    "B_S6G_INITIAL_SQL_READONLY": "PASS_NEW_DB_NO_APP_SCHEMA_NO_IMPORTER"
   },
   "reportBS6B": "docs/verification/v1.1/B_S6B_V1_RUNTIME_RECONCILIATION_REPORT_20261028.md",
   "reportBS6C": "docs/verification/v1.1/B_S6C_V1_PRODUCTION_RECOVERY_REPORT_20261028.md",
   "productionRecoveryOnly": true,
   "reportBS6D": "docs/verification/v1.1/B_S6D_PUBLISHED_APP_READONLY_SMOKE_CLOSURE_20261101.md",
   "dossierBS6": "docs/verification/v1.1/B_S6_CUTOVER_APPROVAL_DOSSIER_DRAFT_20261101.md",
-  "releaseDecision": "B_S6G_NO_GO_NO_VERIFIED_PRODUCTION_SUPABASE_PROJECT",
+  "releaseDecision": "B_S6G_NO_GO_TARGET_PROVISIONED_BUT_UNCONFIGURED",
   "reportBS6E": "docs/verification/v1.1/B_S6E_RELEASE_READINESS_GAP_AUDIT_20261101.md",
   "reportBS6F": "docs/verification/v1.1/B_S6F_CUTOVER_OPERATIONALIZATION_REPORT_20261101.md",
   "runbookBS6F": "docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md",

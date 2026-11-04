@@ -64,3 +64,16 @@ B-S6G-1 technical investigation and guardrails: ACCEPTED/CLOSED.
 B-S6G-2 external dedicated target identity/schema/empty state: BLOCKED/NOT EXECUTED.
 Overall B-S6 live production cutover: NO-GO/NOT AUTHORIZED.
 A docs-only closure commit advances HEAD after the code-bearing verified SHA; do not infer new source code from that docs-only commit.
+
+## 7. 2026-11-04 production target provisioning and read-only baseline
+
+Historical finding B-S6G-P0-01 (no dedicated target) is RESOLVED for project provisioning, not for full production readiness.
+
+- In the owner-selected KAI Org, the connected Supabase tool created chatagent-business-v1.1-production in Seoul ap-northeast-2 (provider returned ACTIVE_HEALTHY, PostgreSQL 17.11). The project creation cost quote was USD 0/month. No paid plan was activated.
+- Historical paused Business B-S0 staging and Personal memory projects remain preserved, unchanged.
+- Read-only introspection found no applied migrations, no application tables, and neither Business Control nor Business Continuity schema; the one-time import function is also absent.
+- A transaction READ ONLY query verified these facts. The previous full-schema SQL inspection template cannot be executed successfully until canonical migrations are installed; no schema or production migration has yet been applied.
+- Evidence validator now confirms projectIdentity/projectActive/distinctFromStagingAndPersonal (3 of 11). Application organization, admin, schema versions, post-schema logical empty target, privileged importer isolation, authenticated readback and runtime secret custody remain PENDING.
+- Project reference, credentials, administrator IDs and private DB results are not included in this publicly visible source repository.
+
+Decision: dedicated infrastructure EXISTS, SCHEMA NOT INSTALLED, PRODUCTION CUTOVER NO-GO. Next: B-S6G-3 canonical schema/security review and guarded initialization; separately verify actual application organization and migration authority.

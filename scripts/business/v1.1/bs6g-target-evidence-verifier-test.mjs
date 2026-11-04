@@ -15,8 +15,8 @@ const mutate=(fn,s)=>{
  assert.equal(x.structurallyValid,false);
  assert(x.errors.some(e=>e.includes(s)),JSON.stringify(x));
 };
-mutate(d=>d.targetProof.emptyTarget='PASS','FALSE_PROOF_WITHOUT_PROJECT');
-mutate(d=>d.targetProof.applicationOrgSlug='PASS','ORG_PROOF_WITHOUT_CANDIDATE');
+mutate(d=>{d.projectInventory.productionCandidateFound=false;d.targetProof.emptyTarget='PASS';},'FALSE_PROOF_WITHOUT_PROJECT');
+mutate(d=>{d.projectInventory.productionCandidateFound=false;d.targetProof.applicationOrgSlug='PASS';},'ORG_PROOF_WITHOUT_CANDIDATE');
 mutate(d=>d.approvedByOwner=true,'NO_OWNER_APPROVAL');
 mutate(d=>d.productionMutationPerformed=true,'PRODUCTION_MUTATION');
 mutate(d=>d.projectInventory.linkedAccountsChecked=1,'ACCOUNT_INVENTORY');
@@ -47,6 +47,6 @@ assert(!/\b(?:insert|update|delete|drop|alter|truncate|create|grant|revoke|copy)
 assert.match(sql,/private_business_control\.logical_projects/);
 assert.match(sql,/private_business_continuity\.events/);
 assert.match(sql,/release-org/);
-console.log('PASS B-S6G no-target blocks promotion and prevents forged production owner approval');
+console.log('PASS B-S6G verified project metadata does not unlock incomplete target or owner approval');
 console.log('PASS B-S6G even complete supplied evidence requires independent review; never grants DB import');
 console.log('BUSINESS_S6G_TARGET_EVIDENCE_CONTRACT=PASS');

@@ -5,12 +5,12 @@
   "projectInventory": {
     "linkedAccountsChecked": 2,
     "businessStagingState": "INACTIVE",
-    "productionCandidateFound": false
+    "productionCandidateFound": true
   },
   "targetProof": {
-    "projectIdentity": "PENDING",
-    "projectActive": "PENDING",
-    "distinctFromStagingAndPersonal": "PENDING",
+    "projectIdentity": "PASS",
+    "projectActive": "PASS",
+    "distinctFromStagingAndPersonal": "PASS",
     "applicationOrgSlug": "PENDING",
     "controlSchema": "PENDING",
     "continuitySchema": "PENDING",
