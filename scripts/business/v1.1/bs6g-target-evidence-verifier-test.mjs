@@ -18,8 +18,9 @@ const mutate=(fn,s)=>{
 mutate(d=>{d.projectInventory.productionCandidateFound=false;d.targetProof.emptyTarget='PASS';},'FALSE_PROOF_WITHOUT_PROJECT');
 mutate(d=>{d.projectInventory.productionCandidateFound=false;d.targetProof.applicationOrgSlug='PASS';},'ORG_PROOF_WITHOUT_CANDIDATE');
 mutate(d=>d.approvedByOwner=true,'NO_OWNER_APPROVAL');
-mutate(d=>d.productionMutationPerformed=true,'PRODUCTION_MUTATION');
-mutate(d=>d.projectInventory.linkedAccountsChecked=1,'ACCOUNT_INVENTORY');
+mutate(d=>d.productionDataImportPerformed=true,'PRODUCTION_DATA_IMPORT');
+mutate(d=>d.schemaInitializationPerformed=false,'SCHEMA_INIT_STATUS_CONFLICT');
+mutate(d=>d.projectInventory.linkedAccountsChecked=0,'ACCOUNT_INVENTORY');
 mutate(d=>d.targetProof.projectIdentity='UNKNOWN','INVALID_PROOF_STATUS');
 mutate(d=>d.projectReference='example-project','INVALID_EVIDENCE_SCHEMA');
 const d=structuredClone(original);
@@ -47,6 +48,16 @@ assert(!/\b(?:insert|update|delete|drop|alter|truncate|create|grant|revoke|copy)
 assert.match(sql,/private_business_control\.logical_projects/);
 assert.match(sql,/private_business_continuity\.events/);
 assert.match(sql,/release-org/);
+const bootstrap=readFileSync('scripts/business/v1.1/control/bs6g3-production-bootstrap-single-admin.sql','utf8');
+assert.match(bootstrap,/B-S6G-3 PRODUCTION one-time bootstrap/);
+assert.match(bootstrap,/v_eligible_count <> 1/);
+assert.match(bootstrap,/v_org_count <> 0 or v_member_count <> 0/);
+assert.match(bootstrap,/confirmed_at is not null/);
+assert.match(bootstrap,/coalesce\(is_anonymous,false\)=false/);
+assert.match(bootstrap,/values \('release-org','ChatAgent Business'\)/);
+assert.match(bootstrap,/values \(v_org,v_user,'ADMIN','ACTIVE'\)/);
+assert.doesNotMatch(bootstrap,/chatagent-business-v11-bs0/);
+assert.doesNotMatch(bootstrap,/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i);
 console.log('PASS B-S6G verified project metadata does not unlock incomplete target or owner approval');
 console.log('PASS B-S6G even complete supplied evidence requires independent review; never grants DB import');
 console.log('BUSINESS_S6G_TARGET_EVIDENCE_CONTRACT=PASS');

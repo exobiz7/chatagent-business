@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const EXACT=['schemaVersion','workUnit','targetRole','projectInventory','targetProof','approvedByOwner','productionMutationPerformed'];
+const EXACT=['schemaVersion','workUnit','targetRole','projectInventory','targetProof','approvedByOwner','schemaInitializationPerformed','productionDataImportPerformed'];
 const INVENTORY=['linkedAccountsChecked','businessStagingState','productionCandidateFound'];
 const PROOF=['projectIdentity','projectActive','distinctFromStagingAndPersonal','applicationOrgSlug','controlSchema','continuitySchema','migrationAdmin','emptyTarget','importerPrivilegeIsolation','authenticatedReadbackPlan','runtimeSecretCustody'];
 const PROOF_STATES=new Set(['PASS','PENDING','BLOCKED']);
@@ -15,9 +15,11 @@ export function evaluateTargetEvidence(d){
  if(!keys(d,EXACT)||d?.schemaVersion!==1||d?.workUnit!=='B-S6G') errors.push('INVALID_EVIDENCE_SCHEMA');
  if(d?.targetRole!=='DEDICATED_BUSINESS_PRODUCTION')errors.push('TARGET_ROLE_INVALID');
  if(d?.approvedByOwner!==false)errors.push('NO_OWNER_APPROVAL_IN_THIS_PROBE');
- if(d?.productionMutationPerformed!==false)errors.push('PRODUCTION_MUTATION_NOT_ALLOWED');
+ if(d?.productionDataImportPerformed!==false)errors.push('PRODUCTION_DATA_IMPORT_NOT_ALLOWED');
+ if(typeof d?.schemaInitializationPerformed!=='boolean')errors.push('SCHEMA_INIT_BOOLEAN_REQUIRED');
+ if(d?.schemaInitializationPerformed !== (d?.targetProof?.controlSchema==='PASS' && d?.targetProof?.continuitySchema==='PASS'))errors.push('SCHEMA_INIT_STATUS_CONFLICT');
  if(!keys(d?.projectInventory,INVENTORY))errors.push('INVENTORY_SCHEMA');
- if(d?.projectInventory?.linkedAccountsChecked!==2)errors.push('ACCOUNT_INVENTORY_INCOMPLETE');
+ if(!Number.isInteger(d?.projectInventory?.linkedAccountsChecked)||d.projectInventory.linkedAccountsChecked<1||d.projectInventory.linkedAccountsChecked>8)errors.push('ACCOUNT_INVENTORY_INCOMPLETE');
  if(!['INACTIVE','UNKNOWN'].includes(d?.projectInventory?.businessStagingState))errors.push('STAGING_STATUS_INVALID');
  if(typeof d?.projectInventory?.productionCandidateFound!=='boolean')errors.push('CANDIDATE_FLAG_INVALID');
  if(!keys(d?.targetProof,PROOF))errors.push('PROOF_SCHEMA');

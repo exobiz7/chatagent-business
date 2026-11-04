@@ -109,3 +109,11 @@ Owner-authorized rollback deadline and decision owner must be recorded before st
 Connected Supabase accounts currently have no verified dedicated ACTIVE Business production project. Historical B-S0 staging is INACTIVE and not a replacement for production. Do not claim step 9 completed. The prepared B-S6G read-only SQL has not been run.
 
 GitHub canonical repository is currently PUBLIC, so raw DB backups, tokens, migration receipts and private operator/member identifiers must remain entirely outside Git. Any change to repository visibility is a separate owner decision.
+
+## B-S6G-3 schema and identity amendment (2026-11-04)
+
+The KAI Org Business v1.1 dedicated Production project now has all 11 canonical B-S1/B-S2 schema migrations applied with verified 15/15 private-table RLS. Auth users and application organizations are still zero. Do NOT treat a Supabase Dashboard login as an application Auth user. Do not run the guarded production bootstrap until exactly one confirmed, non-anonymous actual Auth user is independently verified.
+
+Once an Auth user has been registered by its owner, guarded one-time setup lives outside migrations in scripts/business/v1.1/control/bs6g3-production-bootstrap-single-admin.sql and is NOT YET EXECUTED. Actual source STOP/export/import remains governed by Accepted Design section 37, separate owner authorization and full rollback/identity proofs.
+
+v1.0 runtime was manually recovered with a verified private prestart backup, one scoped Start and tunnel restart; automated host reboot persistence remains unproven.

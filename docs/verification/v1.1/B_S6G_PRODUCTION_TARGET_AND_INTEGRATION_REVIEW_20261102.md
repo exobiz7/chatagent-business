@@ -77,3 +77,13 @@ Historical finding B-S6G-P0-01 (no dedicated target) is RESOLVED for project pro
 - Project reference, credentials, administrator IDs and private DB results are not included in this publicly visible source repository.
 
 Decision: dedicated infrastructure EXISTS, SCHEMA NOT INSTALLED, PRODUCTION CUTOVER NO-GO. Next: B-S6G-3 canonical schema/security review and guarded initialization; separately verify actual application organization and migration authority.
+
+## 8. 2026-11-04 schema initialization, log diagnosis and v1.0 recovery
+
+The historical B-S6G-2 schema-not-installed state is superseded. 11/11 canonical B-S1/B-S2 migrations applied to the new dedicated KAI Org Production target. Control/Continuity versions 1/1, 15/15 private-table RLS, anon-executable bc RPC count 0/24, private schema USAGE denied, user/org/member/task/project/continuity rows zero, importer absent. Evidence 6/11 PASS; application Auth onboarding and signed-in canaries PENDING. See B_S6G3_PRODUCTION_SCHEMA_INITIALIZATION_REPORT_20261104.md.
+
+The screenshot's 38 failed Postgres requests align with initialization-time internal Realtime missing-relation error logs; both named Realtime tables now exist, and fresh SQL checks succeed. See the dedicated report for the timestamps and limits of attribution.
+
+A separate reversible v1.0 runtime recovery was performed after a stale-record finding: original record preserved privately, official backup verified, one Start, post-Start Doctor 15/15, and one tunnel-only kickstart, backend/tunnel HTTP 200. See B_S6G3_V1_RUNTIME_RECOVERY_REPORT_20261104.md. Host boot persistence is still NOT PROVEN.
+
+B-S6 Production Cutover remains NO-GO. No v1.0 STOP for final export, SQLite migration, v1.1 app replacement or PR merge/tag occurred.
