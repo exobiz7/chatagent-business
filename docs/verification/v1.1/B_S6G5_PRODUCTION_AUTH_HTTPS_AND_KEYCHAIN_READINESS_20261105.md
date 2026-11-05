@@ -87,3 +87,7 @@ Release safety: B-S6 NO-GO; v1.0 continues untouched. Do not call this artifact 
 The prior pre-login zero-session status and instructions in sections 1, 4 and 5 are HISTORICAL, not the current state. The owner completed local private interactive sign-in. Mac Studio re-ran the accepted readback canary twice successfully using Keychain-restored real Supabase Auth signed access JWT over HTTPS. Issuer and asymmetric JWT signature were independently checked through published JWKS; Auth getUser returned the matching signed subject. The Production auth.sessions count is now one. No credentials, tokens or user identity were printed or recorded.
 
 This is DIRECT SIGNED JWT HTTPS PASS but NOT v1.1 MCP Gateway E2E. Actual signed MCP tool-call not executed, final Gateway secret custody unproven. Target gate stays 7/11; see B_S6G5B_SIGNED_JWT_HTTPS_READBACK_AUDIT_20261105.md. No production cutover authorized.
+
+## 8. B-S6G-5C isolated signed MCP Gateway (2026-11-05)
+
+The earlier Gateway-pending language described the state BEFORE B-S6G-5C. An isolated owner-hosted loopback Gateway MCP SDK signed tools/call(member_get_profile) now PASS with real Production Auth JWT, live JWKS, negative missing/invalid bearer 401, OAuth resource metadata, and direct Supabase RPC profile parity. This does not establish published v1.1 app plugin E2E, final runtime secret custody or production cutover. Official audit: B_S6G5C_ISOLATED_SIGNED_MCP_GATEWAY_E2E_20261105.md. Overall target proof remains 7/11.

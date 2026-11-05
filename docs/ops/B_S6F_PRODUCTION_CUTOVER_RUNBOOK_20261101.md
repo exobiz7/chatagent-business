@@ -133,3 +133,9 @@ Continue no-GO for source SQLite final export, Supabase privileged importer, app
 ## B-S6G-5B signed Production Auth HTTPS verification (2026-11-05)
 
 Owner-local protected app Auth sign-in completed without ChatGPT-visible credentials. Keychain restored and rotated the legitimate refresh token; live signed JWT over TLS passed member profile and schema status for release-org ADMIN. JWKS signature and issuer plus Auth getUser identity corroborated the direct HTTPS proof. Production sessions count one. Previous B-S6G-5A zero-session text is historical. This verifies the direct bearer HTTPS subgate only, NOT a real signed v1.1 MCP Gateway tool-call or final production runtime Keychain custody. Keep authenticatedReadbackPlan PENDING; target 7/11. No privileged importer, original SQLite export, production cutover or PR release authorization.
+
+## B-S6G-5C isolated MCP authorization canary — 2026-11-05
+
+On the actual Mac Studio, the owner's Production Auth JWT from a dedicated Keychain account was verified using public JWKS and used in an isolated **loopback-only** v1.1 MCP Gateway fixture. Read-only member_get_profile tools/call succeeded and matched a separately authenticated Supabase RPC. No-bearer and malformed-bearer were HTTP 401; protected-resource metadata matched expected issuer. No public tunnel, v1.0 port, customer data, project or privileged import endpoint was used; the fixture shut down cleanly.
+
+Do not call this a Business workspace app-plugin canary or a production-deployed v1.1 Gateway acceptance. Separate Business-account UI/plugin testing must occur only in an authenticated Business workspace, against the exact approved target. Current v1.0 Business plugin cannot prove v1.1 cutover. Target evidence remains 7/11 and Cutover NO-GO; do not advance import/PR merge/tag/app republish or reboot gates.
