@@ -11,7 +11,7 @@
     "projectIdentity": "PASS",
     "projectActive": "PASS",
     "distinctFromStagingAndPersonal": "PASS",
-    "applicationOrgSlug": "PENDING",
+    "applicationOrgSlug": "PASS",
     "controlSchema": "PASS",
     "continuitySchema": "PASS",
     "migrationAdmin": "PENDING",

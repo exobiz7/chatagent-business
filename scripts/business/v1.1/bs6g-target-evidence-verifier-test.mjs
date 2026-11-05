@@ -9,6 +9,14 @@ assert.equal(base.structurallyValid,true);
 assert.equal(base.targetIdentityVerdict,'NO_GO_TARGET_NOT_VERIFIED');
 assert.equal(base.cutoverAuthorized,false);
 assert.equal(base.mayImport,false);
+assert.equal(base.proofsPassed,7);
+assert.equal(base.totalProofs,11);
+assert(base.blockers.includes('migrationAdmin'));
+assert(base.blockers.includes('importerPrivilegeIsolation'));
+assert(base.blockers.includes('authenticatedReadbackPlan'));
+assert(base.blockers.includes('runtimeSecretCustody'));
+assert(!base.blockers.includes('applicationOrgSlug'));
+
 const mutate=(fn,s)=>{
  const d=structuredClone(original);fn(d);
  const x=evaluateTargetEvidence(d);
@@ -50,6 +58,9 @@ assert.match(sql,/private_business_continuity\.events/);
 assert.match(sql,/release-org/);
 const bootstrap=readFileSync('scripts/business/v1.1/control/bs6g3-production-bootstrap-single-admin.sql','utf8');
 assert.match(bootstrap,/B-S6G-3 PRODUCTION one-time bootstrap/);
+assert.match(bootstrap,/EXECUTED_ONCE_20261105/);
+assert.match(bootstrap,/DO NOT REPLAY/);
+
 assert.match(bootstrap,/v_eligible_count <> 1/);
 assert.match(bootstrap,/v_org_count <> 0 or v_member_count <> 0/);
 assert.match(bootstrap,/confirmed_at is not null/);

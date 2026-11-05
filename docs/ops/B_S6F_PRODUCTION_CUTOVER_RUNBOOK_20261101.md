@@ -117,3 +117,9 @@ The KAI Org Business v1.1 dedicated Production project now has all 11 canonical 
 Once an Auth user has been registered by its owner, guarded one-time setup lives outside migrations in scripts/business/v1.1/control/bs6g3-production-bootstrap-single-admin.sql and is NOT YET EXECUTED. Actual source STOP/export/import remains governed by Accepted Design section 37, separate owner authorization and full rollback/identity proofs.
 
 v1.0 runtime was manually recovered with a verified private prestart backup, one scoped Start and tunnel restart; automated host reboot persistence remains unproven.
+
+## B-S6G-4 authenticated admin initialization amendment (2026-11-05)
+
+B-S6G-3 prior 0-user/0-org status is HISTORICAL: exactly one confirmed Auth application user was registered by the owner, and one guarded release-org ADMIN bootstrap was executed. A fresh read-only query confirmed exactly one active ADMIN and one release-org, with all source data target rows still 0 and importer absent. **Never rerun the one-time bootstrap.**
+
+Database role/claim simulation proved key profile/schema and nonmember/anon denial paths, but is NOT a real HTTPS signed JWT or v1.1 Gateway E2E test. The migration operator's actual credential/session approval, importer restricted-execution lifecycle, publishable-only runtime secret custody, a real signed JWT readback, and actual Mac boot persistence remain release gate blockers. Step 9 must not be called fully PASS and the remaining production cutover steps must not be executed without separate authority.

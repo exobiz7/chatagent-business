@@ -87,3 +87,11 @@ The screenshot's 38 failed Postgres requests align with initialization-time inte
 A separate reversible v1.0 runtime recovery was performed after a stale-record finding: original record preserved privately, official backup verified, one Start, post-Start Doctor 15/15, and one tunnel-only kickstart, backend/tunnel HTTP 200. See B_S6G3_V1_RUNTIME_RECOVERY_REPORT_20261104.md. Host boot persistence is still NOT PROVEN.
 
 B-S6 Production Cutover remains NO-GO. No v1.0 STOP for final export, SQLite migration, v1.1 app replacement or PR merge/tag occurred.
+
+## 9. 2026-11-05 B-S6G-4 Production Auth bootstrap and DB RPC canaries
+
+Previous B-S6G-3 statement that Auth users and application organizations are zero is HISTORICAL. The owner completed creation/confirmation of exactly one app Auth user. The canonical guarded one-time Production bootstrap was executed ONCE and verified: release-org exactly one, confirmed ACTIVE ADMIN exactly one, control_state exactly one. Post-bootstrap project/runtime/continuity rows remain zero, importer absent, schema migrations 11.
+
+DB-level positive ADMIN role-simulated profile/schema RPC assertions PASS; negative nonmember, anon, private direct-table, and nonexistent-project checks PASS. These use SET LOCAL ROLE plus synthetic request.jwt.claims within READ ONLY SQL, and do NOT represent a live signed bearer HTTPS flow. Security Advisor findings remain reviewed; no privileges or auth providers changed.
+
+Current target proofs: 7/11 PASS. Remaining four: future cutover operator identity, importer privilege lifecycle, real signed JWT readback, production runtime secret custody. See B_S6G4_PRODUCTION_ADMIN_AND_RPC_AUDIT_20261105.md for complete evidence and residual limitations. v1.0 production remains active and untouched. B-S6 cutover remains NO-GO.

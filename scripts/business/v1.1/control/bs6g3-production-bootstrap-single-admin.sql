@@ -1,4 +1,4 @@
--- ChatAgent Business v1.1 B-S6G-3 PRODUCTION one-time bootstrap -- NOT EXECUTED.
+-- ChatAgent Business v1.1 B-S6G-3 PRODUCTION one-time bootstrap -- EXECUTED_ONCE_20261105. DO NOT REPLAY.
 -- Operator-controlled, one-time data initialization. NOT a migration and NOT a runtime RPC.
 -- Fails closed unless the dedicated Business PRODUCTION project has exactly one confirmed,
 -- non-anonymous Auth user and zero Business organizations/members.
