@@ -95,3 +95,11 @@ Previous B-S6G-3 statement that Auth users and application organizations are zer
 DB-level positive ADMIN role-simulated profile/schema RPC assertions PASS; negative nonmember, anon, private direct-table, and nonexistent-project checks PASS. These use SET LOCAL ROLE plus synthetic request.jwt.claims within READ ONLY SQL, and do NOT represent a live signed bearer HTTPS flow. Security Advisor findings remain reviewed; no privileges or auth providers changed.
 
 Current target proofs: 7/11 PASS. Remaining four: future cutover operator identity, importer privilege lifecycle, real signed JWT readback, production runtime secret custody. See B_S6G4_PRODUCTION_ADMIN_AND_RPC_AUDIT_20261105.md for complete evidence and residual limitations. v1.0 production remains active and untouched. B-S6 cutover remains NO-GO.
+
+## 10. 2026-11-05 B-S6G-5A authenticated HTTPS preparation (no signed user session)
+
+Actual Production anonymous HTTPS bc_member_profile and bc_schema_status both returned HTTP 401 with SQLSTATE 42501 (PostgreSQL permission denied). The dedicated Mac Studio owner-only isolated canary now has an enabled publishable-only key, SHA-pinned macOS Keychain helper and a secure local interactive login launcher. A separate ephemeral Keychain write/read/delete test PASS and unattended readback fails closed as BUSINESS_AUTH_REQUIRED. Production Auth has one confirmed ADMIN but zero application sessions at preflight.
+
+Real user-signed JWT HTTPS readback and actual v1.1 Gateway-to-Supabase end-to-end are NOT complete. Owner must run ~/ChatAgentBusiness/v11-bs6g5-canary/VerifyAuth.command directly in Mac Studio Terminal and enter credentials locally, never through ChatGPT. Do not change authenticatedReadbackPlan or runtimeSecretCustody from PENDING before signed JWT/Gateway independent verification. Refer to B_S6G5_PRODUCTION_AUTH_HTTPS_AND_KEYCHAIN_READINESS_20261105.md.
+
+The previous 7/11 target-proof gate remains 7/11. B-S6 Production Cutover remains NO-GO.

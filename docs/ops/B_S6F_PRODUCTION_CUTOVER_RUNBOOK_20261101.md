@@ -123,3 +123,9 @@ v1.0 runtime was manually recovered with a verified private prestart backup, one
 B-S6G-3 prior 0-user/0-org status is HISTORICAL: exactly one confirmed Auth application user was registered by the owner, and one guarded release-org ADMIN bootstrap was executed. A fresh read-only query confirmed exactly one active ADMIN and one release-org, with all source data target rows still 0 and importer absent. **Never rerun the one-time bootstrap.**
 
 Database role/claim simulation proved key profile/schema and nonmember/anon denial paths, but is NOT a real HTTPS signed JWT or v1.1 Gateway E2E test. The migration operator's actual credential/session approval, importer restricted-execution lifecycle, publishable-only runtime secret custody, a real signed JWT readback, and actual Mac boot persistence remain release gate blockers. Step 9 must not be called fully PASS and the remaining production cutover steps must not be executed without separate authority.
+
+## B-S6G-5A isolated HTTPS and Keychain canary (2026-11-05)
+
+Modern publishable-only Supabase target-pinned canary and owner-only Mac Keychain helper prepared outside the existing v1.0 runtime, no source stop/export/import. Real Production anonymous HTTPS profile/schema RPC calls rejected with HTTP 401 / SQLSTATE 42501. Owner signed-JWT positive live login remains PENDING because the confirmed Auth user has no active session; do not fabricate tokens or treat Supabase management OAuth as an app session. A private Mac Studio-only VerifyAuth.command requires interactive TTY and concealed password input. The one-time ADMIN bootstrap from B-S6G-4 MUST NOT be replayed. Public Git contains no credentials or session receipts.
+
+Continue no-GO for source SQLite final export, Supabase privileged importer, app republish, PR Ready/merge, tag, reboot or customer cutover. See B_S6G5_PRODUCTION_AUTH_HTTPS_AND_KEYCHAIN_READINESS_20261105.md.
