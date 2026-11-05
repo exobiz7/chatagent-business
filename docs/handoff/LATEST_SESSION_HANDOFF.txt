@@ -1,27 +1,26 @@
 ChatAgent Business v1.1 — LATEST VERIFIED SESSION POINTER
 Updated: 2026-11-05 KST
-Latest work B-S6G-5E: OAUTH AUTHORIZATION SERVER DISCOVERY BLOCKED, LOCAL CONTRACT PASS. External Business-account staging NOT ARMED.
+B-S6G-5F LOCAL SECURE CONSENT PREVIEW CONTRACT PASS; REAL SUPABASE OAUTH SERVER OFF/UNPROVEN, DISCOVERY HTTP 404.
 
 Canonical repo /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Branch feat/business-v1.1-bs3-runtime-routing. Check actual HEAD/upstream/CI/clean tree on resuming, not this historic value.
-Prior B-S6G-5D: owner-private real Supabase signed JWT -> isolated loopback exact-one-read-only MCP member_get_profile PASS, including denied signed create_file, anonymous 401. Not a published app test.
-B-S6G-5E actual Production Supabase ref hjgerbyofaxyfqdckret: /auth/v1/.well-known/openid-configuration HTTP 200 and issuer/auth-code/PKCE S256 advertized; /.well-known/oauth-authorization-server/auth/v1 HTTP 404, /auth/v1/.well-known/oauth-authorization-server HTTP 404. No evidence of working MCP OAuth Authorization Server discovery or actual browser PKCE/consent. Do not treat OIDC as proof.
-Old B-S0 consent fixture has public signup, unpinned browser CDN and unsafe-inline CSP; do not publish or reuse with Production Auth unreviewed. Historic Staging ports 31861/51961/32171 not listening. Proposed separate staging ports 31862/51962/32172 not armed.
-New GET-only OAuth discovery preflight and fail-closed staging admission evidence tests added. Recorded BLOCKED_OAUTH_DISCOVERY with no owner staging approval.
-v1.0 is the published Business app; it stays healthy and untouched. The personal Plus chat cannot directly call the Business account plugin. Exact new v1.1 app must be configured/verified in Business workspace before use.
-B-S6 Production target 7/11 PASS. Pending migrationAdmin, importerPrivilegeIsolation, authenticatedReadbackPlan (published app), runtimeSecretCustody (final deployed Gateway). No Production cutover, import, tag, PR Ready/merge, OAuth Server toggles, consent registration, external tunnel or paid services.
+Branch feat/business-v1.1-bs3-runtime-routing. Verify current HEAD/upstream, clean state, latest exact-head CI.
+After B-S6G-5E, user toggled Supabase OAuth Server ON temporarily but CANCELed without saving. Direct live OAuth Authorization Server discovery remains HTTP 404 (OIDC 200). No Auth settings were changed by assistant.
+New B-S6G-5F files: separate PREVIEW-ONLY local consent server, self-hosted pinned Supabase UMD and browser/static CSS, no signup, disabled password/login/approve/deny, strict CSP, no-store; future-only client/redirect/scope/ADMIN check policy and inert SDK consent flow candidate. No real sign-in or authorization performed.
+Full staging HTTPS origin, exact OAuth client ID/redirect, Browser authorization code/PKCE and real Business workspace tool invocation remain PENDING. Historical B-S0 consent fixture MUST NOT be reused unreviewed. Existing staged external ports not armed.
+v1.0 Business production RUNNING, server/tunnel /health and /readyz 200 at onboarding, no changes. KAI Org Business v1.1 Production one ADMIN bootstrap, no customer data import.
+B-S6G Production Target 7/11 PASS, blockers: migrationAdmin, importerPrivilegeIsolation, authenticatedReadbackPlan (published Business app), runtimeSecretCustody (deployed Gateway). Cutover NO-GO. No public tunnel, new OAuth client, app republish, PR Ready/merge, tag, schema changes or paid resources.
+Personal Plus account is not the Business account; direct ChatAgent Business plugin tests must be done only inside Business workspace on exact v1.1 target after separately authorized external staging setup.
 
-READ FIRST
-1. docs/verification/v1.1/B_S6G5E_OAUTH_DISCOVERY_AND_STAGING_DECISION_20261105.md
-2. docs/verification/v1.1/B_S6G5E_EXTERNAL_OAUTH_ADMISSION_EVIDENCE_20261105.json
-3. scripts/business/v1.1/bs6g5e-oauth-discovery-preflight.mjs
-4. scripts/business/v1.1/bs6g5e-oauth-discovery-preflight-test.mjs
-5. scripts/business/v1.1/bs6g5e-external-admission-verifier.mjs
-6. scripts/business/v1.1/bs6g5e-external-admission-verifier-test.mjs
+MANDATORY READ
+1. docs/verification/v1.1/B_S6G5F_CONSENT_PREVIEW_SECURITY_REPORT_20261105.md
+2. scripts/business/v1.1/bs6g5f-consent-preview-server.mjs
+3. scripts/business/v1.1/bs6g5f-consent-flow.mjs
+4. scripts/business/v1.1/bs6g5f-consent-policy.mjs
+5. scripts/business/v1.1/bs6g5f-consent-security-test.mjs
+6. docs/verification/v1.1/B_S6G5E_OAUTH_DISCOVERY_AND_STAGING_DECISION_20261105.md
 7. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
 8. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
-9. docs/verification/v1.1/B_S6G5D_EXTERNAL_READONLY_WORKSPACE_ADMISSION_20261105.md
-10. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
-11. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37/39
+9. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+10. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37/39
 
-NEXT B-S6G-5F: owner-approved review of Supabase Authentication -> OAuth Server feature status and discovery endpoint and an isolated harden-by-design consent UI. No UI changes/tunnel publication/app registration without distinct owner approval. Once correct target is armed, the HOLD-only Business-account prompt lives in docs/ops/B_S6G5D_BUSINESS_ACCOUNT_READONLY_TEST_PROMPT.md. Never call published v1.0 for v1.1 acceptance.
+NEXT B-S6G-5G: exact HTTPS staging URL and client callback design, global Supabase Site URL impact audit, full review and test of a *functional* consent screen under proper gate; only then request approval for OAuth Server ON and new staging OAuth registration. No user action required in current preview preparation.

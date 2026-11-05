@@ -127,3 +127,9 @@ A new one-tool read-only loopback-only fixture (member_get_profile) was built. A
 Real Production Supabase project `hjgerbyofaxyfqdckret` returned 200 for the issuer's OIDC metadata with authorization_code/refresh_token and S256, but 404 for the MCP OAuth Authorization Server discovery route at /.well-known/oauth-authorization-server/auth/v1 and the alternate /auth/v1/.well-known/oauth-authorization-server. OIDC success is not OAuth Server discovery proof. The config might require enabled OAuth Server, exact route mapping or registration; no setting was changed or assumed.
 
 A bounded GET-only preflight and fail-closed staging admission validator/tests were added to CI. Existing B-S0 consent UI has public signup, unpinned external browser dependency and inline CSP, so it was NOT deployed/reused. No public staging endpoint or Business-account app was registered; target evidence remains 7/11 and production cutover NO-GO. See B_S6G5E_OAUTH_DISCOVERY_AND_STAGING_DECISION_20261105.md.
+
+## 15. 2026-11-05 B-S6G-5F secure local consent preview preparation
+
+The owner explicitly canceled unsaved Supabase OAuth Server activation. Subsequent live GET-only Auth discovery still returned OAuth authorization server metadata HTTP 404 and OIDC HTTP 200. No remote settings changed.
+
+A separate owner-reviewed login/consent *preview-only* web UI now exists as a local loopback-only static server with no signup, no enabled login/approve/deny buttons, no external CDN, no inline scripts, strict CSP and no-store. Pure pending authorization policy and a dormant SDK orchestration module fail closed on client ID/redirect/scope/ADMIN mismatches. Only synthetic/test fixtures were exercised, not a real consent. The future HTTPS staging site origin and exact Business client registration/redirect remain unresolved. Production Target 7/11, Cutover NO-GO. See B_S6G5F_CONSENT_PREVIEW_SECURITY_REPORT_20261105.md.
