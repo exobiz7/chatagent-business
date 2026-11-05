@@ -121,3 +121,9 @@ This is an actual isolated signed Gateway read-only PASS, NOT a published Busine
 Independent source/evidence review found historical B-S0/B-S3B-3 ChatGPT Business developer apps but no active 31861/51961/32171 staging listener. No current actual Business-account v1.1 external app endpoint is proven; installed published Business app is still v1.0.
 
 A new one-tool read-only loopback-only fixture (member_get_profile) was built. Actual Supabase Production JWKS/issuer/audience, Auth getUser, direct RPC vs MCP profile parity, exact one-tool discovery, unauthorized/invalid 401, OAuth protected-resource metadata, signed create_file denial and cleanup all PASS. No staging tunnel/publication or login consent was attempted; a browser OAuth authorization-code/PKCE handshake is NOT proved by a local JWT. Business-account plugin test remains PENDING; evidence 7/11 unchanged. See B_S6G5D_EXTERNAL_READONLY_WORKSPACE_ADMISSION_20261105.md.
+
+## 14. 2026-11-05 B-S6G-5E — independent OAuth discovery preflight
+
+Real Production Supabase project `hjgerbyofaxyfqdckret` returned 200 for the issuer's OIDC metadata with authorization_code/refresh_token and S256, but 404 for the MCP OAuth Authorization Server discovery route at /.well-known/oauth-authorization-server/auth/v1 and the alternate /auth/v1/.well-known/oauth-authorization-server. OIDC success is not OAuth Server discovery proof. The config might require enabled OAuth Server, exact route mapping or registration; no setting was changed or assumed.
+
+A bounded GET-only preflight and fail-closed staging admission validator/tests were added to CI. Existing B-S0 consent UI has public signup, unpinned external browser dependency and inline CSP, so it was NOT deployed/reused. No public staging endpoint or Business-account app was registered; target evidence remains 7/11 and production cutover NO-GO. See B_S6G5E_OAUTH_DISCOVERY_AND_STAGING_DECISION_20261105.md.

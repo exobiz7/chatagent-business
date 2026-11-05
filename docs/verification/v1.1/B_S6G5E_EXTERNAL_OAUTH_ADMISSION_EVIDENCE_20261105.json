@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "purpose": "EXTERNAL_STAGING_ADMISSION_ONLY",
+  "projectRef": "hjgerbyofaxyfqdckret",
+  "environment": "ISOLATED_STAGING_NOT_V1_PRODUCTION",
+  "observedAtKst": "2026-11-05",
+  "productionV1Unchanged": true,
+  "productionCutoverStarted": false,
+  "productionImportPerformed": false,
+  "oauth": {
+    "authorizationServerStatus": 404,
+    "metadataValidated": false,
+    "oidcStatus": 200,
+    "oidcValidated": true,
+    "pkceS256": false,
+    "existingBrowserConsentFlowVerified": false,
+    "dynamicClientRegistrationVerified": false
+  },
+  "staging": {
+    "httpsOriginVerified": false,
+    "tlsVerified": false,
+    "oneReadOnlyToolOnly": true,
+    "unauthorizedBearerDenied": true,
+    "actualConsentUiVerified": false,
+    "isolationFromV1Verified": true,
+    "publicTunnelArmed": false
+  },
+  "businessAccount": {
+    "newAppIdentityVerified": false,
+    "exactWorkspaceVerified": false,
+    "oauthAuthorizationCodeFlowVerified": false,
+    "pluginToolCallVerified": false
+  },
+  "owner": {
+    "explicitStagingPublishApproval": false,
+    "explicitV11ProductionCutoverApproval": false
+  },
+  "notes": "Supporting prepublication facts only; no Supabase OAuth settings, public tunnel, app, or v1.0 runtime modified. Never use this document as a source of authorization."
+}
