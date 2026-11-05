@@ -1,22 +1,22 @@
 ChatAgent Business v1.1 — LATEST VERIFIED SESSION POINTER
 Updated: 2026-11-05 KST
-B-S6D/E/F and B-S6G-1 accepted/closed; B-S6G-2 Production target created; B-S6G-3 canonical schema 11/11; B-S6G-4 release-org ADMIN bootstrap ONCE, 1 confirmed admin and DB role-simulated RPC PASS.
-B-S6G-5A: real Production anonymous HTTPS bc_member_profile/bc_schema_status rejected HTTP 401 SQLSTATE 42501 (2/2). SHA-pinned owner-private keychain helper compiled, isolated publishable-only config created, live random Keychain write/read/delete PASS, absent-session readback fails closed. Mac Studio terminal-only credential prompt and JWT canary ready.
-B-S6G-5B REAL SIGNED JWT HTTPS/GATEWAY E2E: PENDING owner-local login; auth.sessions=0 at preflight. Never claim PASS until verified. Target evidence remains 7/11 PASS, 4 PENDING. Full production runtime Keychain custody not proved by canary.
-B-S6 Production Cutover NO-GO/NOT STARTED/NOT AUTHORIZED. v1.0 remains healthy (PID 13607, /health, tunnel /healthz and /readyz HTTP 200).
-Canonical repo /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Working branch feat/business-v1.1-bs3-runtime-routing. Verify actual HEAD, upstream and exact-head CI. Public GitHub: NO Auth email/password/JWT/Keychain receipts/service_role/source SQLite data in repo.
-PR #6-9 stacked, no merge, tag or app republish.
+B-S6G-5B DIRECT PRODUCTION SIGNED JWT HTTPS PASS.
+Mac Studio owner completed interactive local sign-in. Two accepted live readback canaries used owner-private Keychain refresh-token custody and real Supabase signed access JWT to fetch member profile/schema status: release-org, ADMIN, schema/contract 1. Separate published JWKS cryptographic signature/issuer validation and Auth getUser JWT subject match PASS. Auth sessions count 1; no credentials, access/refresh tokens or private member identity entered chat or public Git.
+Historical B-S6G-5A zero-session and owner-login-required state is resolved.
+B-S6G-5C actual v1.1 MCP Gateway tool-call E2E NOT EXECUTED/NOT VERIFIED. Production operator identity, importer privileges and final runtime secret custody remain pending.
+B-S6G target proof stays 7 of 11 PASS. B-S6 Production Cutover NO-GO / NOT STARTED / NOT AUTHORIZED; v1.0 must remain in production.
+Local repo /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Branch feat/business-v1.1-bs3-runtime-routing; verify local/upstream HEAD, GitHub exact-head CI and clean tree before new work. Public GitHub repo; do not commit private member email/UUID, tokens, Supabase secret or private receipts. PR #6->#7->#8->#9 remains protected/draft where applicable; no merge/tag/app republish.
 
 READ FIRST
-1. docs/verification/v1.1/B_S6G5_PRODUCTION_AUTH_HTTPS_AND_KEYCHAIN_READINESS_20261105.md
-2. docs/verification/v1.1/B_S6G4_PRODUCTION_ADMIN_AND_RPC_AUDIT_20261105.md
-3. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
-4. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
-5. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
-6. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37 and 39
-7. scripts/business/v1.1/bs6g5-production-auth-canary.mjs
-8. scripts/business/v1.1/bs6g5-secure-local-signin.py
-9. supabase/migrations/
+1. docs/verification/v1.1/B_S6G5B_SIGNED_JWT_HTTPS_READBACK_AUDIT_20261105.md
+2. docs/verification/v1.1/B_S6G5_PRODUCTION_AUTH_HTTPS_AND_KEYCHAIN_READINESS_20261105.md (sections 1/4/5 historical)
+3. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
+4. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
+5. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_AND_INTEGRATION_REVIEW_20261102.md
+6. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+7. docs/approved/CHATAGENT_BUSINESS_V1_1_ACCEPTED_DESIGN_20261005.md sections 37/39
+8. scripts/business/v1.1/bs6g5-production-auth-canary.mjs and bs6g5-secure-local-signin.py
+9. scripts/business/v1.1/bs1c-live-fixture-server.mjs and bs3d2-live-fixture-server.mjs (fixtures NOT production)
 
-NEXT: Owner runs ~/ChatAgentBusiness/v11-bs6g5-canary/VerifyAuth.command in interactive Mac Studio Terminal, enters confirmed app Auth email and password locally, never sharing credentials in ChatGPT. After owner reports success, run node scripts/business/v1.1/bs6g5-production-auth-canary.mjs readback --config=/Users/macstudio/ChatAgentBusiness/v11-bs6g5-canary/auth.json --expected-project-ref=hjgerbyofaxyfqdckret by authorized RDC, verify production real signed JWT HTTPS and Keychain. Then plan isolated actual v1.1 Gateway E2E, operator identity and importer privilege lifecycle under their own approvals. No source STOP/export/import or cutover, PR Ready/merge/tag, republish or reboot now.
+NEXT B-S6G-5C: review v1.1 signed-JWT Gateway handler, then isolated read-only loopback-only MCP tools/call using owner-private Keychain session in memory. Test actual 401 on absent/malformed token and positive real member_get_profile; no source data/role mutation. If unable to meet isolation controls, record Gateway PENDING, no fake PASS. Then independently validate final operator identity, importer privilege lifecycle, runtime credential custody and owner approval. No further human credentials needed now.

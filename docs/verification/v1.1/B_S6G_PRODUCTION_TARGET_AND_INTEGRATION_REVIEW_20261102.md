@@ -103,3 +103,9 @@ Actual Production anonymous HTTPS bc_member_profile and bc_schema_status both re
 Real user-signed JWT HTTPS readback and actual v1.1 Gateway-to-Supabase end-to-end are NOT complete. Owner must run ~/ChatAgentBusiness/v11-bs6g5-canary/VerifyAuth.command directly in Mac Studio Terminal and enter credentials locally, never through ChatGPT. Do not change authenticatedReadbackPlan or runtimeSecretCustody from PENDING before signed JWT/Gateway independent verification. Refer to B_S6G5_PRODUCTION_AUTH_HTTPS_AND_KEYCHAIN_READINESS_20261105.md.
 
 The previous 7/11 target-proof gate remains 7/11. B-S6 Production Cutover remains NO-GO.
+
+## 11. 2026-11-05 B-S6G-5B actual signed-JWT direct Production HTTPS
+
+Mac Studio owner-local application login has been completed. Two independent accepted canary readbacks passed with Keychain refresh-token restore, real Supabase-signed JWT access and Profile/Schema Status HTTPS RPC readbacks for exactly one release-org ADMIN. Additional Auth server getUser subject matching and cryptographic JWKS signature/issuer checks PASS; Supabase Auth sessions count one. Neither the auth user ID nor token was disclosed in public Git or ChatGPT.
+
+Prior B-S6G-5A zero-session and pending-login statements are HISTORICAL. The signed-JWT direct HTTPS subgate is now PASS. However actual signed MCP Gateway tool-call E2E and final runtime/operator credential custody remain unproven. Keep full target proof 7/11 PASS with authenticatedReadbackPlan still PENDING pending Gateway. Source export/import, app republish and v1.1 cutover remain NO-GO. Refer to B_S6G5B_SIGNED_JWT_HTTPS_READBACK_AUDIT_20261105.md.
