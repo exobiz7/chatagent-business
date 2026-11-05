@@ -139,3 +139,9 @@ Owner-local protected app Auth sign-in completed without ChatGPT-visible credent
 On the actual Mac Studio, the owner's Production Auth JWT from a dedicated Keychain account was verified using public JWKS and used in an isolated **loopback-only** v1.1 MCP Gateway fixture. Read-only member_get_profile tools/call succeeded and matched a separately authenticated Supabase RPC. No-bearer and malformed-bearer were HTTP 401; protected-resource metadata matched expected issuer. No public tunnel, v1.0 port, customer data, project or privileged import endpoint was used; the fixture shut down cleanly.
 
 Do not call this a Business workspace app-plugin canary or a production-deployed v1.1 Gateway acceptance. Separate Business-account UI/plugin testing must occur only in an authenticated Business workspace, against the exact approved target. Current v1.0 Business plugin cannot prove v1.1 cutover. Target evidence remains 7/11 and Cutover NO-GO; do not advance import/PR merge/tag/app republish or reboot gates.
+
+## B-S6G-5D — external Business account path NOT ARMED (2026-11-05)
+
+Created a separate one-read-only-tool localhost MCP fixture with real signed Supabase JWT verification. Exact one tool member_get_profile; missing/malformed bearer denied; write tool create_file rejected even with real ADMIN token; production business data remains untouched. Historical staging 31861/51961 and consent 32171 listeners are not active. No public staging tunnel, new/modified Business app, browser OAuth authorization code flow or fresh Business-account MCP request has been executed.
+
+Do not call a published v1.0 app to claim v1.1 acceptance. Owner approval is required before staging external endpoint, OAuth consent registration or a new Business account app is created/changed. A HOLD-only user-side read-only prompt is prepared at docs/ops/B_S6G5D_BUSINESS_ACCOUNT_READONLY_TEST_PROMPT.md. B-S6 Cutover remains NO-GO and target proof remains 7/11.
