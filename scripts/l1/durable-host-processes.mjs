@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import {fileURLToPath} from "node:url";
 import {spawn,spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,lstatSync,readFileSync,writeFileSync,openSync,closeSync,readSync,statSync,accessSync,constants as C} from "node:fs";
 import {isAbsolute,join} from "node:path";
