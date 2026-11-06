@@ -1,21 +1,33 @@
-ChatAgent Business v1.1 — LATEST SESSION HANDOFF
+ChatAgent Business v1.1 — LATEST VERIFIED HANDOFF
 Updated: 2026-11-06 KST
-B-S6G-5I: NETLIFY FREE DEDICATED SITE CREATED; STATIC CONSENT PREVIEW ASSETS BUILT, BUT NO DEPLOY YET. HUMAN BROWSER ACTION REQUIRED. NO AUTH/GATEWAY/PRODUCTION CHANGE.
+B-S6G-5I FINAL: NETLIFY FREE STATIC CONSENT PREVIEW DEPLOYED AND HTTPS VERIFIED. REAL OAUTH STILL OFF, B-S6 CUTOVER NO-GO.
 
-Canonical Mac Studio SSOT /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Feature branch feat/business-v1.1-bs3-runtime-routing. Check current actual HEAD, origin, exact-head GitHub CI, PR #9 Draft and clean worktree before next unit.
-New Netlify Free site: chatagent-business-v11-consent-staging, exact ID 6a561d90-21fe-4001-8a04-ea566236f236; https://app.netlify.com/projects/chatagent-business-v11-consent-staging. Connected team exobiz7 Free; two existing unrelated sites untouched.
-New static preview generator outputs six files into /tmp/chatagent-business-bs6g5i-staging-preview-20261106. No JavaScript, SDK, login, signup, enabled consent, forms, OAuth callback, secret or API traffic. Local security test PASS. No Netlify connector deploy/upload tool, no Mac Netlify CLI or token. No public deploy; owner must use Netlify Deploys > Deploy manually and drag EXACT local folder. After owner action independently verify actual public HTTPS 200 route /oauth/consent plus CSP/noindex/no-store and all controls disabled before claiming ready.
-Supabase v1.1 Auth ref hjgerbyofaxyfqdckret remains unchanged, OAuth Discovery previously HTTP 404; Auth Site URL NOT changed or independently verified from API. No new OAuth client, ChatGPT Business app registration, public MCP gateway or approval. Existing ChatAgent Business v1.0 RUNNING/healthy at previous verification; preserve it.
-Production Target 7/11 PASS; pending migrationAdmin, importerPrivilegeIsolation, authenticatedReadbackPlan (real connected Business app) and runtimeSecretCustody. B-S6 Cutover NO-GO. PR #9 remains Draft; no merge, release tag, data migration or new paid service.
+Canonical Mac Studio SSOT: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Feature branch: feat/business-v1.1-bs3-runtime-routing. Verify HEAD, origin exact CI, PR #9 Draft and clean worktree first.
+
+Netlify dedicated static STAGING site:
+  Name: chatagent-business-v11-consent-staging
+  Site ID: 6a561d90-21fe-4001-8a04-ea566236f236
+  Deploy ID: 6aed3d71a3bf94cd4310cd9e, READY, published 2026-11-06 02:37:37 UTC
+  Site: https://chatagent-business-v11-consent-staging.netlify.app/oauth/consent
+  Owner team exobiz7 / Free. Two unrelated existing Netlify sites untouched.
+  Five public functional routes independently HTTPS 200 and match exact local build after documented Netlify edge injection normalization. Internal Netlify config _headers/_redirects consumed and unexposed. Strict CSP script-src none, HSTS, no-store, noindex, nosniff.
+  WARNING: Some Netlify responses inject a Netlify marketing comment and public HUD script tag, even though checked-in source contains none. The script is prohibited by current CSP but real browser verification remains pending, and a fully functional future OAuth consent page requires separate security acceptance.
+  Evidence: docs/verification/v1.1/B_S6G5I_HOSTED_STATIC_PREVIEW_VERIFICATION_20261106.json
+  Verifier: node scripts/business/v1.1/bs6g5i-hosted-preview-verifier.mjs
+  Source build: /tmp/chatagent-business-bs6g5i-staging-preview-20261106 (no auth SDK, signup, login, consent, JS or network calls).
+
+Existing ChatAgent Business v1.0 operator RUNNING healthy and ports 31850/51950 /health /healthz /readyz 200 during final independent verification. Supabase v1.1 production Auth ref hjgerbyofaxyfqdckret unchanged, OAuth Authorization Server discovery HTTP 404, OIDC 200. No global Site URL/Auth settings change, new OAuth client, customer data import, public MCP Gateway, Business-workspace plugin test, PR ready/merge, tag or paid resources.
+B-S6G Production Target 7/11 PASS with blockers migrationAdmin, importerPrivilegeIsolation, authenticatedReadbackPlan and runtimeSecretCustody; Cutover NO-GO.
 
 READ FIRST
-1. docs/verification/v1.1/B_S6G5I_NETLIFY_SITE_CREATION_AND_PREVIEW_DEPLOY_HANDOFF_20261106.md
-2. scripts/business/v1.1/bs6g5i-build-static-consent-preview.mjs
-3. scripts/business/v1.1/bs6g5i-static-consent-preview-test.mjs
-4. docs/verification/v1.1/B_S6G5H_FREE_HOSTING_AND_OAUTH_CLIENT_DECISION_20261106.md
+1. docs/verification/v1.1/B_S6G5I_HOSTED_STATIC_PREVIEW_VERIFICATION_20261106.json
+2. docs/verification/v1.1/B_S6G5I_NETLIFY_SITE_CREATION_AND_PREVIEW_DEPLOY_HANDOFF_20261106.md
+3. scripts/business/v1.1/bs6g5i-hosted-preview-verifier.mjs
+4. scripts/business/v1.1/bs6g5i-build-static-consent-preview.mjs
 5. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
 6. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
-7. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+7. docs/verification/v1.1/B_S6G5H_FREE_HOSTING_AND_OAUTH_CLIENT_DECISION_20261106.md
+8. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
 
-NEXT: owner Netlify website uploads exact isolated six-file folder; agent performs independent hosted HTTPS verification after deploy, preserving all OAuth/cutover bans. Do not ask for any password or access token in ChatGPT.
+NEXT B-S6G-5J: investigate/verify Netlify HUD injection under real-browser CSP, whether this Free host is suitable for production-like login/consent. Separately confirm actual Business-account ChatGPT Callback + client method and solve token resource binding/global Auth Site URL risks. No new deployment, OAuth toggle, live authorization E2E or cutover without separate approval.

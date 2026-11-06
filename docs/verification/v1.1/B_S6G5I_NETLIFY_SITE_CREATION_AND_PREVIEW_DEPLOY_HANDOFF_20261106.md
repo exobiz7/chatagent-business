@@ -1,3 +1,20 @@
+# Final independent hosted acceptance update — 2026-11-06 KST
+
+**B-S6G-5I hosted STATIC PREVIEW PASS (with provider edge injection disclosed).**
+The following original preparation section preserves the historical pre-deploy state; the final facts supersede its PENDING statements.
+
+- Netlify Free site `chatagent-business-v11-consent-staging`, ID `6a561d90-21fe-4001-8a04-ea566236f236` now has a READY published production-context *static staging* deploy `6aed3d71a3bf94cd4310cd9e` (UTC 2026-11-06T02:37:37.316Z).
+- Actual HTTPS `https://chatagent-business-v11-consent-staging.netlify.app/oauth/consent`: HTTP 200, CSP `script-src 'none'`, `connect-src 'none'`, `form-action 'none'`, HSTS, no-store, noindex, nosniff.
+- Independently fetched five HTTPS paths (root, consent, consent.html, CSS, robots.txt); 200 responses. Netlify processed internal `_headers` and `_redirects` files (direct requests return 404, expected). All five are identical by SHA-256 to the generated source **after normalizing ONLY a precisely identified Netlify-injected promotion comment and HUD script tag**. The unmodified direct origin response was also byte-for-byte identical for Python urllib with its original header set.
+- **Important provider injection finding:** Netlify automatically inserts an HTML promotion comment and `/.netlify/scripts/hud?variant=public` script tag into some served HTML, despite these being absent from the checked-in/generated static source. Thus claiming every raw HTTP response contains zero script tags would be false. The published response has `script-src 'none'`; a standards-compliant browser blocks execution of that injected script. Do not weaken CSP or assume the future working OAuth screen can safely reuse this setup without an additional runtime/browser-level audit.
+- Existing ChatAgent Business v1.0 process RUNNING/healthy and three local health endpoints 200. Supabase Auth OIDC 200 / OAuth authorization-server discovery 404; OAuth remains unarmed, no signup/login/grant or Business plugin E2E.
+- The screenshot's `3 new files uploaded` is a UI activity count and does not indicate only three functional files; the five hosted functional URLs and Netlify processed internal configuration were independently verified.
+- Release proof remains **7/11 PASS**, B-S6 Production Cutover **NO-GO**.
+- Evidence JSON: `B_S6G5I_HOSTED_STATIC_PREVIEW_VERIFICATION_20261106.json`.
+- Reproducible GET-only script: `node scripts/business/v1.1/bs6g5i-hosted-preview-verifier.mjs` (requires the prepared local `/tmp` source folder; no Auth token or Netlify credential). It fails closed on unexpected extra scripts/content.
+
+---
+
 # B-S6G-5I — Dedicated Netlify Free Consent Preview Site Creation
 
 Date: 2026-11-06 KST
@@ -59,3 +76,11 @@ The connected Netlify plugin can **create a site and inspect deploys**, but expo
 - Public repository change set contains no client secrets, Service Role keys, JWTs or sign-in credentials.
 - Netlify project create returned ID 6a561d90-21fe-4001-8a04-ea566236f236; subsequent site readback confirmed the identity, Free plan, and **empty deploy**.
 - GitHub exact-head CI is separately required after commit. Hosting acceptance remains PENDING until user drag/drop and independent HTTPS headers/content verification.
+
+### Post-deployment CI and verified operational closure
+
+- Mac Studio Hosted-mode CI: **PASS (79.13 seconds)**, run after actual Netlify publication.
+- Mac Studio full Docker + Business/Personal regression CI: **PASS (98.17 seconds)**, run after publication.
+- GET-only independent hosted preview verifier passed twice, comparing 5 live HTTPS routes against local output after precisely documented Netlify edge comment/HUD normalization.
+- Local v1.0 process and secure tunnel: RUNNING/healthy, 3/3 HTTP 200. Supabase OIDC 200, Authorization Server OAuth metadata 404. No OAuth Server enable or settings edits.
+- No real Auth token, live login, OAuth client registration, Business-workspace plugin invocation, migration or Production Cutover. GitHub exact commit CI is a separate acceptance gate after this record commit.
