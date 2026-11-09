@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "purpose": "B-S6G-5H_HOSTING_OAUTH_ADMISSION",
+  "projectRef": "hjgerbyofaxyfqdckret",
+  "observedAtKst": "2026-11-06",
+  "productionV1Unchanged": true,
+  "productionCutoverApproved": false,
+  "migrationAuthorized": false,
+  "externalDeploymentAuthorized": false,
+  "oauthChangesAuthorized": false,
+  "host": {
+    "provider": "netlify",
+    "plan": "free",
+    "separateDedicatedSite": true,
+    "reuseOtherProject": false,
+    "existingUnrelatedSiteCount": 2,
+    "netlifyExistingNames": [
+      "codeit-webdev-basic",
+      "profitwithkai"
+    ],
+    "vercelProjectCount": 0,
+    "vercelDomainCount": 0,
+    "existingSuitableChatagentHost": false,
+    "siteId": null,
+    "origin": null,
+    "verifiedSiteOwner": false,
+    "tlsAndConsentPathVerified": false,
+    "noAutomaticBillableUpgrade": false,
+    "proposedNewSiteName": "chatagent-business-v11-consent-staging",
+    "noProjectOrSiteCreated": true,
+    "freeTierLimitIndependentlyConfirmedOnAccount": false,
+    "accountPlanLabel": "nf_team_dev"
+  },
+  "oauth": {
+    "authorizationPath": "/oauth/consent",
+    "authorizationServerDiscoveryVerified": false,
+    "oidcDiscoveryPreviouslyVerified": true,
+    "pkceS256Verified": false,
+    "exactIssuerVerified": true,
+    "siteUrlLastShownInDashboard": "http://localhost:3000",
+    "siteUrlPersistedReadVerified": false,
+    "configuredSiteOrigin": null,
+    "globalRedirectImpactReviewed": false,
+    "passwordRecoveryAndConfirmationReviewed": false,
+    "currentSiteUrlChangeRollbackReviewed": false,
+    "oauthServerStillUnarmed": true
+  },
+  "client": {
+    "mode": null,
+    "recommendedFirst": "predefined",
+    "fallback": "dcr_after_explicit_security_approval",
+    "cimdSupportUnverified": true,
+    "id": null,
+    "callback": null,
+    "preRegisteredWithExactCallback": false,
+    "chatGptConfiguredPredefinedId": false,
+    "dcrSupportedByDiscovery": false,
+    "ownerSecurityApprovalForOpenRegistration": false,
+    "redirectDomainPolicyReviewed": false,
+    "registeredIdAndCallbackObserved": false,
+    "cimdSupportedByDiscovery": false,
+    "ownerCimdApproval": false,
+    "consentPolicySupportsUrlClientId": false
+  },
+  "gateway": {
+    "resourceOrigin": null,
+    "oneReadOnlyToolVerified": false,
+    "independentFromV1": true,
+    "clientIdScoped": false,
+    "resourceAudienceBound": false,
+    "oauthResourceParamEchoVerified": false,
+    "oauthTokenIssuanceAudienceVerified": false,
+    "supabaseDefaultAudience": "authenticated",
+    "mcpResourceAudienceNotYetProven": true
+  },
+  "owner": {
+    "approvedExternalStagingOnly": false,
+    "businessAccountAppIdentityReviewed": false,
+    "actualWorkspaceConsentFlowObserved": false
+  },
+  "notes": "Account shows Netlify plan label nf_team_dev; actual billing controls not independently verified. Two existing Netlify sites belong to unrelated projects, no site was created. Global Auth Site URL, client identity, resource audience and OAuth discovery remain unresolved. Any green audit is not change authorization."
+}

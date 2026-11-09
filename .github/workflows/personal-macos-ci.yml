@@ -17,8 +17,8 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run hosted macOS tests
-        run: npm run test:ci
+        run: npm run test:ci:hosted
       - name: Document Docker release-host gate
         run: |
-          echo "B5/B6 Docker E2E remains in npm test and is required on the release host."
+          echo "Full Docker/PostgreSQL effect E2E remains in npm run test:ci and is required on the release host."
           echo "GitHub macos-latest does not provide the Docker Desktop daemon used by the production exec plane."

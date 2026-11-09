@@ -1,0 +1,195 @@
+{
+  "capturedAtKst": "2026-10-08",
+  "product": "ChatAgent Business",
+  "shortName": "ChatAgent Biz",
+  "targetRelease": "v1.1.0",
+  "canonicalRepo": {
+    "github": "exobiz7/chatagent-business",
+    "local": "/Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business"
+  },
+  "productionBaseline": {
+    "release": "v1.0.0",
+    "status": "PRODUCTION_ACTIVE_V1.0.0",
+    "releaseCommit": "d6373f8ffef4b3739134f4d14cc300918417553e",
+    "mcpListen": "127.0.0.1:31850",
+    "mutationByV11WorkThroughBs3a": false,
+    "cutoverAllowedNow": false
+  },
+  "gitAtHandoffBase": {
+    "branch": "feat/business-v1.1-bs3-runtime-routing",
+    "head": "de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5",
+    "remoteHeadMatched": true,
+    "worktreeWasCleanBeforeHandoffFiles": true,
+    "newSessionMustVerifyActualHead": true,
+    "handoffPackageMayBeCommittedOnTop": true
+  },
+  "phase": {
+    "B-S0": "ACCEPTED_CLOSED",
+    "B-S1": "ACCEPTED_CLOSED",
+    "B-S2": "ACCEPTED_CLOSED",
+    "B-S3A": "ACCEPTED_CLOSED",
+    "B-S3B": "NEXT",
+    "B-S3": "IN_PROGRESS",
+    "B-S4": "PENDING",
+    "B-S5": "PENDING",
+    "B-S6": "PENDING"
+  },
+  "acceptedClosureHeads": {
+    "B-S0": "2975be54502a89dd92949c57521bacb071d49bac",
+    "B-S1": "63de5e25a6af5b2b4ea8846ef166e104cb305d0d",
+    "B-S2": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
+    "B-S3A": "de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5"
+  },
+  "pullRequestsAtCapture": {
+    "6": {
+      "state": "OPEN",
+      "draft": false,
+      "mergeable": true,
+      "base": "main",
+      "head": "feat/business-v1.1-bs0-validation",
+      "headSha": "2975be54502a89dd92949c57521bacb071d49bac",
+      "mergeRequiresExplicitUserAuthorization": true
+    },
+    "7": {
+      "state": "OPEN",
+      "draft": true,
+      "mergeable": true,
+      "base": "feat/business-v1.1-bs0-validation",
+      "head": "feat/business-v1.1-bs1-cloud-foundation",
+      "headSha": "63de5e25a6af5b2b4ea8846ef166e104cb305d0d",
+      "readyOrMergeRequiresExplicitUserAuthorization": true
+    },
+    "8": {
+      "state": "OPEN",
+      "draft": true,
+      "mergeable": true,
+      "base": "feat/business-v1.1-bs1-cloud-foundation",
+      "head": "feat/business-v1.1-bs2-continuity-foundation",
+      "headSha": "1230f2bde8cb3257901c0c01b9827056b93d8c4c",
+      "readyOrMergeRequiresExplicitUserAuthorization": true
+    },
+    "9": {
+      "state": "OPEN",
+      "draft": true,
+      "mergeable": true,
+      "base": "feat/business-v1.1-bs2-continuity-foundation",
+      "head": "feat/business-v1.1-bs3-runtime-routing",
+      "headSha": "de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5",
+      "readyOrMergeRequiresExplicitUserAuthorization": true
+    }
+  },
+  "staging": {
+    "supabaseProjectRef": "dxofyjarkzizdzumfyul",
+    "mcpListen": "127.0.0.1:31861",
+    "healthPath": "/healthz",
+    "tunnelHealthListen": "127.0.0.1:51961",
+    "fixture": "scripts/business/v1.1/bs3a-live-fixture-server.mjs",
+    "statusAtCapture": "live",
+    "mappingCountAtCapture": 0,
+    "workspaceRootsPublic": [
+      {
+        "workspaceRootId": "proj04",
+        "label": "proj04 workspace"
+      }
+    ],
+    "dbBackedReads": [
+      "member_get_profile",
+      "runtime_list_nodes",
+      "continuity_get_context",
+      "continuity_prepare_handoff",
+      "continuity_search_history"
+    ],
+    "dbBackedMutations": [
+      "runtime_map_project",
+      "runtime_unmap_project"
+    ],
+    "ownerPrivateLocalFiles": [
+      "/Users/macstudio/Library/Application Support/chatagent/business-v11-bs3a/public-runtime-config.json",
+      "/Users/macstudio/Library/Application Support/chatagent/business-v11-bs3a/workspace-mappings.json"
+    ],
+    "ownerPrivateModeVerified": "0600",
+    "publishableKeyValueMustNotBePersisted": true
+  },
+  "nodeRuntimeAuthority": {
+    "requiredEngine": ">=24.15.0 <25",
+    "acceptedNode": "v24.21.0",
+    "nodePath": "/Users/macstudio/.nvm/versions/node/v24.21.0/bin/node",
+    "npmPath": "/Users/macstudio/.nvm/versions/node/v24.21.0/bin/npm",
+    "doNotTrustDefaultShellNode": true
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@supabase/supabase-js": "2.117.2",
+    "mcpSdkKnownHighAdvisory": "GHSA-6qxp-vccf-f47h",
+    "mcpSdkUpgradePolicy": "SEPARATE_BOUNDED_COMPATIBILITY_SECURITY_UNIT"
+  },
+  "personalDonor": {
+    "product": "ChatAgent Personal v1.1.1",
+    "commit": "da391bf9c38697d706049b3b5d7bd2c2ba4ba28e",
+    "manifest": "docs/verification/v1.1/B_S0_PERSONAL_DONOR_MANIFEST.json",
+    "durableHostProcessesBlob": "27a872de687df1f43fd1ab0c4783ac11a181ba94",
+    "brokerServerBlob": "5ee4d6078207031c3b84bc7e238d5c8e3b27d331",
+    "runtimeDependencyAllowed": false,
+    "policy": "REUSE_FIRST_READ_ONLY_DONOR"
+  },
+  "bs3a": {
+    "status": "ACCEPTED_CLOSED",
+    "gateFile": "docs/verification/v1.1/B_S3_GATE_STATE_20261008.json",
+    "report": "docs/verification/v1.1/B_S3A_RUNTIME_ROUTING_FOUNDATION_REPORT_20261008.md",
+    "oauthReadAdmissionCanary": "PASS",
+    "oauthMapDiscoveryCanary": "PASS",
+    "oauthExactRevisionUnmapCanary": "PASS",
+    "finalMappingCount": 0,
+    "absoluteHostPathDisclosed": false,
+    "repositoryMutationObserved": false,
+    "closureRegressionNodeV24_21_0": "PASS"
+  },
+  "hostedCiNote": {
+    "codeBearingHead": "2d7a9e83d045ba83766ea105d2116f77b80d75f9",
+    "codeBearingHeadHostedCi": "SUCCESS",
+    "docsOnlyClosureHead": "de7cb4bf7469cf3e2a5d4d777e24c805ee1946f5",
+    "closureHeadHostedCi": "RUNNER_PROVISIONING_FAILURE_BEFORE_TEST_STEPS",
+    "attemptsObserved": 2,
+    "stepsObserved": [],
+    "runnerIdObserved": 0,
+    "classification": "INFRASTRUCTURE_NOT_PRODUCT_TEST_FAILURE"
+  },
+  "nextUnit": {
+    "id": "B-S3B",
+    "name": "Durable HOST_USER Process Core",
+    "publicTools": [
+      "process_start_host",
+      "process_get_status",
+      "process_read_output",
+      "process_terminate_job"
+    ],
+    "reuseFirst": true,
+    "businessAuthority": "OAUTH_MEMBER -> PROJECT_AUTH -> BS3A_ROUTE -> BS1_NODE_OWNERSHIP_LIFECYCLE_LEASE -> LOCAL_POLICY -> OS_USER",
+    "deferred": [
+      "semantic filesystem effects",
+      "semantic Git/GitHub effects",
+      "Business local effect audit",
+      "production relay transport",
+      "final B-S3 OpenAI safety matrix"
+    ],
+    "contractGapsToResolve": [
+      "public process_read_output maxBytes 524288 vs donor single-read 16384",
+      "public process_read_output waitMs vs donor immediate read",
+      "cwd semantics vs mapped-project host-path privacy and broad HOST_USER authority",
+      "processId-only status/read/terminate must resolve server-owned member/node/project binding",
+      "restart/crash-window reconciliation without arbitrary PID trust"
+    ]
+  },
+  "prohibitions": [
+    "do not restart B-S0/B-S1/B-S2/B-S3A feature development without new evidence",
+    "do not modify production v1.0",
+    "do not merge or mark stacked PRs Ready without explicit user authorization",
+    "do not use service_role in runtime",
+    "do not expose tokens/keychain values/private keys",
+    "do not make Personal a Business runtime dependency",
+    "do not treat cwd as SHARED_NODE security sandbox",
+    "do not accept caller-supplied PID/member/user ID as authority",
+    "do not use broad git reset/clean/add operations"
+  ],
+  "canonicalNextSessionPrompt": "docs/handoff/CHATAGENT_BUSINESS_V1_1_NEXT_SESSION_BOOTSTRAP_PROMPT_20261008.txt"
+}
