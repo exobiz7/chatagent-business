@@ -149,3 +149,7 @@ A new independent Netlify **Free** site `chatagent-business-v11-consent-staging`
 ## 19. 2026-11-06 — B-S6G-5I static hosted HTTPS acceptance (no live OAuth)
 
 Netlify dedicated Free site deploy `6aed3d71a3bf94cd4310cd9e` is READY; five HTTPS functional paths returned 200, Security headers PASS, generated source matches after exact known Netlify HUD/comment edge injection normalization. CSP currently forbids the injected provider script execution; actual live OAuth security approval remains separate. No real OAuth, dynamic client, Business app E2E, customer import or Production cutover. v1.0 health 3/3 HTTP 200, Supabase Authorization Server discovery HTTP 404, Production proof 7/11 PASS. See B_S6G5I_HOSTED_STATIC_PREVIEW_VERIFICATION_20261106.json.
+
+## 20. 2026-11-09 B-S6G-5J — real Chrome security and offline resource token guard
+
+CSP enforcement PASS against Netlify HUD in actual headless Google Chrome, including a securitypolicyviolation event and zero successful injected script network response. Synthetic-only strict JWT admission guard PASS: exact MCP audience/resource, client ID, scope, issuer, signed token and expiry. This guard is NOT deployed. Existing local canary aud=authenticated is insufficient to prove OAuth resource binding. Live OAuth discovery 404; real Business callback and current Site URL unverified. Target remains 7/11, Cutover NO-GO. See B_S6G5J_BROWSER_OAUTH_SECURITY_REVIEW_20261109.md.
