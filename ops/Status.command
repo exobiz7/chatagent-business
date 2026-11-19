@@ -15,4 +15,8 @@ if [[ -z "${NODE}" || ! -x "${NODE}" ]]; then
   exit 1
 fi
 export CHATAGENT_BUSINESS_OPERATOR_CONFIG="${CONFIG}"
+SCHEMA="$(/usr/bin/plutil -extract schemaVersion raw -o - "${CONFIG}" 2>/dev/null || print -- 1)"
+if [[ "${SCHEMA}" == "2" ]]; then
+  exec "${NODE}" "${REPO_ROOT}/scripts/business/v1.1/ops/business-v11-ops-cli.mjs" status "$@"
+fi
 exec "${NODE}" "${REPO_ROOT}/scripts/business/business-ops.mjs" status "$@"

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "workUnit": "B-S6G-5K",
+  "checkedAt": "2026-11-19",
+  "projectRef": "hjgerbyofaxyfqdckret",
+  "externalSettingsChanged": false,
+  "productionCutoverAuthorized": false,
+  "oauthDiscoveryHttpStatus": 404,
+  "oidcDiscoveryHttpStatus": 200,
+  "currentSiteUrl": null,
+  "currentSiteUrlSource": "unavailable via connected Supabase management actions",
+  "businessCallback": null,
+  "clientRegistrationMethod": null,
+  "verified": {
+    "issuerDiscovery": false,
+    "siteUrlActualReadback": false,
+    "siteUrlRedirectImpact": false,
+    "exactBusinessAppCallback": false,
+    "businessClientRegistrationMode": false,
+    "asymmetricSigningVerified": false,
+    "signedOAuthTokenObserved": false,
+    "resourceIndicatorRequested": false,
+    "resourceAudienceBound": false,
+    "exactClientClaimVerified": false,
+    "realTokenAudienceValidated": false,
+    "sessionAndOrgMembershipVerified": false,
+    "readOnlyToolAccessPolicyVerified": false,
+    "independentGatewayIsolated": false,
+    "noV1SideEffects": true,
+    "businessWorkspaceE2E": false
+  },
+  "observations": [
+    "Supabase current project healthy; site URL cannot be read by current connected Supabase actions.",
+    "Supabase docs sample OAuth JWT aud=authenticated and client_id, no demonstrated resource claim.",
+    "OIDC openid email profile scopes do not authorize Postgres database or MCP tool data.",
+    "B-S6G-5J exact resource audience guard is offline synthetic, not a compatible-token proof.",
+    "Netlify consent remains an inert static preview and OAuth has not been enabled.",
+    "Business account is separate and current personal Plus session has no active Business plugin context."
+  ]
+}

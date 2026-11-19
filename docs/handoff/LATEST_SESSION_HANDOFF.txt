@@ -1,0 +1,24 @@
+ChatAgent Business v1.1 — LATEST VERIFIED POINTER
+2026-11-19 KST / B-S6G-5K — OAuth issuer compatibility and evidence-only gates.
+Canonical Mac Studio repo: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Branch feat/business-v1.1-bs3-runtime-routing. Verify actual git HEAD/upstream, PR #9 Draft and exact-head CI first.
+
+Existing v1.0 operator kept unchanged, port 31850/health and 51950/healthz,/readyz all HTTP 200 on B-S6G-5K read-only onboarding.
+Supabase Business v1.1 auth project hjgerbyofaxyfqdckret ACTIVE_HEALTHY; OAuth discovery previously 404, OIDC 200. No OAuth enable. Site URL current persisted value cannot be read with presently exposed Supabase connector; screenshot historical localhost:3000 is NOT current readback. No Business app OAuth client/callback or public MCP gateway registered.
+Netlify Free chatagent-business-v11-consent-staging still serves inert static preview, real Chrome CSP HUD block proven in B-S6G-5J, no redeploy.
+
+CRITICAL: Supabase default OAuth access token JWT aud=authenticated + client_id, per vendor docs; OIDC scopes openid/email/profile control identity, NOT DB/MCP tool access. B-S6G-5J resource-audience-and-resource-claim guard was synthetic only; not proven compatible with actual Supabase token. Do not deploy it or weaken to generic audience without a reviewed resource-binding proof. Custom token hooks affect all Auth token issuance and must not be deployed without rollback/admin recovery review.
+New B-S6G-5K pure admission gate tests actual missing prerequisites. Even all-true evidence does not grant OAuth Settings, deployment, app registration, migration or cutover authority.
+Production Target 7/11 PASS, B-S6 Cutover NO-GO, owner cutover approval NOT_GRANTED. No OAuth, GitHub merge, paid resources, import or runtime changes.
+
+READ FIRST:
+1 docs/verification/v1.1/B_S6G5K_OAUTH_COMPATIBILITY_READONLY_REVIEW_20261119.md
+2 docs/verification/v1.1/B_S6G5K_AUTH_READONLY_EVIDENCE_20261119.json
+3 scripts/business/v1.1/bs6g5k-auth-evidence-gate.mjs
+4 scripts/business/v1.1/bs6g5k-auth-evidence-gate-test.mjs
+5 docs/verification/v1.1/B_S6G5J_BROWSER_OAUTH_SECURITY_REVIEW_20261109.md
+6 docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
+7 docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
+8 docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+
+NEXT B-S6G-5L: Site URL/Redirect URLs dashboard readback and Business-account exact callback/client registration mode; no settings edits. Then assess resource-indicator propagation and actual compatible issuer token before obtaining separate owner approval for functional staging OAuth.

@@ -1,0 +1,119 @@
+{
+  "workUnit": "B-S6G-5I",
+  "checkedAtKst": "2026-11-06",
+  "siteName": "chatagent-business-v11-consent-staging",
+  "netlifyTeam": "exobiz7",
+  "siteId": "6a561d90-21fe-4001-8a04-ea566236f236",
+  "deployId": "6aed3d71a3bf94cd4310cd9e",
+  "deployState": "ready",
+  "deployedAtUtc": "2026-11-06T02:37:37.316Z",
+  "deploymentContext": "production (Netlify static staging site, not ChatAgent Business production cutover)",
+  "hostedEvidence": {
+    "verdict": "PASS_HOSTED_STATIC_PREVIEW_ONLY",
+    "origin": "https://chatagent-business-v11-consent-staging.netlify.app",
+    "exactPathsVerified": 5,
+    "results": [
+      {
+        "path": "/",
+        "status": 200,
+        "bytes": 768,
+        "sourceSha256": "693ddf8303f406ba40f5a680553dd4a448e757ea9a94f2443c524f636761be81",
+        "exactLocalMatchAfterKnownNetlifyInjectionNormalization": true,
+        "netlifyEdgeCommentInjected": true,
+        "netlifyHudScriptTagInjected": true,
+        "netlifyInjectedScriptExecutionBlockedByCSP": true,
+        "csp": true,
+        "noStore": true,
+        "noIndex": true,
+        "hsts": true
+      },
+      {
+        "path": "/oauth/consent",
+        "status": 200,
+        "bytes": 2095,
+        "sourceSha256": "8e7a44b8dbfd23a931e827455d088abce3724a406009b3ce39874268cc26e533",
+        "exactLocalMatchAfterKnownNetlifyInjectionNormalization": true,
+        "netlifyEdgeCommentInjected": true,
+        "netlifyHudScriptTagInjected": true,
+        "netlifyInjectedScriptExecutionBlockedByCSP": true,
+        "csp": true,
+        "noStore": true,
+        "noIndex": true,
+        "hsts": true
+      },
+      {
+        "path": "/oauth/consent.html",
+        "status": 200,
+        "bytes": 2095,
+        "sourceSha256": "8e7a44b8dbfd23a931e827455d088abce3724a406009b3ce39874268cc26e533",
+        "exactLocalMatchAfterKnownNetlifyInjectionNormalization": true,
+        "netlifyEdgeCommentInjected": true,
+        "netlifyHudScriptTagInjected": true,
+        "netlifyInjectedScriptExecutionBlockedByCSP": true,
+        "csp": true,
+        "noStore": true,
+        "noIndex": true,
+        "hsts": true
+      },
+      {
+        "path": "/assets/preview.css",
+        "status": 200,
+        "bytes": 1131,
+        "sourceSha256": "7acf09db921a4e26b1de20bfab353037d38def73b7526bebd9427857c1af73ef",
+        "exactLocalMatchAfterKnownNetlifyInjectionNormalization": true,
+        "netlifyEdgeCommentInjected": false,
+        "netlifyHudScriptTagInjected": false,
+        "netlifyInjectedScriptExecutionBlockedByCSP": true,
+        "csp": true,
+        "noStore": true,
+        "noIndex": true,
+        "hsts": true
+      },
+      {
+        "path": "/robots.txt",
+        "status": 200,
+        "bytes": 26,
+        "sourceSha256": "331ea9090db0c9f6f597bd9840fd5b171830f6e0b3ba1cb24dfa91f0c95aedc1",
+        "exactLocalMatchAfterKnownNetlifyInjectionNormalization": true,
+        "netlifyEdgeCommentInjected": false,
+        "netlifyHudScriptTagInjected": false,
+        "netlifyInjectedScriptExecutionBlockedByCSP": true,
+        "csp": true,
+        "noStore": true,
+        "noIndex": true,
+        "hsts": true
+      }
+    ],
+    "internalNetlifyRulesNotExposed": true,
+    "oauthEnabled": false,
+    "authOrConsentFlowTested": false,
+    "productionCutoverAuthorized": false
+  },
+  "serverSecurity": {
+    "v1OperatorHealthy": true,
+    "v1ServerHealthHttpStatus": 200,
+    "v1TunnelHealthHttpStatus": 200,
+    "v1TunnelReadyHttpStatus": 200,
+    "supabaseOidcDiscovery": 200,
+    "supabaseOauthAuthorizationServerDiscovery": 404
+  },
+  "observedEdgeInjection": {
+    "knownNetlifyPromotionComment": true,
+    "knownNetlifyHudScriptTag": true,
+    "staticSourceFilesContainScripts": false,
+    "httpCspScriptSrcNone": true,
+    "notYetTestedInRealBrowser": true,
+    "interpretation": "Netlify adds a known HUD script tag and promotion comment at the edge on some responses. The supplied CSP script-src none prohibits its execution in compliant browsers. This is NOT raw-byte identity and must be audited again before live OAuth consent."
+  },
+  "scope": {
+    "hostedStaticPreviewVerified": true,
+    "actualConsentLoginVerified": false,
+    "authSettingsModified": false,
+    "oauthServerEnabled": false,
+    "businessWorkspacePluginInvoked": false,
+    "productionCutoverAuthorized": false
+  },
+  "productionTargetProofsPassed": 7,
+  "productionTargetProofsTotal": 11,
+  "verdict": "PASS_HOSTED_INERT_PREVIEW_ONLY_WITH_NETLIFY_EDGE_INJECTION_DISCLOSED"
+}

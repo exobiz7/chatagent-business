@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "workUnit": "B-S6F",
+  "productionCutoverStarted": false,
+  "release": {
+    "currentProductionVersion": "1.0.0",
+    "candidateHead": "77f82dbeeea01446d4b2929a8220d62ad43a880d",
+    "pullRequestStack": [
+      6,
+      7,
+      8,
+      9
+    ],
+    "targetVersion": "1.1.0",
+    "protectedReleaseBranch": "main"
+  },
+  "checks": {
+    "finalHeadApproval": "PENDING",
+    "fullReleaseHostCI": "PASS",
+    "hostedCI": "PASS",
+    "productionStatus": "PASS",
+    "productionDoctor": "PENDING",
+    "protectedPRStackPlan": "PENDING",
+    "ownerApproval": "PENDING",
+    "maintenanceWindowAndRoles": "PENDING",
+    "sourceBackupRecoveryPlan": "PENDING",
+    "productionSupabaseTargetProof": "PENDING",
+    "oneTimeImportReconciliationPlan": "PENDING",
+    "restartPersistenceSafetyPlan": "PENDING",
+    "rollbackDecisionPlan": "PENDING"
+  },
+  "steps": [
+    {
+      "number": 1,
+      "name": "exact-head full regression",
+      "status": "PASS"
+    },
+    {
+      "number": 2,
+      "name": "GitHub/macOS CI",
+      "status": "PASS"
+    },
+    {
+      "number": 3,
+      "name": "production Status/Doctor",
+      "status": "PENDING"
+    },
+    {
+      "number": 4,
+      "name": "maintenance window begins",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 5,
+      "name": "stop v1.0 production",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 6,
+      "name": "fresh verified source backup",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 7,
+      "name": "final SQLite logical export",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 8,
+      "name": "record source counts/revisions/digests",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 9,
+      "name": "prove production Supabase target state",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 10,
+      "name": "one-time final import",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 11,
+      "name": "authenticated readback/export",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 12,
+      "name": "reconcile IDs/counts/revisions/contextDigest",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 13,
+      "name": "retire one-time import RPC",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 14,
+      "name": "install v1.1 artifact",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 15,
+      "name": "start Gateway/runtime nodes",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 16,
+      "name": "verify exact published tool contract",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 17,
+      "name": "TEAM continuity canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 18,
+      "name": "continuity_search_history canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 19,
+      "name": "HOST_USER / process_start_host canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 20,
+      "name": "focused semantic filesystem canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 21,
+      "name": "Git/GitHub semantic canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 22,
+      "name": "multi-node fresh-chat canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 23,
+      "name": "restart persistence",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 24,
+      "name": "node revoke canary",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 25,
+      "name": "post-cutover encrypted backup",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 26,
+      "name": "privately publish updated Business app",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 27,
+      "name": "post-publish production smoke",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 28,
+      "name": "merge release PR",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 29,
+      "name": "tag v1.1.0",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 30,
+      "name": "publish release artifact",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 31,
+      "name": "update Product Specification",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 32,
+      "name": "update User Manual",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 33,
+      "name": "create DevOps handoff",
+      "status": "NOT_STARTED"
+    }
+  ]
+}
