@@ -153,3 +153,7 @@ Netlify dedicated Free site deploy `6aed3d71a3bf94cd4310cd9e` is READY; five HTT
 ## 20. 2026-11-09 B-S6G-5J — real Chrome security and offline resource token guard
 
 CSP enforcement PASS against Netlify HUD in actual headless Google Chrome, including a securitypolicyviolation event and zero successful injected script network response. Synthetic-only strict JWT admission guard PASS: exact MCP audience/resource, client ID, scope, issuer, signed token and expiry. This guard is NOT deployed. Existing local canary aud=authenticated is insufficient to prove OAuth resource binding. Live OAuth discovery 404; real Business callback and current Site URL unverified. Target remains 7/11, Cutover NO-GO. See B_S6G5J_BROWSER_OAUTH_SECURITY_REVIEW_20261109.md.
+
+## 21. 2026-11-19 B-S6G-5K OAuth compatibility admission review
+
+Current linked project healthy, v1.0 health 3/3. No Supabase API method connected for authoritative Auth Site URL readback; exact Business account OAuth client/callback unknown. Vendor documentation states default OAuth JWT aud=authenticated and client_id, but prior synthetic strict resource audience/claim verifier has no proven issuer compatibility. The new read-only admission evaluator fails closed; even hypothetical all-green evidence cannot authorize changes. OIDC identity scopes do not confer MCP tool/data rights. 7/11 Production Target, Cutover NO-GO. See B_S6G5K_OAUTH_COMPATIBILITY_READONLY_REVIEW_20261119.md.

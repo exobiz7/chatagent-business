@@ -1,24 +1,24 @@
 ChatAgent Business v1.1 — LATEST VERIFIED POINTER
-Updated 2026-11-09 KST — B-S6G-5J REAL CHROME CSP PASS, OFFLINE RESOURCE TOKEN GUARD PASS, LIVE OAUTH STILL BLOCKED.
+2026-11-19 KST / B-S6G-5K — OAuth issuer compatibility and evidence-only gates.
+Canonical Mac Studio repo: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
+Branch feat/business-v1.1-bs3-runtime-routing. Verify actual git HEAD/upstream, PR #9 Draft and exact-head CI first.
 
-Canonical repo: /Volumes/SSD 4T/z_proj/proj04_chatagent/chatagent_business
-Branch feat/business-v1.1-bs3-runtime-routing; verify actual HEAD/upstream, exact-head CI, PR #9 Draft, clean git on arrival.
-Existing v1.0 RUNNING healthy, 31850/health, 51950/healthz,/readyz 200 at latest independent verification. NO production process/config change.
-Netlify static PREVIEW ONLY: https://chatagent-business-v11-consent-staging.netlify.app/oauth/consent, site ID 6a561d90-21fe-4001-8a04-ea566236f236, deploy 6aed3d71a3bf94cd4310cd9e unchanged.
-NEW B-S6G-5J: isolated real Google Chrome headless browser CDP test saw injected Netlify / .netlify/scripts/hud tag and verified CSP script-src-elem enforced violation with ZERO successful HUD response; user login, approve/deny controls disabled, no Supabase browser requests. Test may report attempted HUD resource in Performance API even when blocked; use CDP successful response evidence, not attempts.
-Offline ONLY candidate exact JWT resource aud/claim, issuer, signature, expiry, client ID, scope guard passes synthetic positive/negative tests. NOT integrated with Gateway, Auth, or v1.0. Existing one-tool local canary accepts JWT aud=authenticated and does NOT establish real ChatGPT OAuth resource binding.
-Supabase v1.1 production project hjgerbyofaxyfqdckret ACTIVE_HEALTHY. GET-only OIDC Discovery HTTP 200, OAuth Authorization Server Discovery HTTP 404. Historical Site URL http://localhost:3000 shown in screenshot but current persisted config NOT independently read. Do not change Site URL / enable OAuth / register client / redeploy Consent / create paid resources.
-Business-account ChatGPT exact Callback URI and client registration not verified. Personal Plus workspace must NOT be treated as Business plugin test.
-Production Target 7/11 PASS, blockers migrationAdmin, importerPrivilegeIsolation, authenticatedReadbackPlan and runtimeSecretCustody. Cutover NO-GO, PR #9 Draft.
+Existing v1.0 operator kept unchanged, port 31850/health and 51950/healthz,/readyz all HTTP 200 on B-S6G-5K read-only onboarding.
+Supabase Business v1.1 auth project hjgerbyofaxyfqdckret ACTIVE_HEALTHY; OAuth discovery previously 404, OIDC 200. No OAuth enable. Site URL current persisted value cannot be read with presently exposed Supabase connector; screenshot historical localhost:3000 is NOT current readback. No Business app OAuth client/callback or public MCP gateway registered.
+Netlify Free chatagent-business-v11-consent-staging still serves inert static preview, real Chrome CSP HUD block proven in B-S6G-5J, no redeploy.
 
-READ FIRST
-1. docs/verification/v1.1/B_S6G5J_BROWSER_OAUTH_SECURITY_REVIEW_20261109.md
-2. scripts/business/v1.1/bs6g5j-browser-csp-audit.mjs
-3. scripts/business/v1.1/bs6g5j-oauth-token-admission.mjs
-4. scripts/business/v1.1/bs6g5j-oauth-token-admission-test.mjs
-5. docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
-6. docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
-7. docs/verification/v1.1/B_S6G5I_HOSTED_STATIC_PREVIEW_VERIFICATION_20261106.json
-8. docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+CRITICAL: Supabase default OAuth access token JWT aud=authenticated + client_id, per vendor docs; OIDC scopes openid/email/profile control identity, NOT DB/MCP tool access. B-S6G-5J resource-audience-and-resource-claim guard was synthetic only; not proven compatible with actual Supabase token. Do not deploy it or weaken to generic audience without a reviewed resource-binding proof. Custom token hooks affect all Auth token issuance and must not be deployed without rollback/admin recovery review.
+New B-S6G-5K pure admission gate tests actual missing prerequisites. Even all-true evidence does not grant OAuth Settings, deployment, app registration, migration or cutover authority.
+Production Target 7/11 PASS, B-S6 Cutover NO-GO, owner cutover approval NOT_GRANTED. No OAuth, GitHub merge, paid resources, import or runtime changes.
 
-NEXT B-S6G-5K: confirm CURRENT Supabase Auth Site URL read-only and actual Business app callback/registration mode, design independently tested real resource-bound issuer JWT and Gateway token validation. No external changes without separate owner approval.
+READ FIRST:
+1 docs/verification/v1.1/B_S6G5K_OAUTH_COMPATIBILITY_READONLY_REVIEW_20261119.md
+2 docs/verification/v1.1/B_S6G5K_AUTH_READONLY_EVIDENCE_20261119.json
+3 scripts/business/v1.1/bs6g5k-auth-evidence-gate.mjs
+4 scripts/business/v1.1/bs6g5k-auth-evidence-gate-test.mjs
+5 docs/verification/v1.1/B_S6G5J_BROWSER_OAUTH_SECURITY_REVIEW_20261109.md
+6 docs/verification/v1.1/B_S6_GATE_STATE_20261018.json
+7 docs/verification/v1.1/B_S6G_PRODUCTION_TARGET_EVIDENCE_20261102.json
+8 docs/ops/B_S6F_PRODUCTION_CUTOVER_RUNBOOK_20261101.md
+
+NEXT B-S6G-5L: Site URL/Redirect URLs dashboard readback and Business-account exact callback/client registration mode; no settings edits. Then assess resource-indicator propagation and actual compatible issuer token before obtaining separate owner approval for functional staging OAuth.

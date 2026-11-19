@@ -173,3 +173,7 @@ Dedicated Netlify Free static Consent staging site is READY, deployment ID `6aed
 ## B-S6G-5J — Browser CSP enforcement and offline MCP token boundary (2026-11-09)
 
 Installed Google Chrome with an isolated temporary profile confirmed Netlify's injected public HUD script receives CSP script-src-elem enforcement violation and **no successful network response**. Browser consent controls remain disabled. Synthetic offline candidate guard rejects aud=authenticated, foreign MCP resources/clients, wrong scopes and bad signatures; NOT integrated or live-issuer-tested. Supabase OAuth discovery is 404, global Site URL remains unverified, Business callback unregistered/unknown. Static Netlify deploy unchanged; no real sign-in/consent or production cutover. 7/11, B-S6 NO-GO. Full report B_S6G5J_BROWSER_OAUTH_SECURITY_REVIEW_20261109.md.
+
+## B-S6G-5K — Default Supabase OAuth token not proven resource bound (2026-11-19)
+
+Vendor-documented JWT aud=authenticated and client_id; existing strict resource-audience/resource-claim candidate is synthetic and not proven compatible with real issuer output. OIDC scopes are identity only and do not substitute for organization membership/RLS/tool authorization. Current Site URL and exact Business app callback remain unverified. Do not activate OAuth, custom token hooks, client registration or live Gateway. Current evidence-only admission gate BLOCKED, Production 7/11 and Cutover NO-GO. Read B_S6G5K_OAUTH_COMPATIBILITY_READONLY_REVIEW_20261119.md.
